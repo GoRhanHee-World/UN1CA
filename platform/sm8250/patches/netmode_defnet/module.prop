@@ -1,0 +1,6 @@
+id=netmode_defnet
+name=5G network modes: publish the CSC default network type One UI 9 reads (I-52)
+version=v1
+versionCode=1
+author=MinsOS
+description=One UI 9 TelephonyUI only offers the 5G network modes when persist.radio.def_network is above 22, and nothing on the S20+'s A13 vendor writes that property (its RIL publishes ro.telephony.default_network=26). An init trigger copies the vendor value across, as the cellular tablets do since 564155e.

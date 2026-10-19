@@ -1,0 +1,6 @@
+id=ims_profile_id
+name=Plain data profile ids for the vendor RIL
+version=v1
+versionCode=1
+author=MinsOS
+description=Stops the A16 framework folding the call id into the profile id the A13 vendor RIL receives, which broke IMS calls on Korean carriers (I-43).
