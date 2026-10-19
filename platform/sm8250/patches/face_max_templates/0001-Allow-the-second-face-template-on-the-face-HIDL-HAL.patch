@@ -1,0 +1,29 @@
+From 0000000000000000000000000000000000000002 Mon Sep 17 00:00:00 2001
+From: MinsOS <minsos@local>
+Date: Mon, 5 Oct 2026 14:00:00 +0900
+Subject: [PATCH] Allow the second face template on the face HIDL HAL (One UI 9, y2q)
+
+FaceEnrollClient.hasReachedEnrollmentLimit() caps a HIDL face HAL at one
+template when SemBiometricFeature.FEATURE_JDM_HAL is set and at two otherwise,
+the same rule as the stock SM-G986N A13 face/hidl/FaceEnrollClient. y2q sets
+MANUFACTURING_TYPE=jdm only so that HidlToAidlSensorAdapter loads the V2_0 HAL
+class, and that also took away the second template, the "alternative look":
+enroll ended with "Reached enrollment limit" before the HAL was called. Stock
+y2q is in_house (two templates), and its face@2.0 HAL itself refuses a third
+(libFaceService.so FaceService::initEnroll, count < 2). Read the flag as false
+in this method only.
+---
+diff --git a/smali/com/android/server/biometrics/sensors/face/aidl/FaceEnrollClient.smali b/smali/com/android/server/biometrics/sensors/face/aidl/FaceEnrollClient.smali
+--- a/smali/com/android/server/biometrics/sensors/face/aidl/FaceEnrollClient.smali
++++ b/smali/com/android/server/biometrics/sensors/face/aidl/FaceEnrollClient.smali
+@@ -150,7 +150,7 @@
+ 
+     move-result p0
+ 
+-    sget-boolean v0, Lcom/android/server/biometrics/SemBiometricFeature;->FEATURE_JDM_HAL:Z
++    const/4 v0, 0x0
+ 
+     if-eqz v0, :cond_0
+ 
+-- 
+2.45.0

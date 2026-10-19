@@ -1,0 +1,511 @@
+From 9a4bd0f2941f0d7b84e3bd24936e4cbe9d799405 Mon Sep 17 00:00:00 2001
+From: MinsOS <minsos@localhost>
+Date: Sun, 4 Oct 2026 20:59:30 +0900
+Subject: [PATCH] Use Face HIDL 2.0 for the unguarded V3_0 casts
+
+The y2q vendor ships only face@2.0, so unica/patches/legacy deletes the V3_0
+ISehBiometricsFace classes. Its 0001 fallback patch no longer applies to this
+donor, which leaves seven check-casts to V3_0 that the
+MANUFACTURING_TYPE=jdm switch does not gate. Face enrollment then kills
+system_server (NoClassDefFoundError in SemFaceServiceExImpl.daemonSetRotation).
+
+Cast those sites to V2_0 and give the V2_0 proxy the seven @2.0 methods R8
+dropped from it, copied from the donor V3_0 proxy (same @2.0 descriptor and
+transaction codes as the stock SM-G986N A13 proxy).
+
+diff --git a/smali/com/android/server/biometrics/sensors/face/FaceService$FaceServiceWrapper.smali b/smali/com/android/server/biometrics/sensors/face/FaceService$FaceServiceWrapper.smali
+index 3f4c553..e9f6c12 100644
+--- a/smali/com/android/server/biometrics/sensors/face/FaceService$FaceServiceWrapper.smali
++++ b/smali/com/android/server/biometrics/sensors/face/FaceService$FaceServiceWrapper.smali
+@@ -3180,7 +3180,7 @@
+ 
+     move-result-object p0
+ 
+-    check-cast p0, Lvendor/samsung/hardware/biometrics/face/V3_0/ISehBiometricsFace;
++    check-cast p0, Lvendor/samsung/hardware/biometrics/face/V2_0/ISehBiometricsFace;
+ 
+     invoke-interface {p0}, Lvendor/samsung/hardware/biometrics/face/V2_0/ISehBiometricsFace;->sehGetTaInfo()Ljava/lang/String;
+ 
+@@ -3574,7 +3574,7 @@
+ 
+     move-result-object p0
+ 
+-    check-cast p0, Lvendor/samsung/hardware/biometrics/face/V3_0/ISehBiometricsFace;
++    check-cast p0, Lvendor/samsung/hardware/biometrics/face/V2_0/ISehBiometricsFace;
+ 
+     invoke-interface {p0}, Lvendor/samsung/hardware/biometrics/face/V2_0/ISehBiometricsFace;->sehIsTaSessionClosed()Z
+ 
+diff --git a/smali/com/android/server/biometrics/sensors/face/aidl/FaceProvider$$ExternalSyntheticLambda9.smali b/smali/com/android/server/biometrics/sensors/face/aidl/FaceProvider$$ExternalSyntheticLambda9.smali
+index 4016330..60810ce 100644
+--- a/smali/com/android/server/biometrics/sensors/face/aidl/FaceProvider$$ExternalSyntheticLambda9.smali
++++ b/smali/com/android/server/biometrics/sensors/face/aidl/FaceProvider$$ExternalSyntheticLambda9.smali
+@@ -548,7 +548,7 @@
+ 
+     move-result-object p0
+ 
+-    check-cast p0, Lvendor/samsung/hardware/biometrics/face/V3_0/ISehBiometricsFace;
++    check-cast p0, Lvendor/samsung/hardware/biometrics/face/V2_0/ISehBiometricsFace;
+ 
+     invoke-interface {p0}, Lvendor/samsung/hardware/biometrics/face/V2_0/ISehBiometricsFace;->sehPauseEnrollment()I
+ 
+diff --git a/smali/com/android/server/biometrics/sensors/face/aidl/SemFaceServiceExImpl.smali b/smali/com/android/server/biometrics/sensors/face/aidl/SemFaceServiceExImpl.smali
+index 8df2a1c..298a608 100644
+--- a/smali/com/android/server/biometrics/sensors/face/aidl/SemFaceServiceExImpl.smali
++++ b/smali/com/android/server/biometrics/sensors/face/aidl/SemFaceServiceExImpl.smali
+@@ -1454,7 +1454,7 @@
+ 
+     move-result-object p0
+ 
+-    check-cast p0, Lvendor/samsung/hardware/biometrics/face/V3_0/ISehBiometricsFace;
++    check-cast p0, Lvendor/samsung/hardware/biometrics/face/V2_0/ISehBiometricsFace;
+ 
+     if-eq p1, v11, :cond_3
+ 
+diff --git a/smali/com/android/server/biometrics/sensors/face/hidl/HidlToAidlSessionAdapter.smali b/smali/com/android/server/biometrics/sensors/face/hidl/HidlToAidlSessionAdapter.smali
+index a2e9cdd..14434ad 100644
+--- a/smali/com/android/server/biometrics/sensors/face/hidl/HidlToAidlSessionAdapter.smali
++++ b/smali/com/android/server/biometrics/sensors/face/hidl/HidlToAidlSessionAdapter.smali
+@@ -467,7 +467,7 @@
+ 
+     move-result-object v1
+ 
+-    check-cast v1, Lvendor/samsung/hardware/biometrics/face/V3_0/ISehBiometricsFace;
++    check-cast v1, Lvendor/samsung/hardware/biometrics/face/V2_0/ISehBiometricsFace;
+ 
+     new-instance v2, Lcom/android/server/biometrics/sensors/face/hidl/HidlToAidlSessionAdapter$$ExternalSyntheticLambda2;
+ 
+@@ -851,7 +851,7 @@
+ 
+     move-result-object p0
+ 
+-    check-cast p0, Lvendor/samsung/hardware/biometrics/face/V3_0/ISehBiometricsFace;
++    check-cast p0, Lvendor/samsung/hardware/biometrics/face/V2_0/ISehBiometricsFace;
+ 
+     invoke-interface {p0}, Lvendor/samsung/hardware/biometrics/face/V2_0/ISehBiometricsFace;->sehResumeEnrollment()I
+ 
+@@ -913,7 +913,7 @@
+ 
+     move-result-object p0
+ 
+-    check-cast p0, Lvendor/samsung/hardware/biometrics/face/V3_0/ISehBiometricsFace;
++    check-cast p0, Lvendor/samsung/hardware/biometrics/face/V2_0/ISehBiometricsFace;
+ 
+     invoke-interface {p0, v0}, Lvendor/samsung/hardware/biometrics/face/V2_0/ISehBiometricsFace;->sehSetFaceTag(Ljava/util/ArrayList;)I
+     :try_end_0
+diff --git a/smali_classes2/vendor/samsung/hardware/biometrics/face/V2_0/ISehBiometricsFace$Proxy.smali b/smali_classes2/vendor/samsung/hardware/biometrics/face/V2_0/ISehBiometricsFace$Proxy.smali
+index c2d1574..680a46c 100644
+--- a/smali_classes2/vendor/samsung/hardware/biometrics/face/V2_0/ISehBiometricsFace$Proxy.smali
++++ b/smali_classes2/vendor/samsung/hardware/biometrics/face/V2_0/ISehBiometricsFace$Proxy.smali
+@@ -1060,6 +1060,412 @@
+     throw p0
+ .end method
+ 
++.method public final sehGetFaceTag(Lvendor/samsung/hardware/biometrics/face/V2_0/ISehBiometricsFace$sehGetFaceTagCallback;)V
++    .locals 12
++
++    const-string/jumbo v0, "vendor.samsung.hardware.biometrics.face@2.0::ISehBiometricsFace"
++
++    const/16 v1, 0x66
++
++    invoke-static {v1, v0}, Landroid/hardware/broadcastradio/V2_0/AmFmBandRange$$ExternalSyntheticOutline0;->m(ILjava/lang/String;)Landroid/os/HwParcel;
++
++    move-result-object v0
++
++    new-instance v1, Landroid/os/HwParcel;
++
++    invoke-direct {v1}, Landroid/os/HwParcel;-><init>()V
++
++    :try_start_0
++    iget-object p0, p0, Lvendor/samsung/hardware/biometrics/face/V2_0/ISehBiometricsFace$Proxy;->mRemote:Landroid/os/IHwBinder;
++
++    const/16 v2, 0x21
++
++    const/4 v9, 0x0
++
++    invoke-interface {p0, v2, v0, v1, v9}, Landroid/os/IHwBinder;->transact(ILandroid/os/HwParcel;Landroid/os/HwParcel;I)V
++
++    invoke-virtual {v1}, Landroid/os/HwParcel;->verifySuccess()V
++
++    invoke-virtual {v0}, Landroid/os/HwParcel;->releaseTemporaryStorage()V
++
++    invoke-virtual {v1}, Landroid/os/HwParcel;->readInt32()I
++
++    move-result p0
++
++    new-instance v0, Lvendor/samsung/hardware/biometrics/face/V2_0/SehFaceTag;
++
++    invoke-direct {v0}, Ljava/lang/Object;-><init>()V
++
++    iput v9, v0, Lvendor/samsung/hardware/biometrics/face/V2_0/SehFaceTag;->id:I
++
++    iput v9, v0, Lvendor/samsung/hardware/biometrics/face/V2_0/SehFaceTag;->type:I
++
++    new-instance v10, Ljava/util/ArrayList;
++
++    invoke-direct {v10}, Ljava/util/ArrayList;-><init>()V
++
++    iput-object v10, v0, Lvendor/samsung/hardware/biometrics/face/V2_0/SehFaceTag;->data:Ljava/util/ArrayList;
++
++    const-wide/16 v2, 0x18
++
++    invoke-virtual {v1, v2, v3}, Landroid/os/HwParcel;->readBuffer(J)Landroid/os/HwBlob;
++
++    move-result-object v2
++
++    const-wide/16 v3, 0x0
++
++    invoke-virtual {v2, v3, v4}, Landroid/os/HwBlob;->getInt32(J)I
++
++    move-result v3
++
++    iput v3, v0, Lvendor/samsung/hardware/biometrics/face/V2_0/SehFaceTag;->id:I
++
++    const-wide/16 v3, 0x4
++
++    invoke-virtual {v2, v3, v4}, Landroid/os/HwBlob;->getInt32(J)I
++
++    move-result v3
++
++    iput v3, v0, Lvendor/samsung/hardware/biometrics/face/V2_0/SehFaceTag;->type:I
++
++    const-wide/16 v3, 0x10
++
++    invoke-virtual {v2, v3, v4}, Landroid/os/HwBlob;->getInt32(J)I
++
++    move-result v11
++
++    move-object v4, v2
++
++    int-to-long v2, v11
++
++    invoke-virtual {v4}, Landroid/os/HwBlob;->handle()J
++
++    move-result-wide v4
++
++    const/4 v8, 0x1
++
++    const-wide/16 v6, 0x8
++
++    invoke-virtual/range {v1 .. v8}, Landroid/os/HwParcel;->readEmbeddedBuffer(JJJZ)Landroid/os/HwBlob;
++
++    move-result-object v2
++
++    invoke-virtual {v10}, Ljava/util/ArrayList;->clear()V
++
++    :goto_0
++    if-ge v9, v11, :cond_0
++
++    int-to-long v3, v9
++
++    invoke-virtual {v2, v3, v4}, Landroid/os/HwBlob;->getInt8(J)B
++
++    move-result v3
++
++    iget-object v4, v0, Lvendor/samsung/hardware/biometrics/face/V2_0/SehFaceTag;->data:Ljava/util/ArrayList;
++
++    invoke-static {v3}, Ljava/lang/Byte;->valueOf(B)Ljava/lang/Byte;
++
++    move-result-object v3
++
++    invoke-virtual {v4, v3}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
++
++    add-int/lit8 v9, v9, 0x1
++
++    goto :goto_0
++
++    :cond_0
++    check-cast p1, Lcom/android/server/biometrics/sensors/face/hidl/HidlToAidlSessionAdapter$$ExternalSyntheticLambda2;
++
++    invoke-virtual {p1, p0, v0}, Lcom/android/server/biometrics/sensors/face/hidl/HidlToAidlSessionAdapter$$ExternalSyntheticLambda2;->onValues(ILvendor/samsung/hardware/biometrics/face/V2_0/SehFaceTag;)V
++    :try_end_0
++    .catchall {:try_start_0 .. :try_end_0} :catchall_0
++
++    invoke-virtual {v1}, Landroid/os/HwParcel;->release()V
++
++    return-void
++
++    :catchall_0
++    move-exception v0
++
++    move-object p0, v0
++
++    invoke-virtual {v1}, Landroid/os/HwParcel;->release()V
++
++    throw p0
++.end method
++
++.method public final sehGetTaInfo()Ljava/lang/String;
++    .locals 4
++
++    const-string/jumbo v0, "vendor.samsung.hardware.biometrics.face@2.0::ISehBiometricsFace"
++
++    invoke-static {v0}, Landroid/hardware/authsecret/V1_0/IAuthSecret$Proxy$$ExternalSyntheticOutline0;->m(Ljava/lang/String;)Landroid/os/HwParcel;
++
++    move-result-object v0
++
++    new-instance v1, Landroid/os/HwParcel;
++
++    invoke-direct {v1}, Landroid/os/HwParcel;-><init>()V
++
++    :try_start_0
++    iget-object p0, p0, Lvendor/samsung/hardware/biometrics/face/V2_0/ISehBiometricsFace$Proxy;->mRemote:Landroid/os/IHwBinder;
++
++    const/16 v2, 0x16
++
++    const/4 v3, 0x0
++
++    invoke-interface {p0, v2, v0, v1, v3}, Landroid/os/IHwBinder;->transact(ILandroid/os/HwParcel;Landroid/os/HwParcel;I)V
++
++    invoke-virtual {v1}, Landroid/os/HwParcel;->verifySuccess()V
++
++    invoke-virtual {v0}, Landroid/os/HwParcel;->releaseTemporaryStorage()V
++
++    invoke-virtual {v1}, Landroid/os/HwParcel;->readString()Ljava/lang/String;
++
++    move-result-object p0
++    :try_end_0
++    .catchall {:try_start_0 .. :try_end_0} :catchall_0
++
++    invoke-virtual {v1}, Landroid/os/HwParcel;->release()V
++
++    return-object p0
++
++    :catchall_0
++    move-exception p0
++
++    invoke-virtual {v1}, Landroid/os/HwParcel;->release()V
++
++    throw p0
++.end method
++
++.method public final sehIsTaSessionClosed()Z
++    .locals 4
++
++    const-string/jumbo v0, "vendor.samsung.hardware.biometrics.face@2.0::ISehBiometricsFace"
++
++    invoke-static {v0}, Landroid/hardware/authsecret/V1_0/IAuthSecret$Proxy$$ExternalSyntheticOutline0;->m(Ljava/lang/String;)Landroid/os/HwParcel;
++
++    move-result-object v0
++
++    new-instance v1, Landroid/os/HwParcel;
++
++    invoke-direct {v1}, Landroid/os/HwParcel;-><init>()V
++
++    :try_start_0
++    iget-object p0, p0, Lvendor/samsung/hardware/biometrics/face/V2_0/ISehBiometricsFace$Proxy;->mRemote:Landroid/os/IHwBinder;
++
++    const/16 v2, 0x13
++
++    const/4 v3, 0x0
++
++    invoke-interface {p0, v2, v0, v1, v3}, Landroid/os/IHwBinder;->transact(ILandroid/os/HwParcel;Landroid/os/HwParcel;I)V
++
++    invoke-virtual {v1}, Landroid/os/HwParcel;->verifySuccess()V
++
++    invoke-virtual {v0}, Landroid/os/HwParcel;->releaseTemporaryStorage()V
++
++    invoke-virtual {v1}, Landroid/os/HwParcel;->readBool()Z
++
++    move-result p0
++    :try_end_0
++    .catchall {:try_start_0 .. :try_end_0} :catchall_0
++
++    invoke-virtual {v1}, Landroid/os/HwParcel;->release()V
++
++    return p0
++
++    :catchall_0
++    move-exception p0
++
++    invoke-virtual {v1}, Landroid/os/HwParcel;->release()V
++
++    throw p0
++.end method
++
++.method public final sehPauseEnrollment()I
++    .locals 4
++
++    const-string/jumbo v0, "vendor.samsung.hardware.biometrics.face@2.0::ISehBiometricsFace"
++
++    invoke-static {v0}, Landroid/hardware/authsecret/V1_0/IAuthSecret$Proxy$$ExternalSyntheticOutline0;->m(Ljava/lang/String;)Landroid/os/HwParcel;
++
++    move-result-object v0
++
++    new-instance v1, Landroid/os/HwParcel;
++
++    invoke-direct {v1}, Landroid/os/HwParcel;-><init>()V
++
++    :try_start_0
++    iget-object p0, p0, Lvendor/samsung/hardware/biometrics/face/V2_0/ISehBiometricsFace$Proxy;->mRemote:Landroid/os/IHwBinder;
++
++    const/16 v2, 0x14
++
++    const/4 v3, 0x0
++
++    invoke-interface {p0, v2, v0, v1, v3}, Landroid/os/IHwBinder;->transact(ILandroid/os/HwParcel;Landroid/os/HwParcel;I)V
++
++    invoke-virtual {v1}, Landroid/os/HwParcel;->verifySuccess()V
++
++    invoke-virtual {v0}, Landroid/os/HwParcel;->releaseTemporaryStorage()V
++
++    invoke-virtual {v1}, Landroid/os/HwParcel;->readInt32()I
++
++    move-result p0
++    :try_end_0
++    .catchall {:try_start_0 .. :try_end_0} :catchall_0
++
++    invoke-virtual {v1}, Landroid/os/HwParcel;->release()V
++
++    return p0
++
++    :catchall_0
++    move-exception p0
++
++    invoke-virtual {v1}, Landroid/os/HwParcel;->release()V
++
++    throw p0
++.end method
++
++.method public final sehResumeEnrollment()I
++    .locals 4
++
++    const-string/jumbo v0, "vendor.samsung.hardware.biometrics.face@2.0::ISehBiometricsFace"
++
++    invoke-static {v0}, Landroid/hardware/authsecret/V1_0/IAuthSecret$Proxy$$ExternalSyntheticOutline0;->m(Ljava/lang/String;)Landroid/os/HwParcel;
++
++    move-result-object v0
++
++    new-instance v1, Landroid/os/HwParcel;
++
++    invoke-direct {v1}, Landroid/os/HwParcel;-><init>()V
++
++    :try_start_0
++    iget-object p0, p0, Lvendor/samsung/hardware/biometrics/face/V2_0/ISehBiometricsFace$Proxy;->mRemote:Landroid/os/IHwBinder;
++
++    const/16 v2, 0x15
++
++    const/4 v3, 0x0
++
++    invoke-interface {p0, v2, v0, v1, v3}, Landroid/os/IHwBinder;->transact(ILandroid/os/HwParcel;Landroid/os/HwParcel;I)V
++
++    invoke-virtual {v1}, Landroid/os/HwParcel;->verifySuccess()V
++
++    invoke-virtual {v0}, Landroid/os/HwParcel;->releaseTemporaryStorage()V
++
++    invoke-virtual {v1}, Landroid/os/HwParcel;->readInt32()I
++
++    move-result p0
++    :try_end_0
++    .catchall {:try_start_0 .. :try_end_0} :catchall_0
++
++    invoke-virtual {v1}, Landroid/os/HwParcel;->release()V
++
++    return p0
++
++    :catchall_0
++    move-exception p0
++
++    invoke-virtual {v1}, Landroid/os/HwParcel;->release()V
++
++    throw p0
++.end method
++
++.method public final sehSetFaceTag(Ljava/util/ArrayList;)I
++    .locals 3
++
++    new-instance v0, Landroid/os/HwParcel;
++
++    invoke-direct {v0}, Landroid/os/HwParcel;-><init>()V
++
++    const-string/jumbo v1, "vendor.samsung.hardware.biometrics.face@2.0::ISehBiometricsFace"
++
++    invoke-virtual {v0, v1}, Landroid/os/HwParcel;->writeInterfaceToken(Ljava/lang/String;)V
++
++    const/4 v1, 0x1
++
++    invoke-virtual {v0, v1}, Landroid/os/HwParcel;->writeInt32(I)V
++
++    invoke-virtual {v0, p1}, Landroid/os/HwParcel;->writeInt8Vector(Ljava/util/ArrayList;)V
++
++    new-instance p1, Landroid/os/HwParcel;
++
++    invoke-direct {p1}, Landroid/os/HwParcel;-><init>()V
++
++    :try_start_0
++    iget-object p0, p0, Lvendor/samsung/hardware/biometrics/face/V2_0/ISehBiometricsFace$Proxy;->mRemote:Landroid/os/IHwBinder;
++
++    const/16 v1, 0x22
++
++    const/4 v2, 0x0
++
++    invoke-interface {p0, v1, v0, p1, v2}, Landroid/os/IHwBinder;->transact(ILandroid/os/HwParcel;Landroid/os/HwParcel;I)V
++
++    invoke-virtual {p1}, Landroid/os/HwParcel;->verifySuccess()V
++
++    invoke-virtual {v0}, Landroid/os/HwParcel;->releaseTemporaryStorage()V
++
++    invoke-virtual {p1}, Landroid/os/HwParcel;->readInt32()I
++
++    move-result p0
++    :try_end_0
++    .catchall {:try_start_0 .. :try_end_0} :catchall_0
++
++    invoke-virtual {p1}, Landroid/os/HwParcel;->release()V
++
++    return p0
++
++    :catchall_0
++    move-exception p0
++
++    invoke-virtual {p1}, Landroid/os/HwParcel;->release()V
++
++    throw p0
++.end method
++
++.method public final sehSetRotation(I)I
++    .locals 3
++
++    const-string/jumbo v0, "vendor.samsung.hardware.biometrics.face@2.0::ISehBiometricsFace"
++
++    invoke-static {p1, v0}, Landroid/hardware/broadcastradio/V2_0/AmFmBandRange$$ExternalSyntheticOutline0;->m(ILjava/lang/String;)Landroid/os/HwParcel;
++
++    move-result-object p1
++
++    new-instance v0, Landroid/os/HwParcel;
++
++    invoke-direct {v0}, Landroid/os/HwParcel;-><init>()V
++
++    :try_start_0
++    iget-object p0, p0, Lvendor/samsung/hardware/biometrics/face/V2_0/ISehBiometricsFace$Proxy;->mRemote:Landroid/os/IHwBinder;
++
++    const/16 v1, 0x18
++
++    const/4 v2, 0x0
++
++    invoke-interface {p0, v1, p1, v0, v2}, Landroid/os/IHwBinder;->transact(ILandroid/os/HwParcel;Landroid/os/HwParcel;I)V
++
++    invoke-virtual {v0}, Landroid/os/HwParcel;->verifySuccess()V
++
++    invoke-virtual {p1}, Landroid/os/HwParcel;->releaseTemporaryStorage()V
++
++    invoke-virtual {v0}, Landroid/os/HwParcel;->readInt32()I
++
++    move-result p0
++    :try_end_0
++    .catchall {:try_start_0 .. :try_end_0} :catchall_0
++
++    invoke-virtual {v0}, Landroid/os/HwParcel;->release()V
++
++    return p0
++
++    :catchall_0
++    move-exception p0
++
++    invoke-virtual {v0}, Landroid/os/HwParcel;->release()V
++
++    throw p0
++.end method
++
+ .method public final setActiveUser(ILjava/lang/String;)I
+     .locals 2
+ 

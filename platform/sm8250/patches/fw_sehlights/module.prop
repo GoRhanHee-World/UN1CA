@@ -1,0 +1,6 @@
+id=fw_sehlights
+name=SehLights: brightness above 1.0 as a level for the A13 light HAL (One UI 9, y2q)
+version=v1
+versionCode=1
+author=MinsOS
+description=The S20+ keeps the stock A13 light HAL, which takes the panel level from the ISehLights brightness int and reads the colour only when that int is negative. One UI 9 always sent -1 and, above 1.0, an unpacked level as the colour, so outdoor mode, sunlight HBM and HDR boost dropped the panel to a few nits. services.jar sends round(brightness x 255 x 100) through ISehLights again, as the stock S20+ A13 framework did (UN1CA's legacy lights patch for One UI 8, re-made for One UI 9). y2q only.

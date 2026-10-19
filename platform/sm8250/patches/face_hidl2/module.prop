@@ -1,0 +1,6 @@
+id=face_hidl2
+name=Face HIDL 2.0 for the unguarded V3_0 casts
+version=v1
+versionCode=1
+author=MinsOS
+description=Face enrollment soft-rebooted the phone: unica/patches/legacy deletes the face HIDL V3_0 classes for a face@2.0-only vendor, but its fallback patch no longer applies to this donor, so seven check-casts to V3_0 that MANUFACTURING_TYPE=jdm does not gate threw NoClassDefFoundError in system_server. Casts them to V2_0 and adds the seven @2.0 methods R8 dropped from the V2_0 proxy (bodies from the donor V3_0 proxy, codes match the stock SM-G986N proxy).

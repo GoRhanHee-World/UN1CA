@@ -1,0 +1,6 @@
+id=face_strength
+name=Face is a weak biometric again, as on stock S20+
+version=v1
+versionCode=1
+author=MinsOS
+description=MANUFACTURING_TYPE=jdm (set only to load the face@2.0 V2_0 HAL class) also registered face as BIOMETRIC_CONVENIENCE ("1:8:4095"). Stock y2q is in_house and registered it as BIOMETRIC_WEAK ("1:8:255"), so apps that ask for a weak biometric could use face. Only the face strength reads the flag as false; the fingerprint config line stays on jdm.

@@ -1,0 +1,6 @@
+id=face_max_templates
+name=Second face (alternative look) on the face@2.0 HAL
+version=v1
+versionCode=1
+author=MinsOS
+description=Face unlock worked, but registering an alternative look failed at once with "Reached enrollment limit". services.jar allows one face on a HIDL face HAL when MANUFACTURING_TYPE contains jdm and two otherwise; y2q sets jdm only to load the face@2.0 HAL class. Stock S20+ is in_house (two faces) and its face@2.0 HAL holds two. FaceEnrollClient now uses the in_house limit of two.

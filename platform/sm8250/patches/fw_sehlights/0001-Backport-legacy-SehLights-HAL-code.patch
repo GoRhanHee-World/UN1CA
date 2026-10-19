@@ -1,0 +1,264 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: MinsOS <minsos@local>
+Date: Fri, 9 Oct 2026 12:00:00 +0900
+Subject: [PATCH] Backport legacy SehLights HAL code (One UI 9, y2q)
+
+The S20+ keeps the stock SM-G986N A13 vendor light HAL. Its
+ISehLights.setLightState(id, state, brightness) takes the panel level
+from the int argument (x100 scale, 25500 = 1.0, HBM up to 48600) and only
+falls back to ((R*77+G*150+B*29)>>8)*100 of the colour when that int is
+negative (vendor.samsung.hardware.light-service 0x69fc, tbz w1,#31). The
+S918B One UI 9 services always write -1 there, and above 1.0
+BacklightAdapter.setBacklight hands the unpacked level over as the colour:
+486 becomes 2600 and 256 becomes 0, so outdoor mode, sunlight HBM and HDR
+boost drop the panel to a few nits instead of brightening it.
+
+UN1CA's unica/patches/legacy/lights 0001 restores the A13 path but was
+written for the One UI 8 smali and no longer applies (y2q build log:
+"SKIP (X810 8.5): git patch did not apply cleanly"). This is the same
+change re-made on the S918BXXUAZZI8 services.jar, matching what stock
+A13 LightImpl.setBrightness(FI) sends:
+- ISehLights$Stub$Proxy.setLightState takes the brightness int and writes
+  it (same parcel as A13: id, HwLightState, int; transaction 1)
+- LightImpl.setLightLocked/setLightUnchecked(color, mode, onMS, offMS,
+  brightness); the (IIII) forms stay for the other callers and forward
+  -1. mExtendedBrightness joins the dedupe check, as on A13
+- BacklightAdapter.setBacklight always packs the colour (A13 masks with
+  0xff too) and, for HwLight type 0 or 9, sends
+  round(f * 255 * (USE_PERSONAL_AUTO_BRIGHTNESS_V3 ? 100 : 1));
+  AUTO_BRIGHTNESS_TYPE is 4 (V3) in both the A13 and the S918B services
+- PowerManagerUtil.SEC_FEATURE_USE_LIGHTS_HAL_EXTENSION is true, so
+  LightsService talks to the ISehLights extension and not plain ILights
+---
+ ...LocalDisplayAdapter$BacklightAdapter.smali | 52 ++++++++++++++++---
+ .../lights/LightsService$LightImpl.smali      | 52 ++++++++++++++++++-
+ .../server/power/PowerManagerUtil.smali       |  2 +
+ .../light/ISehLights$Stub$Proxy.smali         |  6 +--
+ 4 files changed, 98 insertions(+), 14 deletions(-)
+
+diff --git a/smali/com/android/server/display/LocalDisplayAdapter$BacklightAdapter.smali b/smali/com/android/server/display/LocalDisplayAdapter$BacklightAdapter.smali
+index e21f59f..3e1022c 100644
+--- a/smali/com/android/server/display/LocalDisplayAdapter$BacklightAdapter.smali
++++ b/smali/com/android/server/display/LocalDisplayAdapter$BacklightAdapter.smali
+@@ -19,7 +19,7 @@
+ 
+ # virtual methods
+ .method public final setBacklight(FFFFII)V
+-    .locals 3
++    .locals 6
+ 
+     iget-boolean v0, p0, Lcom/android/server/display/LocalDisplayAdapter$BacklightAdapter;->mUseSurfaceControlBrightness:Z
+ 
+@@ -66,14 +66,12 @@
+     monitor-enter p0
+ 
+     :try_start_0
++    move v4, p3
++
+     invoke-static {p3}, Landroid/hardware/display/DisplayManagerInternal;->convertBrightnessFloatToInt(F)I
+ 
+     move-result p1
+ 
+-    const/16 p2, 0xff
+-
+-    if-gt p1, p2, :cond_2
+-
+     and-int/lit16 p1, p1, 0xff
+ 
+     shl-int/lit8 p2, p1, 0x10
+@@ -88,10 +86,48 @@
+ 
+     or-int/2addr p1, p2
+ 
+-    :cond_2
+-    const/4 p2, 0x0
++    const/4 v5, -0x1
++
++    iget-object v0, p0, Lcom/android/server/lights/LightsService$LightImpl;->mHwLight:Landroid/hardware/light/HwLight;
++
++    iget-byte v0, v0, Landroid/hardware/light/HwLight;->type:B
++
++    if-eqz v0, :sehlights_level
++
++    const/16 v1, 0x9
++
++    if-ne v0, v1, :sehlights_send
++
++    :sehlights_level
++    const/high16 v0, 0x437f0000    # 255.0f
++
++    mul-float/2addr v0, v4
++
++    sget-boolean v1, Lcom/android/server/power/PowerManagerUtil;->USE_PERSONAL_AUTO_BRIGHTNESS_V3:Z
++
++    if-eqz v1, :sehlights_round
++
++    const/high16 v1, 0x42c80000    # 100.0f
++
++    mul-float/2addr v0, v1
++
++    :sehlights_round
++    invoke-static {v0}, Ljava/lang/Math;->round(F)I
++
++    move-result v5
++
++    :sehlights_send
++    move-object v0, p0
++
++    move v1, p1
++
++    const/4 v2, 0x0
++
++    const/4 v3, 0x0
++
++    const/4 v4, 0x0
+ 
+-    invoke-virtual {p0, p1, p2, p2, p2}, Lcom/android/server/lights/LightsService$LightImpl;->setLightLocked(IIII)V
++    invoke-virtual/range {v0 .. v5}, Lcom/android/server/lights/LightsService$LightImpl;->setLightLocked(IIIII)V
+ 
+     monitor-exit p0
+ 
+diff --git a/smali/com/android/server/lights/LightsService$LightImpl.smali b/smali/com/android/server/lights/LightsService$LightImpl.smali
+index 5b86bb8..05f991e 100644
+--- a/smali/com/android/server/lights/LightsService$LightImpl.smali
++++ b/smali/com/android/server/lights/LightsService$LightImpl.smali
+@@ -8,6 +8,8 @@
+ 
+ .field public mConfiguration:Lcom/android/server/lights/LightConfiguration;
+ 
++.field public mExtendedBrightness:I
++
+ .field public final mHwLight:Landroid/hardware/light/HwLight;
+ 
+ .field public mInitialized:Z
+@@ -316,6 +318,26 @@
+ .end method
+ 
+ .method public final setLightLocked(IIII)V
++    .locals 6
++
++    move-object v0, p0
++
++    move v1, p1
++
++    move v2, p2
++
++    move v3, p3
++
++    move v4, p4
++
++    const/4 v5, -0x1
++
++    invoke-virtual/range {v0 .. v5}, Lcom/android/server/lights/LightsService$LightImpl;->setLightLocked(IIIII)V
++
++    return-void
++.end method
++
++.method public final setLightLocked(IIIII)V
+     .locals 3
+ 
+     iget-boolean v0, p0, Lcom/android/server/lights/LightsService$LightImpl;->mInitialized:Z
+@@ -340,6 +362,10 @@
+ 
+     if-ne p4, v0, :cond_0
+ 
++    iget v0, p0, Lcom/android/server/lights/LightsService$LightImpl;->mExtendedBrightness:I
++
++    if-ne p5, v0, :cond_0
++
+     iget-boolean v0, v1, Lcom/android/server/lights/LightsService;->mIsSvcLightChanged:Z
+ 
+     if-eqz v0, :cond_2
+@@ -361,6 +387,8 @@
+ 
+     iput p4, p0, Lcom/android/server/lights/LightsService$LightImpl;->mOffMS:I
+ 
++    iput p5, p0, Lcom/android/server/lights/LightsService$LightImpl;->mExtendedBrightness:I
++
+     iget-object v0, p0, Lcom/android/server/lights/LightsService$LightImpl;->mHwLight:Landroid/hardware/light/HwLight;
+ 
+     iget-byte v1, v0, Landroid/hardware/light/HwLight;->type:B
+@@ -414,13 +442,33 @@
+ 
+     if-nez v0, :cond_2
+ 
+-    invoke-virtual {p0, p1, p2, p3, p4}, Lcom/android/server/lights/LightsService$LightImpl;->setLightUnchecked(IIII)V
++    invoke-virtual/range {p0 .. p5}, Lcom/android/server/lights/LightsService$LightImpl;->setLightUnchecked(IIIII)V
+ 
+     :cond_2
+     return-void
+ .end method
+ 
+ .method public final setLightUnchecked(IIII)V
++    .locals 6
++
++    move-object v0, p0
++
++    move v1, p1
++
++    move v2, p2
++
++    move v3, p3
++
++    move v4, p4
++
++    const/4 v5, -0x1
++
++    invoke-virtual/range {v0 .. v5}, Lcom/android/server/lights/LightsService$LightImpl;->setLightUnchecked(IIIII)V
++
++    return-void
++.end method
++
++.method public final setLightUnchecked(IIIII)V
+     .locals 5
+ 
+     const-string/jumbo v0, "LightsService"
+@@ -540,7 +588,7 @@
+ 
+     check-cast p1, Lvendor/samsung/hardware/light/ISehLights$Stub$Proxy;
+ 
+-    invoke-virtual {p1, p0, v2}, Lvendor/samsung/hardware/light/ISehLights$Stub$Proxy;->setLightState(ILandroid/hardware/light/HwLightState;)V
++    invoke-virtual {p1, p0, v2, p5}, Lvendor/samsung/hardware/light/ISehLights$Stub$Proxy;->setLightState(ILandroid/hardware/light/HwLightState;I)V
+     :try_end_0
+     .catch Landroid/os/RemoteException; {:try_start_0 .. :try_end_0} :catch_0
+     .catch Ljava/lang/UnsupportedOperationException; {:try_start_0 .. :try_end_0} :catch_0
+diff --git a/smali_classes2/com/android/server/power/PowerManagerUtil.smali b/smali_classes2/com/android/server/power/PowerManagerUtil.smali
+index b36df5a..53291aa 100644
+--- a/smali_classes2/com/android/server/power/PowerManagerUtil.smali
++++ b/smali_classes2/com/android/server/power/PowerManagerUtil.smali
+@@ -971,6 +971,8 @@
+     move v0, v2
+ 
+     :goto_1d
++    const/4 v0, 0x1
++
+     sput-boolean v0, Lcom/android/server/power/PowerManagerUtil;->SEC_FEATURE_USE_LIGHTS_HAL_EXTENSION:Z
+ 
+     const-string v0, "-1"
+diff --git a/smali_classes2/vendor/samsung/hardware/light/ISehLights$Stub$Proxy.smali b/smali_classes2/vendor/samsung/hardware/light/ISehLights$Stub$Proxy.smali
+index 0daa3cb..216334e 100644
+--- a/smali_classes2/vendor/samsung/hardware/light/ISehLights$Stub$Proxy.smali
++++ b/smali_classes2/vendor/samsung/hardware/light/ISehLights$Stub$Proxy.smali
+@@ -92,7 +92,7 @@
+     throw p0
+ .end method
+ 
+-.method public final setLightState(ILandroid/hardware/light/HwLightState;)V
++.method public final setLightState(ILandroid/hardware/light/HwLightState;I)V
+     .locals 3
+ 
+     iget-object v0, p0, Lvendor/samsung/hardware/light/ISehLights$Stub$Proxy;->mRemote:Landroid/os/IBinder;
+@@ -116,9 +116,7 @@
+ 
+     invoke-virtual {v0, p2, p1}, Landroid/os/Parcel;->writeTypedObject(Landroid/os/Parcelable;I)V
+ 
+-    const/4 p2, -0x1
+-
+-    invoke-virtual {v0, p2}, Landroid/os/Parcel;->writeInt(I)V
++    invoke-virtual {v0, p3}, Landroid/os/Parcel;->writeInt(I)V
+ 
+     iget-object p0, p0, Lvendor/samsung/hardware/light/ISehLights$Stub$Proxy;->mRemote:Landroid/os/IBinder;
+ 
+-- 
+2.43.0
+

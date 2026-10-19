@@ -1,0 +1,27 @@
+From 0000000000000000000000000000000000000003 Mon Sep 17 00:00:00 2001
+From: MinsOS <minsos@local>
+Date: Mon, 5 Oct 2026 12:00:00 +0900
+Subject: [PATCH] Register the face@2.0 HAL as a weak biometric, like stock y2q (One UI 9)
+
+AuthService$Injector.getConfiguration() registers the HIDL face sensor as
+"1:8:4095" (BIOMETRIC_CONVENIENCE) when SemBiometricFeature.FEATURE_JDM_HAL is
+set and "1:8:255" (BIOMETRIC_WEAK) otherwise, the same rule as stock SM-G986N
+A13 Utils. Stock y2q is in_house, so its face was weak; y2q sets jdm only to
+load the V2_0 face HAL class. Read the flag as false for the face strength
+only. The fingerprint line above it is left on jdm.
+---
+diff --git a/smali/com/android/server/biometrics/AuthService$Injector.smali b/smali/com/android/server/biometrics/AuthService$Injector.smali
+index 73225df..c666fdc 100644
+--- a/smali/com/android/server/biometrics/AuthService$Injector.smali
++++ b/smali/com/android/server/biometrics/AuthService$Injector.smali
+@@ -89,7 +89,7 @@
+     invoke-virtual {p0, p1}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
+ 
+     :cond_2
+-    sget-boolean p1, Lcom/android/server/biometrics/SemBiometricFeature;->FEATURE_JDM_HAL:Z
++    const/4 p1, 0x0
+ 
+     if-eqz p1, :cond_3
+ 
+-- 
+2.45.0
