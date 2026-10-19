@@ -1,0 +1,4 @@
+id=sepolicy_30_mapping
+name=SELinux 30.0 vendor mapping for an Android 17 system
+author=MinsOS
+description=Restores Android 17 compatibility mappings for stock SM8250 vendor policy version 30.0.
