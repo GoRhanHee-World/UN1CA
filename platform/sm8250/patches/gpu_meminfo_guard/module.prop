@@ -1,0 +1,4 @@
+id=gpu_meminfo_guard
+name=No GPU-memory BPF reads on a kernel without the gpu_mem tracepoint
+author=MinsOS
+description=Android 17's libmeminfo aborts the process when /sys/fs/bpf/map_gpuMem_gpu_mem_total_map is missing (BpfMapRO::abortOnMismatch), and the map only exists if gpuMem.bpf loads, which needs the gpu_mem/gpu_mem_total tracepoint y2q's 4.19 kernel does not have. system_server called it about 8 s after start (AppProfiler cached-apps watermark) and died every time, Rescue Party rebooting (One UI 9 r5, 10-04). The Java callers of Debug.getGpuTotalUsageKb/getGpuPrivateMemoryKb get -1 ("not available", which they already handle) instead of the native call.
