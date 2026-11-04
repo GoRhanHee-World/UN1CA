@@ -1,0 +1,29 @@
+# MinsOS nfc_jpn (11-04): pick the NFC HAL by sales code, the same signal kernel 0041 uses for pn547/sec-nfc.
+# KDI (au) and DCM (docomo) units have a Samsung SENN82AB; everything else this zip installs on has an NXP SN100U.
+#
+# The chip name used to be a vendor build.prop line (NXP_SN100U, stock SM-G986N); nfc_jpn deletes it so it can be
+# set here. Stock SCG02 reads SENN82AB from its own build.prop. The compound actions come first: on a Japanese
+# unit the plain one below then fails to change the read-only value, which is the intent.
+on init && property:ro.boot.sales_code=KDI
+    setprop ro.vendor.nfc.feature.chipname SENN82AB
+
+on init && property:ro.boot.sales_code=DCM
+    setprop ro.vendor.nfc.feature.chipname SENN82AB
+
+on init
+    setprop ro.vendor.nfc.feature.chipname NXP_SN100U
+
+# The NXP service (nxp.android.hardware.nfc@1.2-service.rc) is untouched: it declares the INfc and ISehNfc
+# interfaces and hwservicemanager starts it on the first getService. A second service may not declare the same
+# interfaces (init rejects the redefinition), so this one declares none and is started ahead of any NFC client.
+# It starts on boot, after init.nfc.samsung.rc (parsed first, same trigger) has made /dev/sec-nfc nfc:nfc 0660 -
+# no ueventd rule covers it - and seconds before the persistent NFC app asks: the HAL registers both interfaces
+# at once, so that getService finds it and never starts the NXP one.
+service vendor.nfc_hal_sec /vendor/bin/hw/sec.android.hardware.nfc@1.2-service
+    class hal
+    disabled
+    user nfc
+    group nfc net_bt_admin
+
+on boot && property:ro.vendor.nfc.feature.chipname=SENN82AB
+    start vendor.nfc_hal_sec
