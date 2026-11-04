@@ -1,6 +1,6 @@
 id=nfc_jpn
-name=NFC on the Japanese S20+ (SCG02, SC-52A): Samsung SENN82AB HAL from stock SCG02
+name=NFC on the Japanese S20 and S20+ (SCG01, SC-51A, SCG02, SC-52A): Samsung SENN82AB HAL from their stock
 version=v1
 versionCode=1
 author=MinsOS
-description=The Japanese S20+ has a Samsung SENN82AB NFC chip where the Korean and Hong Kong models have an NXP SN100U, and this ROM runs the Korean vendor, so NFC never came up on an SCG02. Kernel 0041 picks pn547 or sec-nfc by sales code; this adds the Samsung NFC HAL, its library, configuration and firmware from stock SCG02, and starts that HAL instead of the NXP one on units with sales code KDI or DCM. FeliCa (Osaifu-Keitai) stays unavailable: the donor has no FeliCa middleware.
+description=The Japanese S20 and S20+ have a Samsung SENN82AB NFC chip where the Korean and Hong Kong models have an NXP SN100U, and this ROM runs the Korean vendor, so NFC never came up on them. Kernel 0041 picks pn547 or sec-nfc by sales code; this adds the Samsung NFC HAL, its library, configuration and firmware from stock SCG02 (SCG01 for the S20, whose RF register file differs), and starts that HAL instead of the NXP one on units with sales code KDI or DCM. FeliCa (Osaifu-Keitai) stays unavailable: the donor has no FeliCa middleware.
