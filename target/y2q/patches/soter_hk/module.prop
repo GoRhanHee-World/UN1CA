@@ -1,0 +1,6 @@
+id=soter_hk
+name=WeChat fingerprint payment (Soter) on the Hong Kong, China and Taiwan S20 series
+version=v1
+versionCode=1
+author=MinsOS
+description=The G9810, G9860 and G9880 ship Samsung's Soter service, which WeChat Pay uses for fingerprint payment; this ROM runs the Korean vendor and the Korean donor's system, which have neither half. This adds the Soter HAL and its libraries from stock SM-G9860 TGY, declares it in the manifest as stock TGY does, starts it only on those three models (their NON-HLOS carries the trustlet), and adds SecSoterService and SoterSskdsSerivce from stock SM-S9480 TGY (the donor already lists both in its permission and preload files). Alipay (IFAA) is not added: the Hong Kong framework talks to an AIDL IFAA HAL this vendor does not have.

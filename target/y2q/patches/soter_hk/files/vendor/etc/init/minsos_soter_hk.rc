@@ -1,0 +1,24 @@
+# MinsOS soter_hk (11-04): the Soter HAL (WeChat fingerprint payment) from stock SM-G9860 TGY.
+#
+# Only the Hong Kong, China and Taiwan units carry its trustlet: their NON-HLOS has tigerfp, the Korean one does
+# not (G9860ZHUCHZE1 vs G981NKSS8IYC2). NON-HLOS is not written by this ROM, so each unit keeps its own. The
+# service therefore starts only on those models; everywhere else it stays defined and never runs.
+#
+# Same definition as stock vendor.samsung.hardware.soter@3.0-service.rc plus "disabled". No "interface" lines,
+# as stock: the manifest declares ISehSoter on every unit, and a client on a unit without the service (Korean,
+# Japanese) gets null straight away - SecSoterService asks with getService() (no retry) and the AIDL name is not
+# declared at all - instead of hwservicemanager starting this on demand.
+service vendor.hal_soter_v3.0 /vendor/bin/hw/vendor.samsung.hardware.soter@3.0-service
+    class late_start
+    user system
+    group system input
+    disabled
+
+on boot && property:ro.boot.em.model=SM-G9810
+    enable vendor.hal_soter_v3.0
+
+on boot && property:ro.boot.em.model=SM-G9860
+    enable vendor.hal_soter_v3.0
+
+on boot && property:ro.boot.em.model=SM-G9880
+    enable vendor.hal_soter_v3.0
