@@ -1,0 +1,30 @@
+# MinsOS dualsim_chn (11-04): run the SIM configuration that matches the model.
+#
+# /vendor/bin/secril_config_svc writes ro.multisim.simslotcount, ro.vendor.multisim.simslotcount and
+# persist.radio.multisim.config from constants compiled into it: the Korean one "1" and "ss", the stock SM-G9860
+# (TGY) one "2" and "dsds" - the two binaries are the same code (ops/s20_series/compare_g9860_20261104.txt). The
+# counts are read-only (first writer wins) and the mode is persistent (last writer wins), so running both in any
+# order leaves a mix: exactly one runs. init.vendor.rilcommon.rc no longer starts sim_config on fs; this file does.
+on init
+    setprop vendor.minsos.sim_config ss
+
+on init && property:ro.boot.em.model=SM-G9810
+    setprop vendor.minsos.sim_config ds
+
+on init && property:ro.boot.em.model=SM-G9860
+    setprop vendor.minsos.sim_config ds
+
+on init && property:ro.boot.em.model=SM-G9880
+    setprop vendor.minsos.sim_config ds
+
+service sim_config_ds /vendor/bin/secril_config_svc_ds SimConfig
+    user radio
+    group radio
+    oneshot
+    disabled
+
+on fs && property:vendor.minsos.sim_config=ss
+    exec_start sim_config
+
+on fs && property:vendor.minsos.sim_config=ds
+    exec_start sim_config_ds

@@ -1,0 +1,6 @@
+id=dualsim_chn
+name=Second SIM on the Hong Kong, China and Taiwan S20 family (SM-G9810, SM-G9860, SM-G9880)
+version=v1
+versionCode=1
+author=MinsOS
+description=The S20 family runs the Korean vendor, whose SIM configuration service hardcodes one slot ("1", "ss") and whose VINTF manifest declares the radio HALs for slot 1 only, so the dual-SIM Hong Kong, China and Taiwan models ran on one SIM. Their stock service (SM-G9860 TGY, same code, constants "2" and "dsds") is added next to it and run instead on those three models, the manifest declares the second slot as stock TGY does, and the Hong Kong/Taiwan and au network name tables the Korean RIL already looks for are added.
