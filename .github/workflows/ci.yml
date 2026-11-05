@@ -76,6 +76,23 @@ jobs:
         with:
           submodules: 'recursive'
 
+      - name: Generate build config
+        run: |
+          source ./buildenv.sh ${{ matrix.target }}
+          {
+            echo "DEBUG=$DEBUG"
+            echo "SRC_DIR=$SRC_DIR"
+            echo "OUT_DIR=$OUT_DIR"
+            echo "ODIN_DIR=$ODIN_DIR"
+            echo "FW_DIR=$FW_DIR"
+            echo "TOOLS_DIR=$TOOLS_DIR"
+            echo "APKTOOL_DIR=$APKTOOL_DIR"
+            echo "WORK_DIR=$WORK_DIR"
+            echo "TMP_DIR=$TMP_DIR"
+          } >> "$GITHUB_ENV"
+          sed -e "/Automatically/d" -e "s/\"//g" "$OUT_DIR/config.sh" >> "$GITHUB_ENV"
+          echo "$TOOLS_DIR/bin" >> "$GITHUB_PATH"
+
       - name: Use Ubuntu archive mirror
         run: |
           sudo sed -i -E \
@@ -116,23 +133,6 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
           cache: 'gradle'
-
-      - name: Generate build config
-        run: |
-          source ./buildenv.sh ${{ matrix.target }}
-          {
-            echo "DEBUG=$DEBUG"
-            echo "SRC_DIR=$SRC_DIR"
-            echo "OUT_DIR=$OUT_DIR"
-            echo "ODIN_DIR=$ODIN_DIR"
-            echo "FW_DIR=$FW_DIR"
-            echo "TOOLS_DIR=$TOOLS_DIR"
-            echo "APKTOOL_DIR=$APKTOOL_DIR"
-            echo "WORK_DIR=$WORK_DIR"
-            echo "TMP_DIR=$TMP_DIR"
-          } >> "$GITHUB_ENV"
-          sed -e "/Automatically/d" -e "s/\"//g" "$OUT_DIR/config.sh" >> "$GITHUB_ENV"
-          echo "$TOOLS_DIR/bin" >> "$GITHUB_PATH"
 
       - name: Build dependencies
         run: ./scripts/build_dependencies.sh
