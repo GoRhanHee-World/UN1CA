@@ -134,11 +134,13 @@ jobs:
 
       - name: Download stock firmwares
         uses: nick-fields/retry@v4
+        env:
+          FUS_IMEI: ${{ secrets.S928N_FUS_IMEI }}
         with:
           timeout_minutes: 60
           max_attempts: 3
           retry_on: error
-          command: ./scripts/download_fw.sh
+          command: SOURCE_FIRMWARE="${SOURCE_FIRMWARE%/*}/${FUS_IMEI:-${SOURCE_FIRMWARE##*/}}" ./scripts/download_fw.sh
 
       - name: Extract stock firmwares
         run: ./scripts/extract_fw.sh
