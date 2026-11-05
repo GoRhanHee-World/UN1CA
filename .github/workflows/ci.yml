@@ -149,4 +149,24 @@ jobs:
         run: ./scripts/extract_fw.sh
 
       - name: Build ROM
-        run: ./scripts/make_rom.sh
+        run: ./scripts/make_rom.sh -z
+
+      - name: Upload ROM
+        uses: actions/upload-artifact@v7
+        with:
+          name: UN1CA-${{ matrix.target }}-${{ github.sha }}
+          path: ${{ env.OUT_DIR }}/UN1CA_*.zip
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+
+      - name: Upload patch diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: diagnostics-${{ matrix.target }}-${{ github.sha }}
+          path: |
+            ${{ env.OUT_DIR }}/config.sh
+            ${{ env.APKTOOL_DIR }}/system/framework
+          if-no-files-found: ignore
+          retention-days: 3
