@@ -1,9 +1,9 @@
 SKIPUNZIP=1
 
-_ISL_FW="SM-S918B/EUX"
-_ISL_DIR="$FW_DIR/SM-S918B_EUX"
-_ISL_PIN="S918BXXUAGZIF/S918BOXMAGZIF/S918BXXUAGZIF"
-_ISL_RUNTIME_SHA="cd2f0aea718209191add1af49a627b31f12b8f59a850403ec00e85c19fc1b412"
+_ISL_FW="SM-S918N/KOO"
+_ISL_DIR="$FW_DIR/SM-S918N_KOO"
+_ISL_PIN="S918NKSU8GZIF/S918NOKR8GZIF/S918NKSU8GZIF"
+_ISL_RUNTIME_SHA="14e2490e2ed1df62d91988e22f617952770b5bbb43fd6de206bbee81fd182769"
 _SYS="$WORK_DIR/system/system"
 _LIST="$MODPATH/island_lib.txt"
 _BIONIC="libc.so libm.so libdl.so libdl_android.so"
@@ -14,7 +14,7 @@ if [ -e "$_SYS/lib/libc.so" ] || [ -L "$_SYS/lib/libc.so" ]; then
 fi
 
 [ -f "$_ISL_DIR/.extracted" ] \
-    || ABORT "[$TARGET_CODENAME] island32: the island source $_ISL_FW is not extracted (out/fw/SM-S918B_EUX)"
+    || ABORT "[$TARGET_CODENAME] island32: the island source $_ISL_FW is not extracted (out/fw/SM-S918N_KOO)"
 [ "$(cat "$_ISL_DIR/.extracted")" = "$_ISL_PIN" ] \
     || ABORT "[$TARGET_CODENAME] island32: island source is $(cat "$_ISL_DIR/.extracted"), measured was $_ISL_PIN"
 [ "$(wc -l < "$_LIST")" = "43" ] || ABORT "[$TARGET_CODENAME] island32: island_lib.txt is not the 43-file list"
