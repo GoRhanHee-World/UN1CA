@@ -1,3 +1,11 @@
+This fork ports UN1CA to the Korean Snapdragon Galaxy S20 family: x1q (SM-G981N), y2q (SM-G986N), and z3q (SM-G988N). The QSSI donor is SM-S928N/KOO, targeting Android 17 / One UI 9. The auxiliary ARM32 runtime comes from SM-S918N/KOO, and each device keeps its own stock vendor firmware.
+
+Upstream UN1CA history is preserved. Device support starts from [ArtisanROM 64257508](https://github.com/ssch71/ArtisanROM/commit/64257508f1200a77929f8f3088f0708a906c530e); Android 17 compatibility changes are adapted from [MinsOS](https://gitlab.com/minsos1/MinsOS), with original authors and source commits recorded in the port commits. Firmware downloading and extraction use the original UN1CA scripts.
+
+Build x1q through the manual [CI workflow](https://github.com/GoRhanHee-World/UN1CA/actions/workflows/ci.yml). This is an initial port; boot and hardware operation have not been verified. The upstream feature list below describes UN1CA and does not establish feature support on this port.
+
+---
+
 <h1 align="center">
   <img loading="lazy" src="readme-res/banner.png"/>
 </h1>
