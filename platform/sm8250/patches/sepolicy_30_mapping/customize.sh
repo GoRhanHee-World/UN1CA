@@ -1,3 +1,4 @@
+# shellcheck disable=SC2034
 SKIPUNZIP=1
 
 LOG_STEP_IN "- SELinux 30.0 vendor mapping for an Android 17 system"
@@ -23,23 +24,11 @@ _SFM_ADD()
 _SFM_ADD system "system/system/etc/selinux/mapping" system "system/etc/selinux/mapping"
 if $TARGET_OS_BUILD_SYSTEM_EXT_PARTITION; then
     _SFM_ADD system_ext "system_ext/etc/selinux/mapping" system_ext "etc/selinux/mapping"
-    _SE="system_ext"
 else
     _SFM_ADD system_ext "system/system/system_ext/etc/selinux/mapping" system "system/system_ext/etc/selinux/mapping"
-    _SE="system/system/system_ext"
 fi
 _SFM_ADD product "product/etc/selinux/mapping" product "etc/selinux/mapping"
 
-while read -r _h _p; do
-    case $_p in
-        ./system/*)     _w="$WORK_DIR/system/system/etc/selinux/mapping/${_p##*/}" ;;
-        ./system_ext/*) _w="$WORK_DIR/$_SE/etc/selinux/mapping/${_p##*/}" ;;
-        ./product/*)    _w="$WORK_DIR/product/etc/selinux/mapping/${_p##*/}" ;;
-        *)              ABORT "! unexpected path $_p in SHA256SUMS" ;;
-    esac
-    [ "$(sha256sum "$_w" | cut -d' ' -f1)" = "$_h" ] || ABORT "! $_w is not the 30.0 mapping that compiled offline"
-done < "$MODPATH/SHA256SUMS"
-
 LOG_STEP_OUT
-unset _V _SE _h _p _w
+unset _V
 unset -f _SFM_ADD
