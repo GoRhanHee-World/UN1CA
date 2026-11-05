@@ -2,6 +2,16 @@ name: CI
 
 on:
   workflow_dispatch:
+    inputs:
+      target:
+        description: Device to build
+        required: true
+        default: x1q
+        type: choice
+        options:
+          - x1q
+          - y2q
+          - z3q
   pull_request:
   push:
     branches:
@@ -42,14 +52,16 @@ jobs:
 
       - name: Generate CI matrix
         id: generate-matrix
+        env:
+          SELECTED_TARGET: ${{ inputs.target || 'x1q' }}
         run: |
-          matrix="$(find target -mindepth 1 -maxdepth 1 -type d -printf '%f\n' \
-            | sort | jq -R -s -c 'split("\n") | map(select(length > 0))')"
+          matrix="$(jq -cn --arg target "$SELECTED_TARGET" '[$target]')"
           echo "$matrix"
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
 
   build:
     name: Build
+    if: github.event_name == 'workflow_dispatch'
     needs: [shellcheck, generate-matrix]
     runs-on: ubuntu-24.04
 
