@@ -70,4 +70,4 @@ grep -q "^ro.product.product.cpu.abilist32=" "$WORK_DIR/product/etc/build.prop" 
 for p in bin/app_process32 etc/init/hw/init.zygote64_32.rc; do
     [ -e "$_SYS/$p" ] && ABORT "[$TARGET_CODENAME] island32: $p is still there"
 done
-LOG "- Island in: $(wc -l < "$_LIST") libs + 5 links + runtime APEX ${_ISL_RUNTIME_SHA:0:12} ($($_SIM && echo simulation || echo 64-bit-only donor))"
+LOG "- Island in: $(wc -l < "$_LIST") libs + 5 links + runtime APEX ${_ISL_RUNTIME_SHA:0:12} (64-bit-only donor)"
