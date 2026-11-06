@@ -1,4 +1,4 @@
 id=island32
 name=32-bit island for a 64-bit-only donor
 author=MinsOS
-description=Restores the Android 17 ARM32 runtime required by stock SM8250 vendor HALs on a 64-bit-only donor.
+description=Installs the pinned ARM32 runtime prebuilts required by stock SM8250 vendor HALs on a 64-bit-only donor.
