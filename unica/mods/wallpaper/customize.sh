@@ -71,22 +71,26 @@ ENCODE_MP4()
 ADD_TO_WORK_DIR "pa2qxxx" "system" \
     "system/priv-app/wallpaper-res/wallpaper-res.apk" 0 0 644 "u:object_r:system_file:s0"
 DECODE_APK "system" "system/priv-app/wallpaper-res/wallpaper-res.apk"
-for f in "$APKTOOL_DIR/system/priv-app/wallpaper-res/wallpaper-res.apk/res/drawable-nodpi/dex_wallpaper_"*.webp; do
+for f in "$APKTOOL_DIR/system/priv-app/wallpaper-res/wallpaper-res.apk/res/"drawable-nodpi*/dex_wallpaper_*.webp; do
     COMPRESS_WEBP "$f"
 done
-for f in "$APKTOOL_DIR/system/priv-app/wallpaper-res/wallpaper-res.apk/res/drawable-nodpi/wallpaper_"*.webp; do
+for f in "$APKTOOL_DIR/system/priv-app/wallpaper-res/wallpaper-res.apk/res/"drawable-nodpi*/wallpaper_*.webp; do
     COMPRESS_WEBP "$f"
 done
 for f in "$APKTOOL_DIR/system/priv-app/wallpaper-res/wallpaper-res.apk/res/raw/video_"*.mp4; do
     ENCODE_MP4 "$f"
 done
-LOG "- Downloading latest Samsung Wallpaper app"
-DOWNLOAD_FILE "$(GET_GALAXY_STORE_DOWNLOAD_URL "000008552712")" \
-    "$WORK_DIR/system/system/priv-app/SpriteWallpaper/SpriteWallpaper.apk"
+ADD_TO_WORK_DIR "$SOURCE_FIRMWARE" "system" \
+    "system/priv-app/SpriteWallpaper/SpriteWallpaper.apk" 0 0 644 "u:object_r:system_file:s0"
+if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge "37" ]; then
+    APPLY_PATCH "system" "system/priv-app/SpriteWallpaper/SpriteWallpaper.apk" \
+        "$MODPATH/SpriteWallpaper-37.apk/0001-Paradigm-motion-at-60fps.patch"
+else
 APPLY_PATCH "system" "system/priv-app/SpriteWallpaper/SpriteWallpaper.apk" \
     "$MODPATH/SpriteWallpaper.apk/0001-Force-Paradigm-wallpapers-motion-animator.patch"
 APPLY_PATCH "system" "system/priv-app/SpriteWallpaper/SpriteWallpaper.apk" \
     "$MODPATH/SpriteWallpaper.apk/0002-Adjust-motion-animator-for-60fps-video-files.patch"
+fi
 APPLY_PATCH "system" "system/priv-app/wallpaper-res/wallpaper-res.apk" \
     "$MODPATH/wallpaper-res.apk/0001-Adjust-metadata-for-60fps-video-files.patch"
 

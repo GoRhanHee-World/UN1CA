@@ -130,7 +130,10 @@ if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "34" ]; then
     PATCHED=true
     APPLY_PATCH "system" "system/framework/framework.jar" \
         "$MODPATH/camera/framework.jar/0001-Backport-legacy-CameraMetadataNative-code.patch"
-    if $TARGET_CAMERA_SUPPORT_MASS_APP_FLAVOR; then
+    if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge "37" ]; then
+        APPLY_PATCH "system" "system/priv-app/SamsungCamera/SamsungCamera.apk" \
+            "$MODPATH/camera-37/SamsungCamera.apk/0001-Backport-legacy-Scene-detection-code.patch"
+    elif $TARGET_CAMERA_SUPPORT_MASS_APP_FLAVOR; then
         APPLY_PATCH "system" "system/priv-app/SamsungCamera/SamsungCamera.apk" \
             "$MODPATH/camera_mass/SamsungCamera.apk/0001-Backport-legacy-Scene-detection-code.patch"
     else
@@ -140,7 +143,10 @@ if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "34" ]; then
 fi
 if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "35" ]; then
     PATCHED=true
-    if $TARGET_CAMERA_SUPPORT_MASS_APP_FLAVOR; then
+    if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge "37" ]; then
+        APPLY_PATCH "system" "system/priv-app/SamsungCamera/SamsungCamera.apk" \
+            "$MODPATH/camera-37/SamsungCamera.apk/0002-Backport-SECOND_PICTURE_CONFIG.patch"
+    elif $TARGET_CAMERA_SUPPORT_MASS_APP_FLAVOR; then
         APPLY_PATCH "system" "system/priv-app/SamsungCamera/SamsungCamera.apk" \
             "$MODPATH/camera_mass/SamsungCamera.apk/0001-Backport-CONTROL_AVAILABLE_FEATURE_SECOND_PICTURE_CO.patch"
     else
@@ -186,8 +192,10 @@ if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "35" ]; then
     if [ -f "$WORK_DIR/vendor/bin/hw/vendor.samsung.hardware.light-service" ] && \
             ! xxd -p -c 4 "$WORK_DIR/vendor/bin/hw/vendor.samsung.hardware.light-service" | grep -q "1853$"; then
         PATCHED=true
+        if [[ "$TARGET_PLATFORM" != "sm8250" ]]; then
         APPLY_PATCH "system" "system/framework/services.jar" \
             "$MODPATH/lights/services.jar/0001-Backport-legacy-SehLights-HAL-code.patch"
+        fi
     fi
 fi
 
@@ -467,11 +475,13 @@ if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "35" ]; then
     if ! find "$WORK_DIR/vendor/etc" -maxdepth 1 -type f -name "media_codecs*.xml" ! -name "*performance*" -exec cat {} + | \
             grep -q -P -z '<MediaCodec\s[^>]*name="c2\.(?!android\.|sec\.)[^"]*"(?:(?!</?MediaCodec[\s>])[\s\S])*?="video/'; then
         PATCHED=true
+        if [ "$SOURCE_PLATFORM_SDK_VERSION" -lt "37" ]; then
         SMALI_PATCH "system" "system/app/MotionPhoto/MotionPhoto.apk" \
             "smali/com/samsung/android/motionphoto/utils/v2/video/VideoTranscoder.smali" "replace" \
             'configVideoEncoderParameters(Landroid/media/MediaFormat;Lcom/samsung/android/motionphoto/utils/v2/video/VideoTranscodingTask;)V' \
             'const p2, 0x7f420888' \
             'const p2, 0x7f000789'
+        fi
         SMALI_PATCH "system" "system/app/MotionPhoto/MotionPhoto.apk" \
             "smali/com/samsung/android/sum/core/filter/EncoderFilter.smali" "replace" \
             'configCodec(Lcom/samsung/android/sum/core/message/Message;)V' \
@@ -483,10 +493,16 @@ if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "35" ]; then
         elif xxd -p -c 0 "$WORK_DIR/system/system/lib/libstagefright.so" | grep -q "aaea002879d1264c0620"; then
             HEX_PATCH "$WORK_DIR/system/system/lib/libstagefright.so" \
                 "aaea002879d1264c0620" "aaea002879e0264c0620"
+        elif xxd -p -c 0 "$WORK_DIR/system/system/lib/libstagefright.so" | grep -q "ceec002848e0724c0620"; then
+            LOG "- ARM32 HDR10+ compatibility is already provided by the platform library"
         else
             ABORT "No known patch available for the supplied libstagefright.so"
         fi
-        if xxd -p -c 0 "$WORK_DIR/system/system/lib64/libstagefright.so" | grep -q "70690594205100347a9a40f9"; then
+        if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge "37" ]; then
+            # S928N EZJ1: do not reject HDR10+ HEVC in ACodec::setupVideoEncoder.
+            HEX_PATCH "$WORK_DIR/system/system/lib64/libstagefright.so" \
+                "1f090071204700547a9a40f9" "1f0900711f2003d57a9a40f9"
+        elif xxd -p -c 0 "$WORK_DIR/system/system/lib64/libstagefright.so" | grep -q "70690594205100347a9a40f9"; then
             HEX_PATCH "$WORK_DIR/system/system/lib64/libstagefright.so" \
                 "70690594205100347a9a40f9" "706905941f2003d57a9a40f9"
         elif xxd -p -c 0 "$WORK_DIR/system/system/lib64/libstagefright.so" | grep -q "864d0594604d00347a9a40f9"; then
@@ -507,11 +523,16 @@ if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "35" ]; then
             'configCodec(Lcom/samsung/android/sum/core/message/Message;)V' \
             'const v4, 0x7f420888' \
             'const v4, 0x7f000789'
+        VEX_COLOR_REGISTER="v3"
+        if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge "37" ]; then
+            VEX_COLOR_REGISTER="v2"
+        fi
         SMALI_PATCH "system" "system/priv-app/vexfwk_service/vexfwk_service.apk" \
             "smali/com/samsung/android/sum/core/filter/EncoderFilter.smali" "replace" \
             'configCodec(Lcom/samsung/android/sum/core/message/Message;)V' \
-            'const v3, 0x7f420888' \
-            'const v3, 0x7f000789'
+            "const $VEX_COLOR_REGISTER, 0x7f420888" \
+            "const $VEX_COLOR_REGISTER, 0x7f000789"
+        unset VEX_COLOR_REGISTER
     fi
 fi
 
@@ -586,16 +607,21 @@ if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "36" ]; then
             "onChange(Z)V" \
             "CLOUDY_WORK_MODE" \
             "1"
+        USB_HANDLER_CLASS="UsbHostRestrictor\$8"
+        if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge "37" ]; then
+            USB_HANDLER_CLASS="UsbHostRestrictor\$11"
+        fi
         SMALI_PATCH "system" "system/framework/services.jar" \
-            "smali_classes2/com/android/server/usb/UsbHostRestrictor\$8.smali" "replace" \
+            "smali_classes2/com/android/server/usb/$USB_HANDLER_CLASS.smali" "replace" \
             "handleMessage(Landroid/os/Message;)V" \
             "SUNNY_WORK_MODE" \
             "0"
         SMALI_PATCH "system" "system/framework/services.jar" \
-            "smali_classes2/com/android/server/usb/UsbHostRestrictor\$8.smali" "replace" \
+            "smali_classes2/com/android/server/usb/$USB_HANDLER_CLASS.smali" "replace" \
             "handleMessage(Landroid/os/Message;)V" \
             "RAINY_RESTRICT_MODE" \
             "2"
+        unset USB_HANDLER_CLASS
         SMALI_PATCH "system" "system/framework/services.jar" \
             "smali_classes2/com/android/server/usb/UsbService\$Lifecycle.smali" "replace" \
             "onBootPhase(I)V" \

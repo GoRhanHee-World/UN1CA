@@ -1,5 +1,6 @@
+Subject: [PATCH] Allow disabling secure windows
+
 diff --git a/smali_classes2/com/android/server/wm/WindowManagerService$SettingsObserver.smali b/smali_classes2/com/android/server/wm/WindowManagerService$SettingsObserver.smali
-index ec6dfbe..62eea03 100644
 --- a/smali_classes2/com/android/server/wm/WindowManagerService$SettingsObserver.smali
 +++ b/smali_classes2/com/android/server/wm/WindowManagerService$SettingsObserver.smali
 @@ -105,9 +105,9 @@
@@ -7,9 +8,10 @@ index ec6dfbe..62eea03 100644
      move-result-object v8
  
 -    const-string/jumbo v9, "disable_secure_windows"
-+    const-string/jumbo v9, "unica_secure_ss"
- 
+-
 -    invoke-static {v9}, Landroid/provider/Settings$Secure;->getUriFor(Ljava/lang/String;)Landroid/net/Uri;
++    const-string/jumbo v9, "unica_secure_ss"
++
 +    invoke-static {v9}, Landroid/provider/Settings$System;->getUriFor(Ljava/lang/String;)Landroid/net/Uri;
  
      move-result-object v9
@@ -39,9 +41,10 @@ index ec6dfbe..62eea03 100644
      move-result-object v0
  
 -    const-string/jumbo v2, "disable_secure_windows"
-+    const-string/jumbo v2, "unica_secure_ss"
- 
+-
 -    invoke-static {v0, v2, v1}, Landroid/provider/Settings$Secure;->getIntForUser(Landroid/content/ContentResolver;Ljava/lang/String;I)I
++    const-string/jumbo v2, "unica_secure_ss"
++
 +    invoke-static {v0, v2, v1}, Landroid/provider/Settings$System;->getInt(Landroid/content/ContentResolver;Ljava/lang/String;I)I
  
      move-result v0

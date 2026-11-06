@@ -173,12 +173,16 @@ BLUETOOTH_APK="$(find "$TMP_DIR/unknown/apex_payload/app" -type f -name Bluetoot
 BLUETOOTH_APP_DIR="$(basename "$(dirname "$BLUETOOTH_APK")")"
 
 # SEC_PRODUCT_FEATURE_BLUETOOTH_SUPPORT_A2DPSINK_PROFILE
+A2DP_SINK_PATCH="0001-Disable-SUPPORT_A2DPSINK_PROFILE-support.patch"
+if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge 37 ]; then
+    A2DP_SINK_PATCH="0002-Disable-SUPPORT_A2DPSINK_PROFILE-oneui9.patch"
+fi
 if $SOURCE_BLUETOOTH_SUPPORT_A2DPSINK_PROFILE; then
     if ! $TARGET_BLUETOOTH_SUPPORT_A2DPSINK_PROFILE; then
         DECODE_APK_IN_APEX "$TMP_DIR/unknown/apex_payload/app/$BLUETOOTH_APP_DIR/Bluetooth.apk"
         LOG "- Applying \"Disable SUPPORT_A2DPSINK_PROFILE support\" to apex_payload/app/$BLUETOOTH_APP_DIR/Bluetooth.apk"
         APPLY_PATCH "system" "system/app/$BLUETOOTH_APP_DIR/Bluetooth.apk" \
-            "$MODPATH/a2dp_sink/Bluetooth.apk/0001-Disable-SUPPORT_A2DPSINK_PROFILE-support.patch" \
+            "$MODPATH/a2dp_sink/Bluetooth.apk/$A2DP_SINK_PATCH" \
             > /dev/null
         DECODE_APK_IN_APEX "$TMP_DIR/unknown/apex_payload/javalib/framework-bluetooth.jar"
         LOG "- Applying \"Disable SUPPORT_A2DPSINK_PROFILE support\" to apex_payload/javalib/framework-bluetooth.jar"
@@ -247,9 +251,16 @@ fi
 # Disable VaultKeeper support
 # Before: [tbnz w8, #0, #0xXXXXXX]
 # After: [b #0xXXXXXX]
+if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge "37" ]; then
+    # S928N One UI 9: ldrb w8, [x20, #0x495]; tbnz w8, #0, +0xa8.
+    HEX_PATCH "$TMP_DIR/unknown/apex_payload/lib64/libbluetooth_jni.so" \
+        "8856523948050037" "885652392a000014" > /dev/null
+else
 LOG "- Patching \"28f7773948050037\" to \"28f777392a000014\" in apex_payload/lib64/libbluetooth_jni.so"
 HEX_PATCH "$TMP_DIR/unknown/apex_payload/lib64/libbluetooth_jni.so" \
     "28f7773948050037" "28f777392a000014" > /dev/null
+
+fi
 
 BUILD_APK_IN_APEX "$TMP_DIR/unknown/apex_payload/app/$BLUETOOTH_APP_DIR/Bluetooth.apk"
 BUILD_APK_IN_APEX "$TMP_DIR/unknown/apex_payload/javalib/framework-bluetooth.jar"
@@ -260,7 +271,7 @@ SIGN_APEX "$WORK_DIR/system/system/apex/com.android.bt.apex"
 
 rm -rf "$TMP_DIR"
 
-unset SOURCE_FIRMWARE_PATH BLUETOOTH_APK BLUETOOTH_APP_DIR
+unset SOURCE_FIRMWARE_PATH BLUETOOTH_APK BLUETOOTH_APP_DIR A2DP_SINK_PATCH
 unset -f BUILD_APK_IN_APEX BUILD_APEX BUILD_PAYLOAD \
     DECODE_APEX DECODE_APK_IN_APEX EXTRACT_PAYLOAD \
     LOG_MISSING_PATCHES SIGN_APEX SIGN_PAYLOAD

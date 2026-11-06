@@ -27,8 +27,13 @@ APPLY_PATCH "system" "system/framework/knoxsdk.jar" \
 SMALI_PATCH "system" "system/framework/samsungkeystoreutils.jar" \
     "smali/com/samsung/android/security/keystore/AttestParameterSpec.smali" "return" \
     'isVerifiableIntegrity()Z' 'true'
+if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge "37" ]; then
+    APPLY_PATCH "system" "system/framework/services.jar" \
+        "$MODPATH/services-37.jar/0001-Bypass-ICD-verification.patch"
+else
 APPLY_PATCH "system" "system/framework/services.jar" \
     "$MODPATH/services.jar/0001-Bypass-ICD-verification.patch"
+fi
 
 # Disable SAK in DarManagerService
 SMALI_PATCH "system" "system/framework/services.jar" \
@@ -47,9 +52,9 @@ SMALI_PATCH "system" "system/framework/services.jar" \
 
 # Spoof ROT/IntegrityStatus in Knox Matrix
 if [ -f "$WORK_DIR/system/system/priv-app/KmxService/KmxService.apk" ]; then
-    LOG "- Downloading latest Knox Matrix app"
-    DOWNLOAD_FILE "$(GET_GALAXY_STORE_DOWNLOAD_URL "com.samsung.android.kmxservice")" \
-        "$WORK_DIR/system/system/priv-app/KmxService/KmxService.apk"
+    LOG "- Using source firmware Knox Matrix app"
+    ADD_TO_WORK_DIR "$SOURCE_FIRMWARE" "system" \
+        "system/priv-app/KmxService/KmxService.apk" 0 0 644 "u:object_r:system_file:s0"
     SMALI_PATCH "system" "system/priv-app/KmxService/KmxService.apk" \
         "smali/com/samsung/android/kmxservice/common/util/RootOfTrust.smali" "return" \
         'getVerifiedBootState()I' '0'

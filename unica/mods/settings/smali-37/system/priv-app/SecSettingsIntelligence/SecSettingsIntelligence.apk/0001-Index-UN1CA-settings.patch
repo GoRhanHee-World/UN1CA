@@ -1,0 +1,26 @@
+Subject: [PATCH] Index UN1CA settings
+
+diff --git a/smali_classes2/com/samsung/android/settings/intelligence/search/categorizing/TopLevelKeysCollector.smali b/smali_classes2/com/samsung/android/settings/intelligence/search/categorizing/TopLevelKeysCollector.smali
+index c1936ef..0a2c55f 100644
+--- a/smali_classes2/com/samsung/android/settings/intelligence/search/categorizing/TopLevelKeysCollector.smali
++++ b/smali_classes2/com/samsung/android/settings/intelligence/search/categorizing/TopLevelKeysCollector.smali
+@@ -45,7 +45,7 @@
+ .end method
+ 
+ .method public constructor <init>(Landroid/content/Context;)V
+-    .locals 37
++    .locals 38
+ 
+     move-object/from16 v0, p0
+ 
+@@ -123,7 +123,9 @@
+ 
+     const-string v34, "top_level_about_phone"
+ 
+-    filled-new-array/range {v1 .. v36}, [Ljava/lang/String;
++    const-string v37, "top_level_unica"
++
++    filled-new-array/range {v1 .. v37}, [Ljava/lang/String;
+ 
+     move-result-object v1
+ 

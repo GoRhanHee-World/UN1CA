@@ -1,5 +1,6 @@
+Subject: [PATCH] Allow app downgrade
+
 diff --git a/smali_classes2/com/android/server/pm/PackageManagerService.smali b/smali_classes2/com/android/server/pm/PackageManagerService.smali
-index cffd9f6..044efd7 100644
 --- a/smali_classes2/com/android/server/pm/PackageManagerService.smali
 +++ b/smali_classes2/com/android/server/pm/PackageManagerService.smali
 @@ -22243,6 +22243,22 @@

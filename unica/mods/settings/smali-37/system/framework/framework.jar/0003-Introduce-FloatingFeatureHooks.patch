@@ -1,5 +1,6 @@
+Subject: [PATCH] Introduce FloatingFeatureHooks
+
 diff --git a/smali_classes6/com/samsung/android/feature/SemFloatingFeature.smali b/smali_classes6/com/samsung/android/feature/SemFloatingFeature.smali
-index df11b72..17dbcab 100644
 --- a/smali_classes6/com/samsung/android/feature/SemFloatingFeature.smali
 +++ b/smali_classes6/com/samsung/android/feature/SemFloatingFeature.smali
 @@ -486,7 +486,7 @@
@@ -132,7 +133,6 @@ index df11b72..17dbcab 100644
  
 diff --git a/smali_classes6/io/mesalabs/unica/FloatingFeatureHooks.smali b/smali_classes6/io/mesalabs/unica/FloatingFeatureHooks.smali
 new file mode 100644
-index 0000000..c8afba5
 --- /dev/null
 +++ b/smali_classes6/io/mesalabs/unica/FloatingFeatureHooks.smali
 @@ -0,0 +1,394 @@

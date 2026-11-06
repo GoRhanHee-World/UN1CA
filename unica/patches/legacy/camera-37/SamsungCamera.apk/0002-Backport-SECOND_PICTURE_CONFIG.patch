@@ -1,0 +1,133 @@
+Subject: [PATCH] Backport legacy extra picture streams to One UI 9 camera
+
+diff --git a/smali/androidx/work/impl/e.smali b/smali_classes5/androidx/work/impl/e.smali
+rename from smali/androidx/work/impl/e.smali
+rename to smali_classes5/androidx/work/impl/e.smali
+--- a/smali/androidx/work/impl/e.smali
++++ b/smali_classes5/androidx/work/impl/e.smali
+@@ -2487,6 +2487,8 @@
+ 
+     :cond_63
+     iget-object v8, v6, Lu8/e;->s:Lcom/samsung/android/camera/core2/CamCapability;
++
++    invoke-static {v8, v5, v7}, Lx8/LegacySecondPictureConfig;->configure(Lcom/samsung/android/camera/core2/CamCapability;Lx8/k;Ll9/a2;)V
+ 
+     invoke-virtual {v8}, Lcom/samsung/android/camera/core2/CamCapability;->u()Ljava/lang/Boolean;
+ 
+diff --git a/smali_classes2/com/samsung/android/camera/core2/CamCapability.smali b/smali_classes2/com/samsung/android/camera/core2/CamCapability.smali
+--- a/smali_classes2/com/samsung/android/camera/core2/CamCapability.smali
++++ b/smali_classes2/com/samsung/android/camera/core2/CamCapability.smali
+@@ -2840,3 +2840,24 @@
+ 
+     return-object p0
+ .end method
++
++.method public final isLegacySecondPictureConfigSupported()Z
++    .locals 2
++
++    iget-object v0, p0, Lcom/samsung/android/camera/core2/CamCapability;->e:Lcom/samsung/android/camera/core2/local/capability/FeatureCapability;
++    iget-object v0, v0, Lcom/samsung/android/camera/core2/local/capability/FeatureCapability;->a:Lcom/samsung/android/camera/core2/CamCapability$CameraCharacteristicsSupplier;
++    invoke-interface {v0}, Lcom/samsung/android/camera/core2/CamCapability$CameraCharacteristicsSupplier;->a()Landroid/hardware/camera2/CameraCharacteristics;
++    move-result-object v0
++    sget-object v1, Lcom/samsung/android/camera/core2/local/vendorkey/SemCameraCharacteristics;->h:Landroid/hardware/camera2/CameraCharacteristics$Key;
++    invoke-static {v0, v1}, Lcom/samsung/android/camera/core2/local/vendorkey/SemCameraCharacteristics;->a(Landroid/hardware/camera2/CameraCharacteristics;Landroid/hardware/camera2/CameraCharacteristics$Key;)Ljava/lang/Object;
++    move-result-object v0
++    check-cast v0, [I
++    if-eqz v0, :unica_no_second_picture
++    const/16 v1, 0x14
++    invoke-static {v0, v1}, Lcom/samsung/android/camera/core2/util/ArrayUtils;->contains([II)Z
++    move-result v0
++    return v0
++    :unica_no_second_picture
++    const/4 v0, 0x0
++    return v0
++.end method
+diff --git a/smali_classes2/com/samsung/android/camera/core2/maker/MakerBase.smali b/smali_classes2/com/samsung/android/camera/core2/maker/MakerBase.smali
+--- a/smali_classes2/com/samsung/android/camera/core2/maker/MakerBase.smali
++++ b/smali_classes2/com/samsung/android/camera/core2/maker/MakerBase.smali
+@@ -5389,6 +5389,10 @@
+ .method public setRunningPhysicalId(Lcom/samsung/android/camera/core2/CamCapability;Landroid/hardware/camera2/CaptureResult;)V
+     .locals 7
+ 
++    invoke-virtual {p1}, Lcom/samsung/android/camera/core2/CamCapability;->isLegacySecondPictureConfigSupported()Z
++    move-result v0
++    if-nez v0, :unica_legacy_physical_id
++
+     invoke-virtual {p1}, Lcom/samsung/android/camera/core2/CamCapability;->r()Ljava/lang/Boolean;
+ 
+     move-result-object v0
+@@ -5399,6 +5403,7 @@
+ 
+     if-eqz v0, :cond_2
+ 
++    :unica_legacy_physical_id
+     sget-object v0, Lcom/samsung/android/camera/core2/local/vendorkey/SemCaptureResult;->G0:Landroid/hardware/camera2/CaptureResult$Key;
+ 
+     invoke-static {p2, v0}, Lcom/samsung/android/camera/core2/local/vendorkey/SemCaptureResult;->a(Landroid/hardware/camera2/CaptureResult;Landroid/hardware/camera2/CaptureResult$Key;)Ljava/lang/Object;
+diff --git a/smali_classes2/x8/LegacySecondPictureConfig.smali b/smali_classes2/x8/LegacySecondPictureConfig.smali
+new file mode 100644
+--- /dev/null
++++ b/smali_classes2/x8/LegacySecondPictureConfig.smali
+@@ -0,0 +1,46 @@
++.class public final Lx8/LegacySecondPictureConfig;
++.super Ljava/lang/Object;
++
++.method public static configure(Lcom/samsung/android/camera/core2/CamCapability;Lx8/k;Ll9/a2;)V
++    .locals 3
++
++    invoke-virtual {p0}, Lcom/samsung/android/camera/core2/CamCapability;->isLegacySecondPictureConfigSupported()Z
++    move-result v0
++    if-eqz v0, :unica_config_done
++
++    invoke-virtual {p2}, Ll9/a2;->c()Ll9/b;
++    move-result-object v0
++    sget-object v1, Ll9/b;->RATIO_4x3:Ll9/b;
++    if-eq v0, v1, :unica_ratio_4x3
++    sget-object v1, Ll9/b;->RATIO_16x9:Ll9/b;
++    if-eq v0, v1, :unica_ratio_16x9
++    sget-object v1, Ll9/b;->RATIO_1x1:Ll9/b;
++    if-eq v0, v1, :unica_ratio_1x1
++    sget-object v0, Le5/n;->BACK_WIDE_CAMERA_RESOLUTION_FULL_RATIO:Le5/n;
++    goto :unica_wide_size
++    :unica_ratio_4x3
++    sget-object v0, Le5/n;->BACK_WIDE_CAMERA_RESOLUTION_4BY3:Le5/n;
++    goto :unica_wide_size
++    :unica_ratio_16x9
++    sget-object v0, Le5/n;->BACK_WIDE_CAMERA_RESOLUTION_16BY9:Le5/n;
++    goto :unica_wide_size
++    :unica_ratio_1x1
++    sget-object v0, Le5/n;->BACK_WIDE_CAMERA_RESOLUTION_1BY1:Le5/n;
++    :unica_wide_size
++    invoke-static {v0}, Le5/g;->m(Le5/n;)Ljava/lang/String;
++    move-result-object v0
++    invoke-static {v0}, Ll9/a2;->k(Ljava/lang/String;)Ll9/a2;
++    move-result-object v0
++    invoke-static {v0}, Lte/c0;->w0(Ll9/a2;)Landroid/util/Size;
++    move-result-object v0
++    sget-object v1, Le5/k;->BACK_WIDE_CAMERA_ID:Le5/k;
++    invoke-static {v1}, Le5/g;->k(Le5/k;)I
++    move-result v1
++    invoke-static {v1}, Ljava/lang/Integer;->toString(I)Ljava/lang/String;
++    move-result-object v1
++    invoke-static {v0, v1}, Landroid/util/Pair;->create(Ljava/lang/Object;Ljava/lang/Object;)Landroid/util/Pair;
++    move-result-object v0
++    iput-object v0, p1, Lx8/k;->p:Landroid/util/Pair;
++    :unica_config_done
++    return-void
++.end method
+diff --git a/smali_classes2/x8/r.smali b/smali_classes2/x8/r.smali
+--- a/smali_classes2/x8/r.smali
++++ b/smali_classes2/x8/r.smali
+@@ -338,6 +338,12 @@
+     :goto_1
+     iput-object v10, v4, Lx8/k;->o:Landroid/util/Size;
+ 
++    invoke-virtual {v6}, Lp8/e0;->t()Lu8/e;
++    move-result-object v10
++    iget-object v10, v10, Lu8/e;->s:Lcom/samsung/android/camera/core2/CamCapability;
++    invoke-static {v10, v4, v8}, Lx8/LegacySecondPictureConfig;->configure(Lcom/samsung/android/camera/core2/CamCapability;Lx8/k;Ll9/a2;)V
++
++
+     sget-object v10, Ll9/f0;->AUTO_LENS_SWITCHING:Ll9/f0;
+ 
+     invoke-virtual {v3, v10}, Lvc/j;->d(Ll9/f0;)I

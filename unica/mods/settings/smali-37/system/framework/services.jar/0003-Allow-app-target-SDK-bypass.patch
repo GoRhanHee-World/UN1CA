@@ -1,5 +1,6 @@
+Subject: [PATCH] Allow app target SDK bypass
+
 diff --git a/smali_classes2/com/android/server/pm/InstallPackageHelper.smali b/smali_classes2/com/android/server/pm/InstallPackageHelper.smali
-index 40e4b93..1e6366b 100644
 --- a/smali_classes2/com/android/server/pm/InstallPackageHelper.smali
 +++ b/smali_classes2/com/android/server/pm/InstallPackageHelper.smali
 @@ -16346,6 +16346,25 @@

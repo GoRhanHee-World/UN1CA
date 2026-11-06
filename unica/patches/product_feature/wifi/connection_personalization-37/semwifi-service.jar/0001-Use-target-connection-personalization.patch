@@ -1,0 +1,158 @@
+Subject: [PATCH] Use legacy vendor Wi-Fi personalization and APE settings with One UI 9
+
+diff --git a/smali/com/samsung/android/server/wifi/SemApeController.smali b/smali/com/samsung/android/server/wifi/SemApeController.smali
+--- a/smali/com/samsung/android/server/wifi/SemApeController.smali
++++ b/smali/com/samsung/android/server/wifi/SemApeController.smali
+@@ -745,61 +745,14 @@
+ .end method
+ 
+ .method public registerContentObserver(Lcom/samsung/android/server/wifi/SemFrameworkFacade;)V
+-    .locals 5
+-
+-    iget-object v0, p0, Lcom/samsung/android/server/wifi/SemApeController;->mContext:Landroid/content/Context;
+-
+-    const/4 v1, 0x1
+-
+-    const-string v2, "sem_wifi_ape_enabled_labs"
+-
+-    invoke-virtual {p1, v0, v2, v1}, Lcom/samsung/android/server/wifi/SemFrameworkFacade;->getIntegerSetting(Landroid/content/Context;Ljava/lang/String;I)I
+-
+-    move-result v0
+-
+-    const/4 v1, 0x0
+-
+-    if-nez v0, :cond_0
+-
+-    new-instance v3, Ljava/lang/StringBuilder;
+-
+-    const-string v4, "APE in Settings is "
+-
+-    invoke-direct {v3, v4}, Ljava/lang/StringBuilder;-><init>(Ljava/lang/String;)V
+-
+-    invoke-virtual {v3, v0}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+-
+-    invoke-virtual {v3}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+-
+-    move-result-object v0
+-
+-    invoke-static {v0}, Lcom/samsung/android/server/wifi/SemApeController;->logi(Ljava/lang/String;)V
++    .locals 3
+ 
+     iget-object v0, p0, Lcom/samsung/android/server/wifi/SemApeController;->mHandler:Landroid/os/Handler;
+-
+-    const/4 v3, 0x4
+-
+-    invoke-virtual {v0, v3, v1, v1}, Landroid/os/Handler;->obtainMessage(III)Landroid/os/Message;
+-
+-    move-result-object v3
+-
+-    invoke-virtual {v0, v3}, Landroid/os/Handler;->sendMessage(Landroid/os/Message;)Z
+-
+-    :cond_0
+-    iget-object v0, p0, Lcom/samsung/android/server/wifi/SemApeController;->mContext:Landroid/content/Context;
+-
+-    invoke-static {v2}, Landroid/provider/Settings$Global;->getUriFor(Ljava/lang/String;)Landroid/net/Uri;
+-
+-    move-result-object v2
+-
+-    new-instance v3, Lcom/samsung/android/server/wifi/SemApeController$1;
+-
+-    const/4 v4, 0x0
+-
+-    invoke-direct {v3, p0, v4, p1}, Lcom/samsung/android/server/wifi/SemApeController$1;-><init>(Lcom/samsung/android/server/wifi/SemApeController;Landroid/os/Handler;Lcom/samsung/android/server/wifi/SemFrameworkFacade;)V
+-
+-    invoke-virtual {p1, v0, v2, v1, v3}, Lcom/samsung/android/server/wifi/SemFrameworkFacade;->registerContentObserver(Landroid/content/Context;Landroid/net/Uri;ZLandroid/database/ContentObserver;)V
+-
++    const/4 v1, 0x4
++    const/4 v2, 0x0
++    invoke-virtual {v0, v1, v2, v2}, Landroid/os/Handler;->obtainMessage(III)Landroid/os/Message;
++    move-result-object v1
++    invoke-virtual {v0, v1}, Landroid/os/Handler;->sendMessage(Landroid/os/Message;)Z
+     return-void
+ .end method
+ 
+diff --git a/smali/com/samsung/android/server/wifi/SemQboxController.smali b/smali/com/samsung/android/server/wifi/SemQboxController.smali
+--- a/smali/com/samsung/android/server/wifi/SemQboxController.smali
++++ b/smali/com/samsung/android/server/wifi/SemQboxController.smali
+@@ -1010,61 +1010,14 @@
+ .end method
+ 
+ .method public registerContentObserver(Lcom/samsung/android/server/wifi/SemFrameworkFacade;)V
+-    .locals 5
+-
+-    iget-object v0, p0, Lcom/samsung/android/server/wifi/SemQboxController;->mContext:Landroid/content/Context;
+-
+-    const/4 v1, 0x1
+-
+-    const-string v2, "sem_wifi_ape_enabled_labs"
+-
+-    invoke-virtual {p1, v0, v2, v1}, Lcom/samsung/android/server/wifi/SemFrameworkFacade;->getIntegerSetting(Landroid/content/Context;Ljava/lang/String;I)I
+-
+-    move-result v0
+-
+-    iget-object v1, p0, Lcom/samsung/android/server/wifi/SemQboxController;->mContext:Landroid/content/Context;
+-
+-    invoke-static {v2}, Landroid/provider/Settings$Global;->getUriFor(Ljava/lang/String;)Landroid/net/Uri;
+-
+-    move-result-object v2
+-
+-    new-instance v3, Lcom/samsung/android/server/wifi/SemQboxController$1;
+-
+-    const/4 v4, 0x0
+-
+-    invoke-direct {v3, p0, v4, p1}, Lcom/samsung/android/server/wifi/SemQboxController$1;-><init>(Lcom/samsung/android/server/wifi/SemQboxController;Landroid/os/Handler;Lcom/samsung/android/server/wifi/SemFrameworkFacade;)V
+-
+-    const/4 v4, 0x0
+-
+-    invoke-virtual {p1, v1, v2, v4, v3}, Lcom/samsung/android/server/wifi/SemFrameworkFacade;->registerContentObserver(Landroid/content/Context;Landroid/net/Uri;ZLandroid/database/ContentObserver;)V
+-
+-    if-nez v0, :cond_0
+-
+-    new-instance p1, Ljava/lang/StringBuilder;
+-
+-    const-string v1, "MSCS in Settings is "
+-
+-    invoke-direct {p1, v1}, Ljava/lang/StringBuilder;-><init>(Ljava/lang/String;)V
+-
+-    invoke-virtual {p1, v0}, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+-
+-    invoke-virtual {p1}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+-
+-    move-result-object p1
+-
+-    invoke-static {p1}, Lcom/samsung/android/server/wifi/SemQboxController;->logi(Ljava/lang/String;)V
+-
+-    iget-object p0, p0, Lcom/samsung/android/server/wifi/SemQboxController;->mHandler:Landroid/os/Handler;
+-
+-    const/4 p1, 0x5
+-
+-    invoke-virtual {p0, p1, v4, v4}, Landroid/os/Handler;->obtainMessage(III)Landroid/os/Message;
+-
+-    move-result-object p1
+-
+-    invoke-virtual {p0, p1}, Landroid/os/Handler;->sendMessage(Landroid/os/Message;)Z
+-
+-    :cond_0
++    .locals 3
++
++    iget-object v0, p0, Lcom/samsung/android/server/wifi/SemQboxController;->mHandler:Landroid/os/Handler;
++    const/4 v1, 0x5
++    const/4 v2, 0x0
++    invoke-virtual {v0, v1, v2, v2}, Landroid/os/Handler;->obtainMessage(III)Landroid/os/Message;
++    move-result-object v1
++    invoke-virtual {v0, v1}, Landroid/os/Handler;->sendMessage(Landroid/os/Message;)Z
+     return-void
+ .end method
+ 
+diff --git a/smali/com/samsung/android/server/wifi/SemWifiInjector.smali b/smali/com/samsung/android/server/wifi/SemWifiInjector.smali
+--- a/smali/com/samsung/android/server/wifi/SemWifiInjector.smali
++++ b/smali/com/samsung/android/server/wifi/SemWifiInjector.smali
+@@ -1906,7 +1906,7 @@
+ 
+     iput-object v0, v4, Lcom/samsung/android/server/wifi/SemWifiInjector;->mWifiCoexManager:Lcom/samsung/android/server/wifi/SemWifiCoexManager;
+ 
+-    const-string v0, "2"
++    const-string v0, "CONFIG_CONNECTION_PERSONALIZATION"
+ 
+     invoke-static {v0}, Ljava/lang/Integer;->parseInt(Ljava/lang/String;)I
+ 

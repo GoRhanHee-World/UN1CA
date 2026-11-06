@@ -206,15 +206,26 @@ if [ ! -d "$WORK_DIR/system/system/saiv/smartcropping_2.0" ] || \
     if [ -d "$WORK_DIR/system/system/saiv/smartcropping_2.0" ]; then
         DELETE_FROM_WORK_DIR "system" "system/saiv/smartcropping_2.0"
     fi
-    ADD_TO_WORK_DIR "$SOURCE_FIRMWARE" "system" "system/saiv/smartcropping_2.0/db/smartcrop_saliency_deploy.prototxt" 0 0 644 "u:object_r:system_file:s0"
-    ADD_TO_WORK_DIR "$SOURCE_FIRMWARE" "system" "system/saiv/smartcropping_2.0/db/smartcrop_saliency_train" 0 0 644 "u:object_r:system_file:s0"
+    SMARTCROP_FIRMWARE="$SOURCE_FIRMWARE"
+    if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge "37" ]; then
+        # One UI 9 removed the legacy Caffe model used by this vendor.
+        SMARTCROP_FIRMWARE="$TARGET_FIRMWARE"
+    fi
+    ADD_TO_WORK_DIR "$SMARTCROP_FIRMWARE" "system" "system/saiv/smartcropping_2.0/db/smartcrop_saliency_deploy.prototxt" 0 0 644 "u:object_r:system_file:s0"
+    ADD_TO_WORK_DIR "$SMARTCROP_FIRMWARE" "system" "system/saiv/smartcropping_2.0/db/smartcrop_saliency_train" 0 0 644 "u:object_r:system_file:s0"
+    unset SMARTCROP_FIRMWARE
 fi
 if [ ! -d "$WORK_DIR/vendor/saiv/image_understanding/db/sce_detector" ] || \
         [ "$TARGET_PLATFORM_SDK_VERSION" -lt "$SOURCE_PLATFORM_SDK_VERSION" ]; then
     if [ -d "$WORK_DIR/vendor/saiv/image_understanding/db/sce_detector" ]; then
         DELETE_FROM_WORK_DIR "vendor" "saiv/image_understanding/db/sce_detector"
     fi
-    ADD_TO_WORK_DIR "$SOURCE_FIRMWARE" "vendor" "saiv/image_understanding/db/sce_detector/sce_detector_cnn.tflite" 0 0 644 "u:object_r:vendor_snap_file:s0"
+    SCE_FIRMWARE="$SOURCE_FIRMWARE"
+    if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge "37" ]; then
+        SCE_FIRMWARE="$TARGET_FIRMWARE"
+    fi
+    ADD_TO_WORK_DIR "$SCE_FIRMWARE" "vendor" "saiv/image_understanding/db/sce_detector/sce_detector_cnn.tflite" 0 0 644 "u:object_r:vendor_snap_file:s0"
+    unset SCE_FIRMWARE
 fi
 
 # SEC_PRODUCT_FEATURE_CAMERA_CONFIG_STRIDE_OCR_VERSION

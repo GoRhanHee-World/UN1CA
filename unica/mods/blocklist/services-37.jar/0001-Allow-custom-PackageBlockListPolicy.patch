@@ -1,0 +1,113 @@
+Subject: [PATCH] Use UN1CA package blocklist for One UI 9 install and boot scan
+
+diff --git a/smali_classes2/com/android/server/pm/InstallPackageHelper.smali b/smali_classes2/com/android/server/pm/InstallPackageHelper.smali
+--- a/smali_classes2/com/android/server/pm/InstallPackageHelper.smali
++++ b/smali_classes2/com/android/server/pm/InstallPackageHelper.smali
+@@ -22526,46 +22526,7 @@
+     .catchall {:try_start_4 .. :try_end_4} :catchall_0
+ 
+     :try_start_5
+-    sget-object v2, Lcom/samsung/android/server/pm/install/PackageBlockListPolicy;->sIsRduDevice:Ljava/util/concurrent/atomic/AtomicBoolean;
+-
+-    invoke-virtual {v2}, Ljava/util/concurrent/atomic/AtomicBoolean;->get()Z
+-
+-    move-result v2
+-
+-    if-nez v2, :cond_7
+-
+-    goto :goto_3
+-
+-    :cond_7
+-    sget-object v2, Lcom/samsung/android/server/pm/install/PackageBlockListPolicy;->sLduBlocklist:Ljava/util/HashSet;
+-
+-    if-nez v2, :cond_8
+-
+-    const-string v2, "/system/etc/ldu_blocklist.xml"
+-
+-    invoke-static {v2}, Lcom/samsung/android/server/pm/install/PmConfigParser;->parsePackages(Ljava/lang/String;)Ljava/util/List;
+-
+-    move-result-object v2
+-
+-    new-instance v3, Ljava/util/HashSet;
+-
+-    invoke-direct {v3, v2}, Ljava/util/HashSet;-><init>(Ljava/util/Collection;)V
+-
+-    sput-object v3, Lcom/samsung/android/server/pm/install/PackageBlockListPolicy;->sLduBlocklist:Ljava/util/HashSet;
+-
+-    :cond_8
+-    sget-boolean v2, Lcom/samsung/android/server/pm/install/PackageBlockListPolicy;->sBypassBlocklist:Z
+-
+-    if-eqz v2, :cond_9
+-
+-    move/from16 v2, v17
+-
+-    goto :goto_2
+-
+-    :cond_9
+-    sget-object v2, Lcom/samsung/android/server/pm/install/PackageBlockListPolicy;->sLduBlocklist:Ljava/util/HashSet;
+-
+-    invoke-virtual {v2, v1}, Ljava/util/HashSet;->contains(Ljava/lang/Object;)Z
++    invoke-static {v1}, Lcom/samsung/android/server/pm/install/PackageBlockListPolicy;->isBlockedPackage(Ljava/lang/String;)Z
+ 
+     move-result v2
+ 
+@@ -22932,6 +22893,19 @@
+ .method public final scanPackageForInitLI(Lcom/android/internal/pm/parsing/pkg/ParsedPackage;IILandroid/os/UserHandle;)Landroid/util/Pair;
+     .locals 38
+ 
++    move-object/from16 v0, p1
++    invoke-interface {v0}, Lcom/android/internal/pm/parsing/pkg/ParsedPackage;->getPackageName()Ljava/lang/String;
++    move-result-object v0
++    invoke-static {v0}, Lcom/samsung/android/server/pm/install/PackageBlockListPolicy;->isBlockedPackage(Ljava/lang/String;)Z
++    move-result v0
++    if-eqz v0, :unica_scan_allowed
++    new-instance v0, Lcom/android/server/pm/PackageManagerException;
++    const/16 v1, -0x6e
++    const-string v2, "Package blocked by UN1CA"
++    invoke-direct {v0, v1, v2}, Lcom/android/server/pm/PackageManagerException;-><init>(ILjava/lang/String;)V
++    throw v0
++    :unica_scan_allowed
++
+     move/from16 v2, p2
+ 
+     const-string/jumbo v15, "System package enabled; name: "
+diff --git a/smali_classes2/com/samsung/android/server/pm/install/PackageBlockListPolicy.smali b/smali_classes2/com/samsung/android/server/pm/install/PackageBlockListPolicy.smali
+--- a/smali_classes2/com/samsung/android/server/pm/install/PackageBlockListPolicy.smali
++++ b/smali_classes2/com/samsung/android/server/pm/install/PackageBlockListPolicy.smali
+@@ -25,3 +25,36 @@
+ 
+     return-void
+ .end method
++
++.method public static declared-synchronized isBlockedPackage(Ljava/lang/String;)Z
++    .locals 3
++
++    const-class v0, Lcom/samsung/android/server/pm/install/PackageBlockListPolicy;
++    monitor-enter v0
++
++    :try_start_unica
++    sget-object v1, Lcom/samsung/android/server/pm/install/PackageBlockListPolicy;->sLduBlocklist:Ljava/util/HashSet;
++    if-nez v1, :unica_policy_loaded
++    const-string v1, "/system/etc/unica_blocklist.xml"
++    invoke-static {v1}, Lcom/samsung/android/server/pm/install/PmConfigParser;->parsePackages(Ljava/lang/String;)Ljava/util/List;
++    move-result-object v1
++    new-instance v2, Ljava/util/HashSet;
++    invoke-direct {v2}, Ljava/util/HashSet;-><init>()V
++    if-eqz v1, :unica_policy_store
++    invoke-virtual {v2, v1}, Ljava/util/HashSet;->addAll(Ljava/util/Collection;)Z
++    :unica_policy_store
++    sput-object v2, Lcom/samsung/android/server/pm/install/PackageBlockListPolicy;->sLduBlocklist:Ljava/util/HashSet;
++    move-object v1, v2
++    :unica_policy_loaded
++    invoke-virtual {v1, p0}, Ljava/util/HashSet;->contains(Ljava/lang/Object;)Z
++    move-result p0
++    :try_end_unica
++    .catchall {:try_start_unica .. :try_end_unica} :unica_policy_error
++    monitor-exit v0
++    return p0
++
++    :unica_policy_error
++    move-exception p0
++    monitor-exit v0
++    throw p0
++.end method
