@@ -1,3 +1,29 @@
+# Android 16+ compatibility adapted from ssch71/ArtisanROM (sixteen-qpr2).
+# Keep the modern framework and native libraries; the legacy replacements below
+# target older donors. The same KnoxGuard constructor is present on S928N / API 37.
+if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge 36 ]; then
+    LOG "- Applying modern Knox compatibility patches"
+    SET_PROP_IF_DIFF "vendor" "ro.security.fips.ux" "Disabled"
+
+    APPLY_PATCH "system" "system/framework/services.jar" \
+        "$MODPATH/knoxguard/services.jar/0001-Disable-KnoxGuard.patch"
+
+    SET_FLOATING_FEATURE_CONFIG \
+        "SEC_FLOATING_FEATURE_FRAMEWORK_SUPPORT_BLOCKCHAIN_SERVICE" --delete
+    DECODE_APK "system" "system/framework/framework.jar"
+    PRODUCT_PACKAGES_RUNE="$(find "$APKTOOL_DIR/system/framework/framework.jar" \
+        -type f -path '*/com/samsung/android/ProductPackagesRune.smali' -printf '%P\n' -quit)"
+    if [ "$PRODUCT_PACKAGES_RUNE" ] && grep -q "SERVICE_SAMSUNG_BLOCKCHAIN:Z = true" \
+            "$APKTOOL_DIR/system/framework/framework.jar/$PRODUCT_PACKAGES_RUNE"; then
+        SMALI_PATCH "system" "system/framework/framework.jar" \
+            "$PRODUCT_PACKAGES_RUNE" "replaceall" \
+            "SERVICE_SAMSUNG_BLOCKCHAIN:Z = true" \
+            "SERVICE_SAMSUNG_BLOCKCHAIN:Z = false"
+    fi
+    unset PRODUCT_PACKAGES_RUNE
+    return 0
+fi
+
 SET_PROP_IF_DIFF "vendor" "ro.security.fips.ux" "Disabled"
 
 if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "qssi" ]]; then
