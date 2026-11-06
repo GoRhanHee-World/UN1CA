@@ -94,7 +94,6 @@ _IMPORT_LEGACY_NXP_JNI()
 # ]
 
 TARGET_FIRMWARE_PATH="$(cut -d "/" -f 1 -s <<< "$TARGET_FIRMWARE")_$(cut -d "/" -f 2 -s <<< "$TARGET_FIRMWARE")"
-SOURCE_FIRMWARE_PATH="$(cut -d "/" -f 1 -s <<< "$SOURCE_FIRMWARE")_$(cut -d "/" -f 2 -s <<< "$SOURCE_FIRMWARE")"
 
 if [ -f "$FW_DIR/$TARGET_FIRMWARE_PATH/system/system/etc/libnfc-nci.conf" ]; then
     ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" "system/etc/libnfc-nci.conf" 0 0 644 "u:object_r:system_file:s0"
@@ -247,7 +246,7 @@ elif [ -f "$FW_DIR/$TARGET_FIRMWARE_PATH/system/system/lib64/libnfc_sec_jni.so" 
     fi
 fi
 
-unset SOURCE_FIRMWARE_PATH TARGET_FIRMWARE_PATH
+unset TARGET_FIRMWARE_PATH
 unset -f _IMPORT_LEGACY_NXP_JNI _LOG
 
 # Keep SecSettings' compiled antenna position aligned with the target vendor.
