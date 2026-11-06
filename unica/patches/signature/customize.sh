@@ -5,7 +5,13 @@ if [ ! -f "$SRC_DIR/security/${CERT_PREFIX}_platform.x509.pem" ]; then
     ABORT "File not found: security/${CERT_PREFIX}_platform.x509.pem"
 fi
 
-APPLY_PATCH "system" "system/framework/services.jar" "$MODPATH/services.jar/0001-Allow-custom-platform-signature.patch"
+if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge 36 ]; then
+    APPLY_PATCH "system" "system/framework/services.jar" \
+        "$MODPATH/services.jar/0002-Allow-custom-platform-signature-oneui85.patch"
+else
+    APPLY_PATCH "system" "system/framework/services.jar" \
+        "$MODPATH/services.jar/0001-Allow-custom-platform-signature.patch"
+fi
 
 CERT_SIGNATURE="$(sed "/CERTIFICATE/d" "$SRC_DIR/security/${CERT_PREFIX}_platform.x509.pem" | tr -d "\n" | base64 -d | xxd -p -c 0)"
 SMALI_PATCH "system" "system/framework/services.jar" \

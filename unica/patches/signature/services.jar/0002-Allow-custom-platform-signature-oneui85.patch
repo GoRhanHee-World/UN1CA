@@ -1,0 +1,203 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: MinsOS <minsos@localhost>
+Date: Sat, 8 Aug 2026 02:00:00 +0900
+Subject: [PATCH] Allow custom platform signature (One UI 8.5 donor)
+
+Re-derived for the 8.5 donor: 8.5 dropped InstallPackageHelper.mDexManager and moved the
+registers the upstream 8.0 patch assumed, so that patch fails as a whole and git apply is
+all-or-nothing. Same effect by a smaller route: applyPolicy keeps its signature, and both
+the scan path and the install path hand the parsed package to one helper that swaps in the
+platform package's SigningDetails when the package carries our signing key. Every call site
+uses registers that are already live there, so no spare register has to be found.
+
+diff --git a/smali_classes2/com/android/server/pm/InstallPackageHelper.smali b/smali_classes2/com/android/server/pm/InstallPackageHelper.smali
+index 2eacbb3..cd5bc13 100644
+--- a/smali_classes2/com/android/server/pm/InstallPackageHelper.smali
++++ b/smali_classes2/com/android/server/pm/InstallPackageHelper.smali
+@@ -12,6 +12,8 @@
+ 
+ .field public final mContext:Landroid/content/Context;
+ 
++.field public final mCustomPlatformSignatures:[Landroid/content/pm/Signature;
++
+ .field public final mDeletePackageHelper:Lcom/android/server/pm/DeletePackageHelper;
+ 
+ .field public final mIncrementalManager:Landroid/os/incremental/IncrementalManager;
+@@ -143,6 +145,18 @@
+ 
+     iput-object p1, p0, Lcom/android/server/pm/InstallPackageHelper;->mUpdateOwnershipHelper:Lcom/android/server/pm/UpdateOwnershipHelper;
+ 
++    const-string p1, "CONFIG_CUSTOM_PLATFORM_SIGNATURE"
++
++    filled-new-array {p1}, [Ljava/lang/String;
++
++    move-result-object p1
++
++    invoke-static {p1}, Lcom/android/server/pm/InstallPackageHelper;->createSignatures([Ljava/lang/String;)[Landroid/content/pm/Signature;
++
++    move-result-object p1
++
++    iput-object p1, p0, Lcom/android/server/pm/InstallPackageHelper;->mCustomPlatformSignatures:[Landroid/content/pm/Signature;
++
+     new-instance p1, Landroid/util/ArraySet;
+ 
+     invoke-direct {p1}, Landroid/util/ArraySet;-><init>()V
+@@ -283,6 +297,73 @@
+     return p0
+ .end method
+ 
++.method public static createSignatures([Ljava/lang/String;)[Landroid/content/pm/Signature;
++    .locals 5
++
++    array-length v0, p0
++
++    new-array v1, v0, [Landroid/content/pm/Signature;
++
++    const/4 v2, 0x0
++
++    :goto_0
++    if-ge v2, v0, :cond_0
++
++    new-instance v3, Landroid/content/pm/Signature;
++
++    aget-object v4, p0, v2
++
++    invoke-direct {v3, v4}, Landroid/content/pm/Signature;-><init>(Ljava/lang/String;)V
++
++    aput-object v3, v1, v2
++
++    add-int/lit8 v2, v2, 0x1
++
++    goto :goto_0
++
++    :cond_0
++    return-object v1
++.end method
++
++.method public applyCustomSignatures(Lcom/android/internal/pm/parsing/pkg/ParsedPackage;)V
++    .locals 2
++
++    iget-object v0, p0, Lcom/android/server/pm/InstallPackageHelper;->mCustomPlatformSignatures:[Landroid/content/pm/Signature;
++
++    if-eqz v0, :cond_0
++
++    invoke-interface {p1}, Lcom/android/internal/pm/parsing/pkg/ParsedPackage;->getSigningDetails()Landroid/content/pm/SigningDetails;
++
++    move-result-object v1
++
++    if-eqz v1, :cond_0
++
++    invoke-virtual {v1}, Landroid/content/pm/SigningDetails;->getSignatures()[Landroid/content/pm/Signature;
++
++    move-result-object v1
++
++    invoke-static {v0, v1}, Lcom/android/server/pm/ScanPackageUtils;->signedWithCustomSignatures([Landroid/content/pm/Signature;[Landroid/content/pm/Signature;)Z
++
++    move-result v0
++
++    if-eqz v0, :cond_0
++
++    iget-object v0, p0, Lcom/android/server/pm/InstallPackageHelper;->mPm:Lcom/android/server/pm/PackageManagerService;
++
++    iget-object v0, v0, Lcom/android/server/pm/PackageManagerService;->mPlatformPackage:Lcom/android/server/pm/pkg/AndroidPackage;
++
++    if-eqz v0, :cond_0
++
++    invoke-interface {v0}, Lcom/android/server/pm/pkg/AndroidPackage;->getSigningDetails()Landroid/content/pm/SigningDetails;
++
++    move-result-object v0
++
++    invoke-interface {p1, v0}, Lcom/android/internal/pm/parsing/pkg/ParsedPackage;->setSigningDetails(Landroid/content/pm/SigningDetails;)Lcom/android/internal/pm/parsing/pkg/ParsedPackage;
++
++    :cond_0
++    return-void
++.end method
++
+ .method public static isAdminApplication(Lcom/android/server/pm/pkg/AndroidPackage;)Z
+     .locals 5
+ 
+@@ -15917,6 +15998,8 @@
+     :goto_18
+     invoke-interface {v3, v4}, Lcom/android/internal/pm/parsing/pkg/ParsedPackage;->setSigningDetails(Landroid/content/pm/SigningDetails;)Lcom/android/internal/pm/parsing/pkg/ParsedPackage;
+ 
++    invoke-virtual {v1, v3}, Lcom/android/server/pm/InstallPackageHelper;->applyCustomSignatures(Lcom/android/internal/pm/parsing/pkg/ParsedPackage;)V
++
+     goto :goto_19
+ 
+     :cond_25
+@@ -15942,6 +16025,8 @@
+ 
+     invoke-interface {v3, v0}, Lcom/android/internal/pm/parsing/pkg/ParsedPackage;->setSigningDetails(Landroid/content/pm/SigningDetails;)Lcom/android/internal/pm/parsing/pkg/ParsedPackage;
+ 
++    invoke-virtual {v1, v3}, Lcom/android/server/pm/InstallPackageHelper;->applyCustomSignatures(Lcom/android/internal/pm/parsing/pkg/ParsedPackage;)V
++
+     :goto_19
+     const-string/jumbo v0, "PackageManager"
+ 
+@@ -22501,6 +22586,8 @@
+ 
+     const/4 v9, 0x1
+ 
++    invoke-virtual {v15, v1}, Lcom/android/server/pm/InstallPackageHelper;->applyCustomSignatures(Lcom/android/internal/pm/parsing/pkg/ParsedPackage;)V
++
+     invoke-static {v1, v10, v2, v9}, Lcom/android/server/pm/ScanPackageUtils;->applyPolicy(Lcom/android/internal/pm/parsing/pkg/ParsedPackage;ILcom/android/server/pm/pkg/AndroidPackage;Z)V
+ 
+     iget-object v2, v15, Lcom/android/server/pm/InstallPackageHelper;->mPm:Lcom/android/server/pm/PackageManagerService;
+@@ -23995,6 +24082,8 @@
+ 
+     iget-object v2, v2, Lcom/android/server/pm/PackageManagerService;->mPlatformPackage:Lcom/android/server/pm/pkg/AndroidPackage;
+ 
++    invoke-virtual {v15, v1}, Lcom/android/server/pm/InstallPackageHelper;->applyCustomSignatures(Lcom/android/internal/pm/parsing/pkg/ParsedPackage;)V
++
+     invoke-static {v1, v10, v2, v5}, Lcom/android/server/pm/ScanPackageUtils;->applyPolicy(Lcom/android/internal/pm/parsing/pkg/ParsedPackage;ILcom/android/server/pm/pkg/AndroidPackage;Z)V
+ 
+     iget-object v2, v15, Lcom/android/server/pm/InstallPackageHelper;->mPm:Lcom/android/server/pm/PackageManagerService;
+diff --git a/smali_classes2/com/android/server/pm/PackageManagerServiceUtils.smali b/smali_classes2/com/android/server/pm/PackageManagerServiceUtils.smali
+index 411d059..bedd59e 100644
+--- a/smali_classes2/com/android/server/pm/PackageManagerServiceUtils.smali
++++ b/smali_classes2/com/android/server/pm/PackageManagerServiceUtils.smali
+@@ -619,6 +619,16 @@
+     return p0
+ .end method
+ 
++.method public static compareSignaturesActual([Landroid/content/pm/Signature;[Landroid/content/pm/Signature;)I
++    .locals 0
++
++    invoke-static {p0, p1}, Lcom/android/server/pm/PackageManagerServiceUtils;->compareSignatureArrays([Landroid/content/pm/Signature;[Landroid/content/pm/Signature;)I
++
++    move-result p0
++
++    return p0
++.end method
++
+ .method public static copyFile(Ljava/lang/String;Ljava/io/File;Ljava/lang/String;)V
+     .locals 2
+ 
+diff --git a/smali_classes2/com/android/server/pm/ScanPackageUtils.smali b/smali_classes2/com/android/server/pm/ScanPackageUtils.smali
+index cda69a4..70c95f5 100644
+--- a/smali_classes2/com/android/server/pm/ScanPackageUtils.smali
++++ b/smali_classes2/com/android/server/pm/ScanPackageUtils.smali
+@@ -5003,3 +5003,23 @@
+     :goto_2
+     return-void
+ .end method
++
++.method public static signedWithCustomSignatures([Landroid/content/pm/Signature;[Landroid/content/pm/Signature;)Z
++    .locals 0
++
++    invoke-static {p0, p1}, Lcom/android/server/pm/PackageManagerServiceUtils;->compareSignaturesActual([Landroid/content/pm/Signature;[Landroid/content/pm/Signature;)I
++
++    move-result p0
++
++    if-nez p0, :cond_0
++
++    const/4 p0, 0x1
++
++    goto :goto_0
++
++    :cond_0
++    const/4 p0, 0x0
++
++    :goto_0
++    return p0
++.end method

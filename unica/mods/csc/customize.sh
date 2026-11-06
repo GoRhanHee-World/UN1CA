@@ -6,7 +6,10 @@ SMALI_PATCH "system_ext" "priv-app/SystemUI/SystemUI.apk" \
     "smali/com/android/systemui/bixby2/controller/DeviceController.smali" "return" \
     'isSupportPowerOffLock()Z' 'true'
 
-# Hide Remote management tile in Settings app
-SMALI_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
-    "smali_classes4/com/samsung/android/settings/homepage/TopLevelRemoteSupportPreferenceController.smali" "return" \
-    'getAvailabilityStatus()I' '3'
+# Android 17 no longer ships this legacy dashboard controller.
+if [ "$SOURCE_PLATFORM_SDK_VERSION" -lt 37 ]; then
+    # Hide Remote management tile in Settings app
+    SMALI_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
+        "smali_classes4/com/samsung/android/settings/homepage/TopLevelRemoteSupportPreferenceController.smali" "return" \
+        'getAvailabilityStatus()I' '3'
+fi

@@ -1,0 +1,97 @@
+diff --git a/smali_classes2/com/android/server/wm/ScreenRecordingCallbackController.smali b/smali_classes2/com/android/server/wm/ScreenRecordingCallbackController.smali
+index ee06bfd..33fc2e0 100644
+--- a/smali_classes2/com/android/server/wm/ScreenRecordingCallbackController.smali
++++ b/smali_classes2/com/android/server/wm/ScreenRecordingCallbackController.smali
+@@ -47,6 +47,28 @@
+ .method public final dispatchCallbacks(Landroid/util/ArraySet;Z)V
+     .locals 5
+ 
++    iget-object v0, p0, Lcom/android/server/wm/ScreenRecordingCallbackController;->mWms:Lcom/android/server/wm/WindowManagerService;
++
++    iget-object v0, v0, Lcom/android/server/wm/WindowManagerService;->mContext:Landroid/content/Context;
++
++    invoke-virtual {v0}, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
++
++    move-result-object v0
++
++    const-string/jumbo v1, "unica_ss_detection"
++
++    const/4 v2, 0x0
++
++    invoke-static {v0, v1, v2}, Landroid/provider/Settings$System;->getInt(Landroid/content/ContentResolver;Ljava/lang/String;I)I
++
++    move-result v0
++
++    if-eqz v0, :cond_unica_ssd
++
++    const/4 p2, 0x0
++
++    :cond_unica_ssd
++
+     invoke-virtual {p1}, Landroid/util/ArraySet;->isEmpty()Z
+ 
+     move-result v0
+diff --git a/smali_classes2/com/android/server/wm/WindowManagerService.smali b/smali_classes2/com/android/server/wm/WindowManagerService.smali
+index ffe5e3b..2519841 100644
+--- a/smali_classes2/com/android/server/wm/WindowManagerService.smali
++++ b/smali_classes2/com/android/server/wm/WindowManagerService.smali
+@@ -28235,6 +28235,30 @@
+ 
+     if-eqz v0, :cond_1
+ 
++    iget-object v0, p0, Lcom/android/server/wm/WindowManagerService;->mContext:Landroid/content/Context;
++
++    invoke-virtual {v0}, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
++
++    move-result-object v0
++
++    const-string/jumbo v1, "unica_ss_detection"
++
++    const/4 v3, 0x0
++
++    invoke-static {v0, v1, v3}, Landroid/provider/Settings$System;->getInt(Landroid/content/ContentResolver;Ljava/lang/String;I)I
++
++    move-result v0
++
++    if-eqz v0, :cond_unica_ssd2
++
++    invoke-static {}, Ljava/util/Collections;->emptyList()Ljava/util/List;
++
++    move-result-object p0
++
++    return-object p0
++
++    :cond_unica_ssd2
++
+     iget-object v0, p0, Lcom/android/server/wm/WindowManagerService;->mGlobalLock:Lcom/android/server/wm/WindowManagerGlobalLock;
+ 
+     invoke-static {}, Lcom/android/server/wm/WindowManagerService;->traceBeforeWmsLock()V
+@@ -32348,6 +32372,28 @@
+ 
+     invoke-virtual {p0}, Landroid/view/IWindowManager$Stub;->registerScreenRecordingCallback_enforcePermission()V
+ 
++    iget-object v0, p0, Lcom/android/server/wm/WindowManagerService;->mContext:Landroid/content/Context;
++
++    invoke-virtual {v0}, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
++
++    move-result-object v0
++
++    const-string/jumbo v1, "unica_ss_detection"
++
++    const/4 v2, 0x0
++
++    invoke-static {v0, v1, v2}, Landroid/provider/Settings$System;->getInt(Landroid/content/ContentResolver;Ljava/lang/String;I)I
++
++    move-result v0
++
++    if-eqz v0, :cond_unica_ssd3
++
++    const/4 v0, 0x0
++
++    return v0
++
++    :cond_unica_ssd3
++
+     iget-object p0, p0, Lcom/android/server/wm/WindowManagerService;->mScreenRecordingCallbackController:Lcom/android/server/wm/ScreenRecordingCallbackController;
+ 
+     iget-object v0, p0, Lcom/android/server/wm/ScreenRecordingCallbackController;->mWms:Lcom/android/server/wm/WindowManagerService;

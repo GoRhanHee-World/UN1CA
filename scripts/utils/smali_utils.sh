@@ -71,6 +71,14 @@ SMALI_PATCH()
 
     local FILE_PATH="$APKTOOL_DIR/$PARTITION/${FILE//system\//}"
 
+    if [ ! -f "$FILE_PATH/$SMALI" ]; then
+        local RESOLVED_SMALI
+        RESOLVED_SMALI="$(find "$FILE_PATH" -type f -path "*/${SMALI#*/}" -printf '%P\n' -quit)"
+        if [ "$RESOLVED_SMALI" ]; then
+            SMALI="$RESOLVED_SMALI"
+        fi
+    fi
+
     # Check if provided smali exists
     if [ ! -f "$FILE_PATH/$SMALI" ]; then
         LOGE "Smali not found: \"/$PARTITION/$FILE/$SMALI\""

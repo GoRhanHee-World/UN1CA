@@ -73,43 +73,19 @@ ADD_TO_WORK_DIR "a73xqxx" "product" "priv-app/HotwordEnrollmentXGoogleEx3HEXAGON
 LOG_STEP_OUT
 
 LOG_STEP_IN "- Adding tlc dependencies"
-ADD_TO_WORK_DIR "$SOURCE_FIRMWARE" "vendor" "lib/vendor.qti.hardware.trustedui@1.0.so" 0 0 644 "u:object_r:vendor_file:s0"
-ADD_TO_WORK_DIR "$SOURCE_FIRMWARE" "vendor" "lib/vendor.qti.hardware.trustedui@1.1.so" 0 0 644 "u:object_r:vendor_file:s0"
-ADD_TO_WORK_DIR "$SOURCE_FIRMWARE" "vendor" "lib/vendor.qti.hardware.trustedui@1.2.so" 0 0 644 "u:object_r:vendor_file:s0"
-ADD_TO_WORK_DIR "$SOURCE_FIRMWARE" "vendor" "lib/vendor.qti.hardware.tui_comm@1.0.so" 0 0 644 "u:object_r:vendor_file:s0"
-
-ADD_TO_WORK_DIR "$SOURCE_FIRMWARE" "vendor" "lib64/vendor.qti.hardware.trustedui@1.0.so" 0 0 644 "u:object_r:vendor_file:s0"
-ADD_TO_WORK_DIR "$SOURCE_FIRMWARE" "vendor" "lib64/vendor.qti.hardware.trustedui@1.1.so" 0 0 644 "u:object_r:vendor_file:s0"
-ADD_TO_WORK_DIR "$SOURCE_FIRMWARE" "vendor" "lib64/vendor.qti.hardware.trustedui@1.2.so" 0 0 644 "u:object_r:vendor_file:s0"
-ADD_TO_WORK_DIR "$SOURCE_FIRMWARE" "vendor" "lib64/vendor.qti.hardware.tui_comm@1.0.so" 0 0 644 "u:object_r:vendor_file:s0"
-
-mv "$WORK_DIR/vendor/lib/vendor.qti.hardware.trustedui@1.0.so" "$WORK_DIR/system/system/lib/"
-mv "$WORK_DIR/vendor/lib/vendor.qti.hardware.trustedui@1.1.so" "$WORK_DIR/system/system/lib/"
-mv "$WORK_DIR/vendor/lib/vendor.qti.hardware.trustedui@1.2.so" "$WORK_DIR/system/system/lib/"
-
-mv "$WORK_DIR/vendor/lib64/vendor.qti.hardware.trustedui@1.0.so" "$WORK_DIR/system/system/lib64/"
-mv "$WORK_DIR/vendor/lib64/vendor.qti.hardware.trustedui@1.1.so" "$WORK_DIR/system/system/lib64/"
-mv "$WORK_DIR/vendor/lib64/vendor.qti.hardware.trustedui@1.2.so" "$WORK_DIR/system/system/lib64/"
-
-{
-    echo "system/lib/vendor.qti.hardware.trustedui@1.0.so 0 0 644 capabilities=0x0"
-    echo "system/lib/vendor.qti.hardware.trustedui@1.1.so 0 0 644 capabilities=0x0"
-    echo "system/lib/vendor.qti.hardware.trustedui@1.2.so 0 0 644 capabilities=0x0"
-
-    echo "system/lib64/vendor.qti.hardware.trustedui@1.0.so 0 0 644 capabilities=0x0"
-    echo "system/lib64/vendor.qti.hardware.trustedui@1.1.so 0 0 644 capabilities=0x0"
-    echo "system/lib64/vendor.qti.hardware.trustedui@1.2.so 0 0 644 capabilities=0x0"
-} >> "$WORK_DIR/configs/fs_config-system"
-
-{
-    echo "/system/lib/vendor\.qti\.hardware\.trustedui@1\.0\.so u:object_r:system_lib_file:s0"
-    echo "/system/lib/vendor\.qti\.hardware\.trustedui@1\.1\.so u:object_r:system_lib_file:s0"
-    echo "/system/lib/vendor\.qti\.hardware\.trustedui@1\.2\.so u:object_r:system_lib_file:s0"
-
-    echo "/system/lib64/vendor\.qti\.hardware\.trustedui@1\.0\.so u:object_r:system_lib_file:s0"
-    echo "/system/lib64/vendor\.qti\.hardware\.trustedui@1\.1\.so u:object_r:system_lib_file:s0"
-    echo "/system/lib64/vendor\.qti\.hardware\.trustedui@1\.2\.so u:object_r:system_lib_file:s0"
-} >> "$WORK_DIR/configs/file_context-system"
+TUI_ABIS="lib64"
+if [ "$SOURCE_PLATFORM_SDK_VERSION" -lt 36 ]; then
+    TUI_ABIS="lib lib64"
+fi
+SOURCE_FIRMWARE_PATH="$(cut -d / -f 1 <<< "$SOURCE_FIRMWARE")_$(cut -d / -f 2 <<< "$SOURCE_FIRMWARE")"
+for ABI in $TUI_ABIS; do
+    for VERSION in 1.0 1.1 1.2; do
+        TUI_LIB="vendor.qti.hardware.trustedui@$VERSION.so"
+        EVAL "cp -a \"$FW_DIR/$SOURCE_FIRMWARE_PATH/vendor/$ABI/$TUI_LIB\" \"$WORK_DIR/system/system/$ABI/$TUI_LIB\""
+        SET_METADATA "system" "system/$ABI/$TUI_LIB" 0 0 644 "u:object_r:system_lib_file:s0"
+    done
+done
+unset TUI_ABIS SOURCE_FIRMWARE_PATH ABI VERSION TUI_LIB
 LOG_STEP_OUT
 
 LOG_STEP_IN "- Adding pa1qxxx nfc blobs"

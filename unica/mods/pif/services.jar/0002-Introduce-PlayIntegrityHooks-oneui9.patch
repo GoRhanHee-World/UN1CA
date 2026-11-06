@@ -1,0 +1,42 @@
+--- a/smali_classes2/com/android/server/wm/ActivityTaskManagerService.smali
++++ b/smali_classes2/com/android/server/wm/ActivityTaskManagerService.smali
+@@ -8377,9 +8377,19 @@
+ .method public final getFocusedRootTaskInfo()Landroid/app/ActivityTaskManager$RootTaskInfo;
+     .locals 5
+ 
++    iget-object v0, p0, Lcom/android/server/wm/ActivityTaskManagerService;->mContext:Landroid/content/Context;
++
++    invoke-static {v0}, Lio/mesalabs/unica/PlayIntegrityHooks;->shouldBypassTaskPermission(Landroid/content/Context;)Z
++
++    move-result v0
++
++    if-nez v0, :cond_pif_root_task
++
+     const-string/jumbo v0, "getFocusedRootTaskInfo()"
+ 
+     invoke-static {v0}, Lcom/android/server/wm/ActivityTaskManagerService;->enforceTaskPermission(Ljava/lang/String;)V
++
++:cond_pif_root_task
+ 
+     invoke-static {}, Landroid/os/Binder;->clearCallingIdentity()J
+ 
+@@ -17546,9 +17556,19 @@
+ .method public final registerTaskStackListener(Landroid/app/ITaskStackListener;)V
+     .locals 2
+ 
++    iget-object v0, p0, Lcom/android/server/wm/ActivityTaskManagerService;->mContext:Landroid/content/Context;
++
++    invoke-static {v0}, Lio/mesalabs/unica/PlayIntegrityHooks;->shouldBypassTaskPermission(Landroid/content/Context;)Z
++
++    move-result v0
++
++    if-nez v0, :cond_pif_task_listener
++
+     const-string/jumbo v0, "registerTaskStackListener()"
+ 
+     invoke-static {v0}, Lcom/android/server/wm/ActivityTaskManagerService;->enforceTaskPermission(Ljava/lang/String;)V
++
++:cond_pif_task_listener
+ 
+     iget-object p0, p0, Lcom/android/server/wm/ActivityTaskManagerService;->mTaskChangeNotificationController:Lcom/android/server/wm/TaskChangeNotificationController;
+ 

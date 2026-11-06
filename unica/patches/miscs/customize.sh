@@ -12,12 +12,16 @@ SMALI_PATCH "system" "system/framework/framework.jar" \
     'ro.product.device' \
     'ro.product.vendor.device'
 
-# shellcheck disable=SC2016
-# Disable RescueParty
-SMALI_PATCH "system" "system/framework/services.jar" \
-    "smali/com/android/server/RescueParty.smali" "return" \
-    '-$$Nest$smisDisabled()Z' \
-    'true'
+if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge 37 ]; then
+    SET_PROP "system" "persist.sys.disable_rescue" "true"
+else
+    # shellcheck disable=SC2016
+    # Disable RescueParty
+    SMALI_PATCH "system" "system/framework/services.jar" \
+        "smali/com/android/server/RescueParty.smali" "return" \
+        '-$$Nest$smisDisabled()Z' \
+        'true'
+fi
 
 # Better model detection in FreecessController
 SMALI_PATCH "system" "system/framework/services.jar" \

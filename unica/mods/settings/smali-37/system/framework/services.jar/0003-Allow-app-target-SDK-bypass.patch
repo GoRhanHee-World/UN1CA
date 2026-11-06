@@ -1,0 +1,30 @@
+diff --git a/smali_classes2/com/android/server/pm/InstallPackageHelper.smali b/smali_classes2/com/android/server/pm/InstallPackageHelper.smali
+index 40e4b93..1e6366b 100644
+--- a/smali_classes2/com/android/server/pm/InstallPackageHelper.smali
++++ b/smali_classes2/com/android/server/pm/InstallPackageHelper.smali
+@@ -16346,6 +16346,25 @@
+     goto :goto_11
+ 
+     :cond_16
++    iget-object v0, v1, Lcom/android/server/pm/InstallPackageHelper;->mContext:Landroid/content/Context;
++
++    invoke-virtual {v0}, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
++
++    move-result-object v0
++
++    const-string/jumbo v15, "unica_allow_sdkbypass"
++
++    invoke-static {v0, v15, v8}, Landroid/provider/Settings$System;->getInt(Landroid/content/ContentResolver;Ljava/lang/String;I)I
++
++    move-result v0
++
++    if-eqz v0, :cond_unica_sdkbypass
++
++    const/4 v0, 0x1
++
++    goto :goto_11
++
++    :cond_unica_sdkbypass
+     move v0, v8
+ 
+     :goto_11

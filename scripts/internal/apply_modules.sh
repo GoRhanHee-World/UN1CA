@@ -12,6 +12,7 @@ APPLY_MODULE()
     local MODPATH="$1"
     local MODNAME
     local MODAUTH
+    local SMALI_PATH="$MODPATH/smali"
 
     if [ ! -d "$MODPATH" ]; then
         LOGE "Folder not found: ${MODPATH//$SRC_DIR\//}"
@@ -58,10 +59,14 @@ APPLY_MODULE()
         . "$MODPATH/customize.sh"
     fi
 
-    if [ -d "$MODPATH/smali" ]; then
+    SMALI_PATH="$MODPATH/smali"
+    if [ -d "$MODPATH/smali-$SOURCE_PLATFORM_SDK_VERSION" ]; then
+        SMALI_PATH="$MODPATH/smali-$SOURCE_PLATFORM_SDK_VERSION"
+    fi
+    if [ -d "$SMALI_PATH" ]; then
         while IFS= read -r f; do
-            APPLY_SMALI_PATCHES "$MODPATH/smali" "$f"
-        done < <(find "$MODPATH/smali" -type d \( -name "*.apk" -o -name "*.jar" \) | sed "s|$MODPATH/smali/||")
+            APPLY_SMALI_PATCHES "$SMALI_PATH" "$f"
+        done < <(find "$SMALI_PATH" -type d \( -name "*.apk" -o -name "*.jar" \) | sed "s|$SMALI_PATH/||")
     fi
 
     LOG_STEP_OUT
