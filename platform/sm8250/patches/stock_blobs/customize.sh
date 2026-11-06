@@ -30,9 +30,14 @@ ADD_TO_WORK_DIR "a52qnsxx" "system_ext" "app/com.qualcomm.qti.services.secureui/
     0 0 644 "u:object_r:system_file:s0"
 LOG_STEP_OUT
 
-LOG_STEP_IN "- Add r9qxxx libhwui"
-ADD_TO_WORK_DIR "r9qxxx" "system" "system/lib/libhwui.so" 0 0 644 "u:object_r:system_lib_file:s0"
-ADD_TO_WORK_DIR "r9qxxx" "system" "system/lib64/libhwui.so" 0 0 644 "u:object_r:system_lib_file:s0"
+LOG_STEP_IN "- Configuring HWUI libraries"
+if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge "37" ]; then
+    # Android 17 HWUI must match the donor's graphics interfaces and Skia ABI.
+    ADD_TO_WORK_DIR "$SOURCE_FIRMWARE" "system" "system/lib64/libhwui.so" 0 0 644 "u:object_r:system_lib_file:s0"
+else
+    ADD_TO_WORK_DIR "r9qxxx" "system" "system/lib/libhwui.so" 0 0 644 "u:object_r:system_lib_file:s0"
+    ADD_TO_WORK_DIR "r9qxxx" "system" "system/lib64/libhwui.so" 0 0 644 "u:object_r:system_lib_file:s0"
+fi
 LOG_STEP_OUT
 
 LOG_STEP_IN "- Adding r9qxxx keymaster libs"

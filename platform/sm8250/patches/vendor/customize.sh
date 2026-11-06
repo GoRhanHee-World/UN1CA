@@ -32,23 +32,43 @@ if [[ "$TARGET_CODENAME" == "x1q" || \
     LOG_STEP_OUT
 fi
 
-LOG_STEP_IN "- Adding 32-bit WFD blobs"
-DELETE_FROM_WORK_DIR "system" "system/lib64/libhdcp_client_aidl.so"
-DELETE_FROM_WORK_DIR "system" "system/lib64/libhdcp2.so"
-DELETE_FROM_WORK_DIR "system" "system/lib64/libremotedisplay_wfd.so"
-DELETE_FROM_WORK_DIR "system" "system/lib64/libremotedisplayservice.so"
-DELETE_FROM_WORK_DIR "system" "system/lib64/libsecuibc.so"
-DELETE_FROM_WORK_DIR "system" "system/lib64/libstagefright_hdcp.so"
-DELETE_FROM_WORK_DIR "system" "system/lib64/vendor.samsung.hardware.security.hdcp.wifidisplay-V2-ndk.so"
-DELETE_FROM_WORK_DIR "system" "system/lib64/wfd_log.so"
-ADD_TO_WORK_DIR "r9qxxx" "system" "system/bin/insthk" 0 2000 755 "u:object_r:insthk_exec:s0"
-ADD_TO_WORK_DIR "r9qxxx" "system" "system/bin/remotedisplay" 0 2000 755 "u:object_r:remotedisplay_exec:s0"
-ADD_TO_WORK_DIR "r9qxxx" "system" "system/lib/libhdcp2.so" 0 0 644 "u:object_r:system_lib_file:s0"
-ADD_TO_WORK_DIR "r9qxxx" "system" "system/lib/libremotedisplay_wfd.so" 0 0 644 "u:object_r:system_lib_file:s0"
-ADD_TO_WORK_DIR "r9qxxx" "system" "system/lib/libremotedisplayservice.so" 0 0 644 "u:object_r:system_lib_file:s0"
-ADD_TO_WORK_DIR "r9qxxx" "system" "system/lib/libsecuibc.so" 0 0 644 "u:object_r:system_lib_file:s0"
-ADD_TO_WORK_DIR "r9qxxx" "system" "system/lib/libstagefright_hdcp.so" 0 0 644 "u:object_r:system_lib_file:s0"
-ADD_TO_WORK_DIR "r9qxxx" "system" "system/lib/wfd_log.so" 0 0 644 "u:object_r:system_lib_file:s0"
+if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge "37" ]; then
+    LOG_STEP_IN "- Using donor 64-bit WFD stack"
+    for WFD_BINARY in insthk remotedisplay; do
+        ADD_TO_WORK_DIR "$SOURCE_FIRMWARE" "system" "system/bin/$WFD_BINARY" 0 2000 755 "u:object_r:${WFD_BINARY}_exec:s0"
+    done
+    for WFD_LIB in \
+        libhdcp_client_aidl.so \
+        libhdcp2.so \
+        libremotedisplay_wfd.so \
+        libremotedisplayservice.so \
+        libsecuibc.so \
+        libstagefright_hdcp.so \
+        vendor.samsung.hardware.security.hdcp.wifidisplay-V2-ndk.so \
+        wfd_log.so; do
+        ADD_TO_WORK_DIR "$SOURCE_FIRMWARE" "system" "system/lib64/$WFD_LIB" 0 0 644 "u:object_r:system_lib_file:s0"
+    done
+    unset WFD_BINARY WFD_LIB
+    LOG_STEP_OUT
+else
+    LOG_STEP_IN "- Adding 32-bit WFD blobs"
+    DELETE_FROM_WORK_DIR "system" "system/lib64/libhdcp_client_aidl.so"
+    DELETE_FROM_WORK_DIR "system" "system/lib64/libhdcp2.so"
+    DELETE_FROM_WORK_DIR "system" "system/lib64/libremotedisplay_wfd.so"
+    DELETE_FROM_WORK_DIR "system" "system/lib64/libremotedisplayservice.so"
+    DELETE_FROM_WORK_DIR "system" "system/lib64/libsecuibc.so"
+    DELETE_FROM_WORK_DIR "system" "system/lib64/libstagefright_hdcp.so"
+    DELETE_FROM_WORK_DIR "system" "system/lib64/vendor.samsung.hardware.security.hdcp.wifidisplay-V2-ndk.so"
+    DELETE_FROM_WORK_DIR "system" "system/lib64/wfd_log.so"
+    ADD_TO_WORK_DIR "r9qxxx" "system" "system/bin/insthk" 0 2000 755 "u:object_r:insthk_exec:s0"
+    ADD_TO_WORK_DIR "r9qxxx" "system" "system/bin/remotedisplay" 0 2000 755 "u:object_r:remotedisplay_exec:s0"
+    ADD_TO_WORK_DIR "r9qxxx" "system" "system/lib/libhdcp2.so" 0 0 644 "u:object_r:system_lib_file:s0"
+    ADD_TO_WORK_DIR "r9qxxx" "system" "system/lib/libremotedisplay_wfd.so" 0 0 644 "u:object_r:system_lib_file:s0"
+    ADD_TO_WORK_DIR "r9qxxx" "system" "system/lib/libremotedisplayservice.so" 0 0 644 "u:object_r:system_lib_file:s0"
+    ADD_TO_WORK_DIR "r9qxxx" "system" "system/lib/libsecuibc.so" 0 0 644 "u:object_r:system_lib_file:s0"
+    ADD_TO_WORK_DIR "r9qxxx" "system" "system/lib/libstagefright_hdcp.so" 0 0 644 "u:object_r:system_lib_file:s0"
+    ADD_TO_WORK_DIR "r9qxxx" "system" "system/lib/wfd_log.so" 0 0 644 "u:object_r:system_lib_file:s0"
+fi
 
 echo "Remove DualDAR mount points"
 sed -i "/keydata/d" "$WORK_DIR/vendor/etc/fstab.qcom"
