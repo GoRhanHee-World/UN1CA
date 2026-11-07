@@ -93,6 +93,16 @@ SET_PROP "vendor" "wlan.wfd.hdcp" "disabled"
 SET_PROP "vendor" "wifi.interface" "wlan0"
 SET_PROP "vendor" "ro.security.vaultkeeper.native" "0"
 SET_PROP "vendor" "ro.security.vaultkeeper.feature" "0"
+if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge 37 ]; then
+    SMALI_PATCH "system" "system/framework/services.jar" \
+        "smali/com/android/server/VaultKeeperService.smali" "replace" \
+        '<init>(Landroid/content/Context;)V' \
+        'invoke-direct {p0}, Lcom/android/server/VaultKeeperService;->nativeGetSystemSolution()I' \
+        'const/4 v0, 0x0'
+    SMALI_PATCH "system" "system/framework/services.jar" \
+        "smali/com/android/server/VaultKeeperService.smali" "replace" \
+        '<init>(Landroid/content/Context;)V' 'move-result v0' ''
+fi
 LOG_STEP_OUT
 
 LOG_STEP_IN "- Replacing singletake blobs with dm3qxxx"

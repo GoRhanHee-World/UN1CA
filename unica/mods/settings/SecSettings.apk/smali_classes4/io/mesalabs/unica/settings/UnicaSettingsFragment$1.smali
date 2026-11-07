@@ -23,6 +23,16 @@
 
 
 # virtual methods
+.method public final onMenuItemClick(Landroid/view/MenuItem;)Z
+    .locals 0
+
+    invoke-virtual {p0, p1}, Lio/mesalabs/unica/settings/UnicaSettingsFragment$1;->onMenuItemClick(Landroid/view/MenuItem;)V
+
+    const/4 p0, 0x1
+
+    return p0
+.end method
+
 .method public final onMenuItemClick(Landroid/view/MenuItem;)V
     .locals 2
 

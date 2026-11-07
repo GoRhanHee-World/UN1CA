@@ -1,4 +1,4 @@
 id=ueventd_legacy
-name=Vendor ueventd rules where an Android 17 ueventd reads them
+name=Legacy vendor device permissions
 author=MinsOS
-description=y2q's Android 11-era vendor keeps its device rules in /vendor/ueventd.rc. Android 16's ueventd still read that legacy path for old vendors; Android 17's no longer does, so /dev/qseecom, /dev/kgsl-3d0, /dev/ion and the firmware_directories line never applied and every TrustZone and DSP client failed (One UI 9 diagnostic boot, 10-04). Copies it to /vendor/etc/ueventd.rc, the path the system ueventd.rc imports.
+description=Imports legacy vendor device rules on Android 17 while preserving existing vendor/etc rules.
