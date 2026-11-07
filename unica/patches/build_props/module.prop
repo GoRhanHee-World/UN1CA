@@ -1,0 +1,4 @@
+id=build_props
+name=Build property hook compatibility
+author=GoRhanHee
+description=Keeps fields used by UN1CA property hooks writable on Android 17 and later.

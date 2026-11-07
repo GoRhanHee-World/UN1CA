@@ -55,6 +55,12 @@ if [ "$(GET_FLOATING_FEATURE_CONFIG "SEC_FLOATING_FEATURE_GRAPHICS_SUPPORT_3D_SU
 fi
 LOG_STEP_OUT
 
+if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge 37 ]; then
+    LOG "- Converting legacy camera recording defaults to explicit 30 fps"
+    sed -i -E '/name="(BACK|FRONT)_CAMERA_RECORDING_DEFAULT_RESOLUTION"/s/(value="[0-9]+x[0-9]+)_AUTO"/\1"/' \
+        "$WORK_DIR/system/system/cameradata/camera-feature.xml"
+fi
+
 # Samsung Camera "hal3_mass-phone-release" app flavor
 if ! $SOURCE_CAMERA_SUPPORT_MASS_APP_FLAVOR; then
     if $TARGET_CAMERA_SUPPORT_MASS_APP_FLAVOR; then

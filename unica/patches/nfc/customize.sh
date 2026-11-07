@@ -1,6 +1,93 @@
 # [
 _LOG() { if $DEBUG; then LOGW "$1"; else ABORT "$1"; fi }
 
+_IMPORT_SOURCE_NFC_JNI()
+{
+    local ABI_DIR="$1"
+    local JNI_PATH="system/$ABI_DIR/libnfc_nci_jni.so"
+    local SOURCE_APEX
+    local SOURCE_SYSTEM="$FW_DIR/$SOURCE_FIRMWARE_PATH/system/system"
+    local NFC_TMP_DIR
+    local NFC_APEX
+
+    for SOURCE_APEX in "$SOURCE_SYSTEM/apex/com.android.nfcservices.capex" \
+            "$SOURCE_SYSTEM/apex/com.android.nfcservices.apex" \
+            "$SOURCE_SYSTEM/apex/com.android.nfcservices"; do
+        if [ -e "$SOURCE_APEX" ]; then
+            LOG "- Using $ABI_DIR NFC JNI from the source nfcservices APEX"
+            if [ -d "$SOURCE_APEX" ]; then
+                if [ "$ABI_DIR" = lib ] && [ ! -f "$SOURCE_APEX/lib/libnfc_nci_jni.so" ] && \
+                        [ -f "$SOURCE_APEX/lib64/libnfc_nci_jni.so" ]; then
+                    LOG "- Source NFC service only supplies a 64-bit JNI"
+                    return 0
+                fi
+                cp -f "$SOURCE_APEX/$ABI_DIR/libnfc_nci_jni.so" \
+                    "$WORK_DIR/system/$JNI_PATH" || return 1
+            else
+                NFC_TMP_DIR="$(mktemp -d)" || return 1
+                NFC_APEX="$SOURCE_APEX"
+                if [[ "$SOURCE_APEX" == *.capex ]]; then
+                    if ! unzip -p "$SOURCE_APEX" original_apex > "$NFC_TMP_DIR/nfc.apex"; then
+                        rm -rf "$NFC_TMP_DIR"
+                        return 1
+                    fi
+                    NFC_APEX="$NFC_TMP_DIR/nfc.apex"
+                fi
+                if ! unzip -p "$NFC_APEX" apex_payload.img > "$NFC_TMP_DIR/payload.img"; then
+                    rm -rf "$NFC_TMP_DIR"
+                    return 1
+                fi
+                if [ "$(READ_BYTES_AT "$NFC_TMP_DIR/payload.img" 1024 4)" = "e0f5e1e2" ]; then
+                    if ! fsck.erofs --extract="$NFC_TMP_DIR/payload" --no-preserve "$NFC_TMP_DIR/payload.img"; then
+                        rm -rf "$NFC_TMP_DIR"
+                        return 1
+                    fi
+                    if [ -f "$NFC_TMP_DIR/payload/$ABI_DIR/libnfc_nci_jni.so" ]; then
+                        cp -f "$NFC_TMP_DIR/payload/$ABI_DIR/libnfc_nci_jni.so" "$NFC_TMP_DIR/jni.so"
+                    fi
+                else
+                    debugfs -R "dump /$ABI_DIR/libnfc_nci_jni.so $NFC_TMP_DIR/jni.so" \
+                        "$NFC_TMP_DIR/payload.img" > /dev/null 2>&1
+                fi
+                if [ "$ABI_DIR" = lib ] && [ ! -s "$NFC_TMP_DIR/jni.so" ]; then
+                    if [ -f "$NFC_TMP_DIR/payload/lib64/libnfc_nci_jni.so" ]; then
+                        cp -f "$NFC_TMP_DIR/payload/lib64/libnfc_nci_jni.so" "$NFC_TMP_DIR/jni64.so"
+                    else
+                        debugfs -R "dump /lib64/libnfc_nci_jni.so $NFC_TMP_DIR/jni64.so" \
+                            "$NFC_TMP_DIR/payload.img" > /dev/null 2>&1
+                    fi
+                    if [ -s "$NFC_TMP_DIR/jni64.so" ]; then
+                        rm -rf "$NFC_TMP_DIR"
+                        LOG "- Source NFC service only supplies a 64-bit JNI"
+                        return 0
+                    fi
+                fi
+                if [ ! -s "$NFC_TMP_DIR/jni.so" ]; then
+                    rm -rf "$NFC_TMP_DIR"
+                    ABORT "Missing $ABI_DIR NFC JNI in the source nfcservices APEX"
+                    return 1
+                fi
+                if ! cp -f "$NFC_TMP_DIR/jni.so" "$WORK_DIR/system/$JNI_PATH"; then
+                    rm -rf "$NFC_TMP_DIR"
+                    return 1
+                fi
+                rm -rf "$NFC_TMP_DIR"
+            fi
+            SET_METADATA "system" "$JNI_PATH" 0 0 644 "u:object_r:system_lib_file:s0"
+            return 0
+        fi
+    done
+
+    if [ -f "$SOURCE_SYSTEM/$ABI_DIR/libnfc_nci_jni.so" ]; then
+        ADD_TO_WORK_DIR "$SOURCE_FIRMWARE" "system" "$JNI_PATH" \
+            0 0 644 "u:object_r:system_lib_file:s0"
+        return 0
+    fi
+
+    ABORT "No source-matched NFC JNI for $ABI_DIR on API $SOURCE_PLATFORM_SDK_VERSION"
+    return 1
+}
+
 _IMPORT_LEGACY_NXP_JNI()
 {
     local ABI_DIR="$1"
@@ -81,7 +168,9 @@ _IMPORT_LEGACY_NXP_JNI()
     # API 36 uses a vendor-neutral JNI that can talk to both AIDL and legacy
     # HIDL NFC HALs. Prefer the native API 36 implementation for arm64 while
     # retaining the target's own NXP HAL, firmware and configuration.
-    if [ "$ABI_DIR" = "lib64" ] && [ -f "$MODERN_JNI" ]; then
+    if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge 37 ]; then
+        _IMPORT_SOURCE_NFC_JNI "$ABI_DIR" || return 1
+    elif [ "$ABI_DIR" = "lib64" ] && [ -f "$MODERN_JNI" ]; then
         ADD_TO_WORK_DIR "pa3qzcx" "system" "$GENERIC_PATH" \
             0 0 644 "u:object_r:system_lib_file:s0"
     else
@@ -94,6 +183,7 @@ _IMPORT_LEGACY_NXP_JNI()
 # ]
 
 TARGET_FIRMWARE_PATH="$(cut -d "/" -f 1 -s <<< "$TARGET_FIRMWARE")_$(cut -d "/" -f 2 -s <<< "$TARGET_FIRMWARE")"
+SOURCE_FIRMWARE_PATH="$(cut -d "/" -f 1 -s <<< "$SOURCE_FIRMWARE")_$(cut -d "/" -f 2 -s <<< "$SOURCE_FIRMWARE")"
 
 if [ -f "$FW_DIR/$TARGET_FIRMWARE_PATH/system/system/etc/libnfc-nci.conf" ]; then
     ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" "system/etc/libnfc-nci.conf" 0 0 644 "u:object_r:system_file:s0"

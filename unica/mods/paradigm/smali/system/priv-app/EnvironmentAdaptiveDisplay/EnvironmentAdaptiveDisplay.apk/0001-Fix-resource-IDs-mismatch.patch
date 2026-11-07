@@ -1,16 +1,10 @@
-From 563f654c33d413a507c1a1dfae42b1cfa9786da9 Mon Sep 17 00:00:00 2001
-From: Salvo Giangreco <giangrecosalvo9@gmail.com>
-Date: Tue, 12 May 2026 01:12:26 +0200
-Subject: [PATCH] Fix resource IDs mismatch
+From: GoRhanHee <gorhanhee@users.noreply.github.com>
+Subject: [PATCH] Resolve Adaptive colour tone arrays by framework field name
 
----
- .../android/sead/EadFlickerController.smali   |  8 +++----
- .../android/sead/EadLuxController.smali       |  8 +++----
- .../EnvironmentAdaptiveDisplayService.smali   | 22 +++++++++----------
- 3 files changed, 19 insertions(+), 19 deletions(-)
+Numeric resource IDs change between Samsung framework versions. Reference
+the framework R fields so every source uses its own calibration arrays.
 
 diff --git a/smali/com/samsung/android/sead/EadFlickerController.smali b/smali/com/samsung/android/sead/EadFlickerController.smali
-index 1b5e003..8d00bc7 100644
 --- a/smali/com/samsung/android/sead/EadFlickerController.smali
 +++ b/smali/com/samsung/android/sead/EadFlickerController.smali
 @@ -780,7 +780,7 @@
@@ -18,7 +12,7 @@ index 1b5e003..8d00bc7 100644
      move-result-object v0
  
 -    const v1, 0x1070056
-+    const v1, 0x1070057
++    sget v1, Lcom/android/internal/R$array;->config_EadLuxHysteresisInput_Brightening_Sub:I
  
      invoke-virtual {v0, v1}, Landroid/content/res/Resources;->getIntArray(I)[I
  
@@ -27,7 +21,7 @@ index 1b5e003..8d00bc7 100644
      move-result-object v0
  
 -    const v1, 0x107005a
-+    const v1, 0x107005b
++    sget v1, Lcom/android/internal/R$array;->config_EadLuxHysteresisOutput_Brightening_Sub:I
  
      invoke-virtual {v0, v1}, Landroid/content/res/Resources;->getIntArray(I)[I
  
@@ -36,7 +30,7 @@ index 1b5e003..8d00bc7 100644
      move-result-object v0
  
 -    const v1, 0x1070058
-+    const v1, 0x1070059
++    sget v1, Lcom/android/internal/R$array;->config_EadLuxHysteresisInput_Darkening_Sub:I
  
      invoke-virtual {v0, v1}, Landroid/content/res/Resources;->getIntArray(I)[I
  
@@ -45,12 +39,11 @@ index 1b5e003..8d00bc7 100644
      move-result-object v0
  
 -    const v1, 0x107005c
-+    const v1, 0x107005d
++    sget v1, Lcom/android/internal/R$array;->config_EadLuxHysteresisOutput_Darkening_Sub:I
  
      invoke-virtual {v0, v1}, Landroid/content/res/Resources;->getIntArray(I)[I
  
 diff --git a/smali/com/samsung/android/sead/EadLuxController.smali b/smali/com/samsung/android/sead/EadLuxController.smali
-index 0799fe2..c1fb78e 100644
 --- a/smali/com/samsung/android/sead/EadLuxController.smali
 +++ b/smali/com/samsung/android/sead/EadLuxController.smali
 @@ -1073,7 +1073,7 @@
@@ -58,7 +51,7 @@ index 0799fe2..c1fb78e 100644
      move-result-object v0
  
 -    const v1, 0x1070055
-+    const v1, 0x1070056
++    sget v1, Lcom/android/internal/R$array;->config_EadLuxHysteresisInput_Brightening:I
  
      invoke-virtual {v0, v1}, Landroid/content/res/Resources;->getIntArray(I)[I
  
@@ -67,7 +60,7 @@ index 0799fe2..c1fb78e 100644
      move-result-object v0
  
 -    const v1, 0x1070059
-+    const v1, 0x107005a
++    sget v1, Lcom/android/internal/R$array;->config_EadLuxHysteresisOutput_Brightening:I
  
      invoke-virtual {v0, v1}, Landroid/content/res/Resources;->getIntArray(I)[I
  
@@ -76,7 +69,7 @@ index 0799fe2..c1fb78e 100644
      move-result-object v0
  
 -    const v1, 0x1070057
-+    const v1, 0x1070058
++    sget v1, Lcom/android/internal/R$array;->config_EadLuxHysteresisInput_Darkening:I
  
      invoke-virtual {v0, v1}, Landroid/content/res/Resources;->getIntArray(I)[I
  
@@ -85,12 +78,11 @@ index 0799fe2..c1fb78e 100644
      move-result-object v0
  
 -    const v1, 0x107005b
-+    const v1, 0x107005c
++    sget v1, Lcom/android/internal/R$array;->config_EadLuxHysteresisOutput_Darkening:I
  
      invoke-virtual {v0, v1}, Landroid/content/res/Resources;->getIntArray(I)[I
  
 diff --git a/smali/com/samsung/android/sead/EnvironmentAdaptiveDisplayService.smali b/smali/com/samsung/android/sead/EnvironmentAdaptiveDisplayService.smali
-index 3ff7dac..9a25a9e 100644
 --- a/smali/com/samsung/android/sead/EnvironmentAdaptiveDisplayService.smali
 +++ b/smali/com/samsung/android/sead/EnvironmentAdaptiveDisplayService.smali
 @@ -1132,7 +1132,7 @@
@@ -98,7 +90,7 @@ index 3ff7dac..9a25a9e 100644
      move-result-object v0
  
 -    const v1, 0x1070047
-+    const v1, 0x1070048
++    sget v1, Lcom/android/internal/R$array;->config_Blf_Custom_CCT:I
  
      invoke-virtual {v0, v1}, Landroid/content/res/Resources;->getIntArray(I)[I
  
@@ -107,7 +99,7 @@ index 3ff7dac..9a25a9e 100644
      move-result-object v0
  
 -    const v1, 0x107005d
-+    const v1, 0x107005e
++    sget v1, Lcom/android/internal/R$array;->config_EadMeasuredCCT:I
  
      invoke-virtual {v0, v1}, Landroid/content/res/Resources;->getIntArray(I)[I
  
@@ -116,7 +108,7 @@ index 3ff7dac..9a25a9e 100644
      move-result-object v0
  
 -    const v1, 0x107005e
-+    const v1, 0x107005f
++    sget v1, Lcom/android/internal/R$array;->config_EadTargetCCT:I
  
      invoke-virtual {v0, v1}, Landroid/content/res/Resources;->getIntArray(I)[I
  
@@ -125,7 +117,7 @@ index 3ff7dac..9a25a9e 100644
      move-result-object v1
  
 -    const v2, 0x1070063
-+    const v2, 0x1070064
++    sget v2, Lcom/android/internal/R$array;->config_EadWhiteRGB_TargetCCT:I
  
      invoke-virtual {v1, v2}, Landroid/content/res/Resources;->getIntArray(I)[I
  
@@ -134,7 +126,7 @@ index 3ff7dac..9a25a9e 100644
      move-result-object v1
  
 -    const v2, 0x1070064
-+    const v2, 0x1070065
++    sget v2, Lcom/android/internal/R$array;->config_EadWhiteRGB_TargetCCT_Natural:I
  
      invoke-virtual {v1, v2}, Landroid/content/res/Resources;->getIntArray(I)[I
  
@@ -143,7 +135,7 @@ index 3ff7dac..9a25a9e 100644
      move-result-object v1
  
 -    const v2, 0x107005f
-+    const v2, 0x1070060
++    sget v2, Lcom/android/internal/R$array;->config_EadWhiteRGB_Offset:I
  
      invoke-virtual {v1, v2}, Landroid/content/res/Resources;->getStringArray(I)[Ljava/lang/String;
  
@@ -152,7 +144,7 @@ index 3ff7dac..9a25a9e 100644
      move-result-object v1
  
 -    const v2, 0x1070060
-+    const v2, 0x1070061
++    sget v2, Lcom/android/internal/R$array;->config_EadWhiteRGB_Offset_Natural:I
  
      invoke-virtual {v1, v2}, Landroid/content/res/Resources;->getStringArray(I)[Ljava/lang/String;
  
@@ -161,7 +153,7 @@ index 3ff7dac..9a25a9e 100644
      move-result-object v1
  
 -    const v2, 0x1070061
-+    const v2, 0x1070062
++    sget v2, Lcom/android/internal/R$array;->config_EadWhiteRGB_Offset_Sub:I
  
      invoke-virtual {v1, v2}, Landroid/content/res/Resources;->getStringArray(I)[Ljava/lang/String;
  
@@ -170,7 +162,7 @@ index 3ff7dac..9a25a9e 100644
      move-result-object v1
  
 -    const v2, 0x1070062
-+    const v2, 0x1070063
++    sget v2, Lcom/android/internal/R$array;->config_EadWhiteRGB_Offset_Sub_Natural:I
  
      invoke-virtual {v1, v2}, Landroid/content/res/Resources;->getStringArray(I)[Ljava/lang/String;
  
@@ -179,7 +171,7 @@ index 3ff7dac..9a25a9e 100644
      move-result-object v0
  
 -    const v1, 0x107006e
-+    const v1, 0x107006f
++    sget v1, Lcom/android/internal/R$array;->config_Gallery_App_Launcher:I
  
      invoke-virtual {v0, v1}, Landroid/content/res/Resources;->getStringArray(I)[Ljava/lang/String;
  
@@ -188,10 +180,7 @@ index 3ff7dac..9a25a9e 100644
      move-result-object v0
  
 -    const v1, 0x107004b
-+    const v1, 0x107004c
++    sget v1, Lcom/android/internal/R$array;->config_Camera_App_Launcher:I
  
      invoke-virtual {v0, v1}, Landroid/content/res/Resources;->getStringArray(I)[Ljava/lang/String;
  
--- 
-2.54.0
-
