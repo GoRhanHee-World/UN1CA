@@ -11,3 +11,12 @@ else
     APPLY_PATCH "system" "system/priv-app/SamsungDeviceHealthManagerService/SamsungDeviceHealthManagerService.apk" \
         "$MODPATH/legacy/0001-Restore-SM8250-TABoostController.patch"
 fi
+
+LOG_STEP_IN "- Removing unsupported SM8250 performance controls"
+for HYPER_CONFIG in config_chipset.json config_vendor.json; do
+    if [ -f "$WORK_DIR/vendor/etc/hyper/$HYPER_CONFIG" ]; then
+        EVAL "python3 \"$MODPATH/files/fix_hyper_config.py\" \"$WORK_DIR/vendor/etc/hyper/$HYPER_CONFIG\""
+    fi
+done
+unset HYPER_CONFIG
+LOG_STEP_OUT
