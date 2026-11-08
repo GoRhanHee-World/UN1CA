@@ -1,4 +1,4 @@
 id=kernel
 name=Kernel
-author=utkustnr,mianhamza
-description=Add prebuilt grass kernel images
+author=utkustnr,mianhamza,GoRhanHee
+description=Repack the ROM boot image with the not_kernel Image and DTB, and install its matching DTBO.
