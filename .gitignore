@@ -1,5 +1,11 @@
 out/
 
+# Keep patch development sources and tests local.
+/platform/*/patches/**/src/
+/platform/*/patches/**/tests/
+/target/*/patches/**/src/
+/target/*/patches/**/tests/
+
 # Cert
 security/unica_ota.x509.pem
 security/unica_ota.pk8

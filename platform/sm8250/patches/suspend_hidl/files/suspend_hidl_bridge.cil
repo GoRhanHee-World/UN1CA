@@ -1,0 +1,2 @@
+;; UN1CA SM8250 suspend bridge: both processes use the system_suspend domain.
+(allow system_suspend self (binder (call transfer)))

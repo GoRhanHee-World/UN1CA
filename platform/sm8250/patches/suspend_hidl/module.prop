@@ -1,0 +1,4 @@
+id=suspend_hidl
+name=Legacy suspend compatibility
+author=GoRhanHee
+description=Forwards SM8250 HIDL wake locks to the Android 17 AIDL suspend service.
