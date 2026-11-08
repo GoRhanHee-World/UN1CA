@@ -1,0 +1,4 @@
+id=cid_activation
+name=CID activation compatibility
+author=GoRhanHee
+description=Stores carrier activation state when VaultKeeper is unsupported on SM8250.
