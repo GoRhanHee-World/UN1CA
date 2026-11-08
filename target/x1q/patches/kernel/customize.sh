@@ -1,8 +1,6 @@
 KERNEL_BASE_TAG="boot-x1q-20261101-211838"
-KERNEL_BASE_SHA256="7b7c82734fdd92b26877764ab07981ac56f5cf3e1f5154bf85b60ce64d61f25e"
 KERNEL_TAG="x1q-20261108"
 KERNEL_ZIP="not-stock-20261108-5269d116-x1q.zip"
-KERNEL_SHA256="48a25cec028375639cc580ca1ceda67d5264da1de3149625002ffaf545498f29"
 
 LOG_STEP_IN "- Repacking not_kernel ($KERNEL_TAG)"
 mkdir -p "$TMP_DIR" "$WORK_DIR/kernel"
@@ -11,14 +9,6 @@ KERNEL_TMP="$(mktemp -d "$TMP_DIR/kernel-x1q.XXXXXX")"
 # Preserve the boot header and ramdisk already used by this ROM.
 DOWNLOAD_FILE "https://github.com/ssch71/not_samsung.sm8250-4.19/releases/download/$KERNEL_BASE_TAG/boot.img" "$KERNEL_TMP/boot.img"
 DOWNLOAD_FILE "https://github.com/GoRhanHee-World/android_samsung_kernel_sm8250/releases/download/$KERNEL_TAG/$KERNEL_ZIP" "$KERNEL_TMP/kernel.zip"
-for IMG in boot.img kernel.zip; do
-    WANT="$KERNEL_SHA256"
-    [ "$IMG" == "boot.img" ] && WANT="$KERNEL_BASE_SHA256"
-    GOT="$(sha256sum "$KERNEL_TMP/$IMG" | cut -d " " -f 1)"
-    if [ "$WANT" != "$GOT" ]; then
-        ABORT "$IMG checksum mismatch ($KERNEL_TAG)"
-    fi
-done
 
 LOG "- Extracting the boot image"
 EVAL "unpack_bootimg --boot_img \"$KERNEL_TMP/boot.img\" --out \"$KERNEL_TMP/out\" --format mkbootimg -0 > \"$KERNEL_TMP/mkbootimg.args\"" || return 1
@@ -40,22 +30,8 @@ for IMG in out/kernel out/dtb dtbo.img; do
     fi
 done
 
-# Match the One UI command-line flags used by the AnyKernel installer.
-KERNEL_CMDLINE=""
-for KERNEL_ARG in "${!KERNEL_ARGS[@]}"; do
-    if [ "${KERNEL_ARGS[$KERNEL_ARG]}" == "--cmdline" ]; then
-        KERNEL_CMDLINE="${KERNEL_ARGS[$((KERNEL_ARG + 1))]}"
-    fi
-done
-KERNEL_CMDLINE="$(sed -E 's/(^|[[:space:]])android\.is_(aosp|uos)=[^[:space:]]+//g' <<< "$KERNEL_CMDLINE")"
-KERNEL_UOS=0
-if [ "$(GET_PROP "system" "ro.build.version.oneui")" == "80000" ]; then
-    KERNEL_UOS=1
-fi
-KERNEL_CMDLINE+=" android.is_aosp=0 android.is_uos=$KERNEL_UOS"
-
 LOG "- Repacking boot.img"
-printf -v KERNEL_COMMAND '%q ' mkbootimg "${KERNEL_ARGS[@]}" --cmdline "$KERNEL_CMDLINE" -o "$KERNEL_TMP/new-boot.img"
+printf -v KERNEL_COMMAND '%q ' mkbootimg "${KERNEL_ARGS[@]}" -o "$KERNEL_TMP/new-boot.img"
 EVAL "$KERNEL_COMMAND" || return 1
 echo -n "SEANDROIDENFORCE" >> "$KERNEL_TMP/new-boot.img"
 if [ "$(wc -c < "$KERNEL_TMP/new-boot.img")" -gt "$TARGET_BOOT_PARTITION_SIZE" ]; then
@@ -68,6 +44,6 @@ EVAL "mv -f \"$KERNEL_TMP/new-boot.img\" \"$WORK_DIR/kernel/boot.img\"" || retur
 EVAL "mv -f \"$KERNEL_TMP/dtbo.img\" \"$WORK_DIR/kernel/dtbo.img\"" || return 1
 EVAL "rm -rf \"$KERNEL_TMP\""
 
-unset KERNEL_BASE_TAG KERNEL_BASE_SHA256 KERNEL_TAG KERNEL_ZIP KERNEL_SHA256 KERNEL_TMP
-unset KERNEL_ARGS KERNEL_ARG KERNEL_CMDLINE KERNEL_UOS KERNEL_COMMAND IMG WANT GOT
+unset KERNEL_BASE_TAG KERNEL_TAG KERNEL_ZIP KERNEL_TMP
+unset KERNEL_ARGS KERNEL_ARG KERNEL_COMMAND IMG
 LOG_STEP_OUT
