@@ -1,5 +1,5 @@
 From: GoRhanHee <gorhanhee01@gmail.com>
-Subject: [PATCH] Honor HMA enable state and preserve same-app launches
+Subject: [PATCH] Honor HMA enable state after boot and preserve same-app launches
 
 diff --git a/smali_classes2/com/android/server/pm/ComputerEngine.smali b/smali_classes2/com/android/server/pm/ComputerEngine.smali
 --- a/smali_classes2/com/android/server/pm/ComputerEngine.smali
@@ -22,7 +22,7 @@ diff --git a/smali_classes2/com/android/server/pm/ComputerEngine.smali b/smali_c
      const-string v2, "com.android.vending"
 
      invoke-virtual {v0, v2}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
-@@ -137,12 +148,26 @@
+@@ -137,12 +148,34 @@
  .end method
 
  .method public recreateApplicationList(ILandroid/content/Context;ILjava/util/List;)Ljava/util/List;
@@ -33,6 +33,14 @@ diff --git a/smali_classes2/com/android/server/pm/ComputerEngine.smali b/smali_c
 
      invoke-direct {p3, p4}, Ljava/util/ArrayList;-><init>(Ljava/util/Collection;)V
 
++    invoke-static {}, Lcom/android/server/pm/ComputerEngine;->isBootCompleted()Z
++
++    move-result v0
++
++    if-eqz v0, :hma_list_unfiltered
++
++    if-eqz p2, :hma_list_unfiltered
++
 +    invoke-virtual {p2}, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
 +
 +    move-result-object v0
@@ -50,7 +58,7 @@ diff --git a/smali_classes2/com/android/server/pm/ComputerEngine.smali b/smali_c
      const/4 p4, 0x0
 
      invoke-virtual {p0, p1, p4}, Lcom/android/server/pm/ComputerEngine;->canHideApp(ILjava/lang/String;)Z
-@@ -151,6 +176,7 @@
+@@ -151,6 +184,7 @@
 
      if-nez p0, :cond_0
 
@@ -58,7 +66,7 @@ diff --git a/smali_classes2/com/android/server/pm/ComputerEngine.smali b/smali_c
      return-object p3
 
      :cond_0
-@@ -168,7 +194,7 @@
+@@ -168,7 +202,7 @@
  .end method
 
  .method public recreatePackageList(ILandroid/content/Context;ILandroid/content/pm/ParceledListSlice;)Landroid/content/pm/ParceledListSlice;
@@ -67,10 +75,18 @@ diff --git a/smali_classes2/com/android/server/pm/ComputerEngine.smali b/smali_c
 
      new-instance p3, Ljava/util/ArrayList;
 
-@@ -178,6 +204,20 @@
+@@ -178,6 +212,28 @@
 
      invoke-direct {p3, p4}, Ljava/util/ArrayList;-><init>(Ljava/util/Collection;)V
 
++    invoke-static {}, Lcom/android/server/pm/ComputerEngine;->isBootCompleted()Z
++
++    move-result v0
++
++    if-eqz v0, :hma_list_unfiltered
++
++    if-eqz p2, :hma_list_unfiltered
++
 +    invoke-virtual {p2}, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
 +
 +    move-result-object v0
@@ -88,7 +104,7 @@ diff --git a/smali_classes2/com/android/server/pm/ComputerEngine.smali b/smali_c
      const/4 p4, 0x0
 
      invoke-virtual {p0, p1, p4}, Lcom/android/server/pm/ComputerEngine;->canHideApp(ILjava/lang/String;)Z
-@@ -186,6 +226,7 @@
+@@ -186,6 +242,7 @@
 
      if-nez p0, :cond_0
 
