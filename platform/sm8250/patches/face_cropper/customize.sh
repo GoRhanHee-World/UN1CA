@@ -20,8 +20,8 @@ if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge 37 ]; then
     fi
     SMALI_PATCH "system" "system/priv-app/FaceService/FaceService.apk" \
         "smali/vizinsight/atl/vzimagecropper/VZImageCropper.smali" "replace" \
-        '<clinit>()V' '"ImageCropper.camera.samsung"' '"ImageCropper_sm8250.camera.samsung"'
-    EVAL "sed -i 's/libImageCropper\\.camera\\.samsung\\.so/libImageCropper_sm8250.camera.samsung.so/g' \"$APKTOOL_DIR/system/priv-app/FaceService/FaceService.apk/AndroidManifest.xml\""
+        '<clinit>()V' 'ImageCropper.camera.samsung' 'ImageCropper_sm8250.camera.samsung' || return 1
+    EVAL "sed -i 's/libImageCropper\\.camera\\.samsung\\.so/libImageCropper_sm8250.camera.samsung.so/g' \"$APKTOOL_DIR/system/priv-app/FaceService/FaceService.apk/AndroidManifest.xml\"" || return 1
     unset CROPPER_FIRMWARE_PATH CROPPER_SOURCE
     LOG_STEP_OUT
 fi
