@@ -249,6 +249,29 @@
 
     iput-object v1, p0, Lio/mesalabs/unica/settings/spoof/HideDeveloperStatusFragment;->mLoadingViewController:Lcom/android/settings/widget/LoadingViewController;
 
+    sget v0, Landroid/os/Build$VERSION;->SDK_INT:I
+
+    const/16 v1, 0x25
+
+    if-lt v0, v1, :legacy_switch_bar
+
+    const-string v0, "layout"
+
+    const-string v1, "sec_settings_main_switch_bar"
+
+    invoke-static {v0, v1}, Lio/mesalabs/unica/utils/Utils;->getResourceId(Ljava/lang/String;Ljava/lang/String;)I
+
+    move-result v0
+
+    invoke-virtual {p0, v0}, Lcom/android/settings/SettingsPreferenceFragment;->setPinnedHeaderView(I)Landroid/view/View;
+
+    move-result-object p1
+
+    check-cast p1, Lcom/android/settings/widget/SettingsMainSwitchBar;
+
+    goto :switch_bar_ready
+
+    :legacy_switch_bar
     invoke-virtual {p0}, Landroidx/fragment/app/Fragment;->getActivity()Landroidx/fragment/app/FragmentActivity;
 
     move-result-object p1
@@ -256,6 +279,8 @@
     check-cast p1, Lcom/android/settings/SettingsActivity;
 
     iget-object p1, p1, Lcom/android/settings/SettingsActivity;->mMainSwitch:Lcom/android/settings/widget/SettingsMainSwitchBar;
+
+    :switch_bar_ready
 
     iput-object p1, p0, Lio/mesalabs/unica/settings/spoof/HideDeveloperStatusFragment;->mSwitchBar:Lcom/android/settings/widget/SettingsMainSwitchBar;
 
