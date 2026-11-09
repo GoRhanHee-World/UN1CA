@@ -194,6 +194,7 @@ if $APKTOOL; then
     APKTOOL_CMDS=(
         "git reset --hard"
         "git apply \"$SRC_DIR/external/patches/apktool/0001-feat-support-aapt-optimization.patch\""
+        "bash \"$SRC_DIR/scripts/internal/prepare_gradle.sh\""
         "./gradlew build shadowJar"
         "cp -a \"scripts/linux/apktool\" \"$TOOLS_DIR/bin\""
         "cp -a \"brut.apktool/apktool-cli/build/libs/apktool-cli.jar\" \"$TOOLS_DIR/bin/apktool.jar\""
@@ -228,6 +229,7 @@ if $SAMLOADER; then
 fi
 if $SIGNAPK; then
     SIGNAPK_CMDS=(
+        "bash \"$SRC_DIR/scripts/internal/prepare_gradle.sh\""
         "./gradlew build"
         "cp -a \"scripts/linux/signapk\" \"$TOOLS_DIR/bin\""
         "cp -a \"signapk/build/libs/signapk-all.jar\" \"$TOOLS_DIR/bin/signapk.jar\""
