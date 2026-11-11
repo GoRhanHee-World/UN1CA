@@ -5,6 +5,14 @@ if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge 37 ]; then
         "smali/n5/i0.smali" "replace" '<clinit>()V' 'SM8350' 'SM8250'
     SMALI_PATCH "system" "system/priv-app/SamsungDeviceHealthManagerService/SamsungDeviceHealthManagerService.apk" \
         "smali/e4/o0.smali" "replaceall" 'TABoostControllerSM8350_SYSFS' 'TABoostControllerSM8250_SYSFS'
+
+    # The donor's TABoost controller writes Sysfs IDs 0x301500, 0x301504
+    # and 0x301507 on acquisition and release. None is registered by the
+    # SM8250 vendor. Keep its DVFS locks and other boost handling intact.
+    SMALI_PATCH "system" "system/priv-app/SamsungDeviceHealthManagerService/SamsungDeviceHealthManagerService.apk" \
+        "smali/e4/o0.smali" "null" 'r()V'
+    SMALI_PATCH "system" "system/priv-app/SamsungDeviceHealthManagerService/SamsungDeviceHealthManagerService.apk" \
+        "smali/e4/o0.smali" "null" 'v()V'
 else
     SMALI_PATCH "system" "system/priv-app/SamsungDeviceHealthManagerService/SamsungDeviceHealthManagerService.apk" \
         "smali/r1/c.smali" "replace" '<clinit>()V' 'SM8350' 'SM8250'
