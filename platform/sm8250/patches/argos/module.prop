@@ -1,0 +1,4 @@
+id=argos
+name=Disable unsupported ARGOS traffic monitoring
+author=GoRhanHee
+description=Keeps the disabled vendor ARGOS daemon stopped when the kernel has no ARGOS QoS interface.
