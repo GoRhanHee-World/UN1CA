@@ -1,6 +1,6 @@
 KERNEL_BASE_TAG="boot-y2q-20261101-212750"
-KERNEL_TAG="y2q-20261108"
-KERNEL_ZIP="not-stock-20261108-5269d116-y2q.zip"
+KERNEL_TAG="y2q-20261112"
+KERNEL_ZIP="not-stock-20261112-c222db3e-y2q.zip"
 
 LOG_STEP_IN "- Repacking not_kernel ($KERNEL_TAG)"
 mkdir -p "$TMP_DIR" "$WORK_DIR/kernel"
