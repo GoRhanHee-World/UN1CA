@@ -79,9 +79,17 @@ APPLY_PATCH "system_ext" "priv-app/SystemUI/SystemUI.apk" \
 fi
 LOG_STEP_OUT
 
-# Set AI Version to 20253 (latest)
-SET_FLOATING_FEATURE_CONFIG "SEC_FLOATING_FEATURE_COMMON_CONFIG_AI_VERSION" "20253"
-ADD_TO_WORK_DIR "pa2qxxx" "system" "system/app/SketchBook/SketchBook.apk" 0 0 644 "u:object_r:system_file:s0"
+# Match the AI apps to the source framework generation.
+AI_PREBUILT="pa2qxxx"
+if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge "37" ]; then
+    AI_PREBUILT="m3qksx"
+    SET_FLOATING_FEATURE_CONFIG "SEC_FLOATING_FEATURE_COMMON_CONFIG_AI_VERSION" "20263"
+    SET_FLOATING_FEATURE_CONFIG "SEC_FLOATING_FEATURE_FRAMEWORK_CONFIG_NOW_NUDGE_VERSION" "2"
+    SET_FLOATING_FEATURE_CONFIG "SEC_FLOATING_FEATURE_MMFW_SUPPORT_TARGET_TRACKING" "TRUE"
+else
+    SET_FLOATING_FEATURE_CONFIG "SEC_FLOATING_FEATURE_COMMON_CONFIG_AI_VERSION" "20253"
+fi
+ADD_TO_WORK_DIR "$AI_PREBUILT" "system" "system/app/SketchBook/SketchBook.apk" 0 0 644 "u:object_r:system_file:s0"
 
 # Media Context Analyzer
 LOG_STEP_IN "- Adding Media Context Analyzer feature"
@@ -120,13 +128,26 @@ LOG_STEP_OUT
 # Requires SEC_FLOATING_FEATURE_COMMON_CONFIG_AI_VERSION >= 20251
 # or SEC_FLOATING_FEATURE_FRAMEWORK_SUPPORT_AI_BRIEF_FOR_UT
 LOG_STEP_IN "- Adding Now brief feature"
-ADD_TO_WORK_DIR "pa2qxxx" "system" \
+ADD_TO_WORK_DIR "$AI_PREBUILT" "system" \
     "system/etc/default-permissions/default-permissions-com.samsung.android.app.moments.xml" 0 0 644 "u:object_r:system_file:s0"
-ADD_TO_WORK_DIR "pa2qxxx" "system" \
+ADD_TO_WORK_DIR "$AI_PREBUILT" "system" \
     "system/etc/permissions/privapp-permissions-com.samsung.android.app.moments.xml" 0 0 644 "u:object_r:system_file:s0"
-ADD_TO_WORK_DIR "pa2qxxx" "system" \
+ADD_TO_WORK_DIR "$AI_PREBUILT" "system" \
     "system/etc/sysconfig/moments.xml" 0 0 644 "u:object_r:system_file:s0"
-ADD_TO_WORK_DIR "pa2qxxx" "system" "system/priv-app/Moments/Moments.apk" 0 0 644 "u:object_r:system_file:s0"
+ADD_TO_WORK_DIR "$AI_PREBUILT" "system" "system/priv-app/Moments/Moments.apk" 0 0 644 "u:object_r:system_file:s0"
+if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge "37" ]; then
+    ADD_TO_WORK_DIR "$AI_PREBUILT" "system" \
+        "system/priv-app/SamsungSmartSuggestions/SamsungSmartSuggestions.apk" 0 0 644 "u:object_r:system_file:s0"
+    for AI_CONFIG in \
+        "system/etc/permissions/privapp-permissions-com.samsung.android.smartsuggestions.xml" \
+        "system/etc/sysconfig/preinstalled-packages-com.samsung.android.smartsuggestions.xml" \
+        "system/etc/sysconfig/samsungsmartsuggestions.xml"; do
+        ADD_TO_WORK_DIR "$AI_PREBUILT" "system" "$AI_CONFIG" 0 0 644 "u:object_r:system_file:s0"
+    done
+    unset AI_CONFIG
+    # Rebuild with the ROM certificate, as for the legacy full flavor below.
+    DECODE_APK "system" "system/priv-app/SamsungSmartSuggestions/SamsungSmartSuggestions.apk"
+else
 ADD_TO_WORK_DIR "$MODPATH" "system" \
     "system/priv-app/SamsungSmartSuggestions/SamsungSmartSuggestions.apk" 0 0 644 "u:object_r:system_file:s0"
 # HACK [
@@ -139,7 +160,9 @@ DECODE_APK "system" "system/priv-app/SamsungSmartSuggestions/SamsungSmartSuggest
 LOG "- Patching versionCode in SamsungSmartSuggestions.apk"
 EVAL "sed -i \"s/710500000/711100100/g\" \"$APKTOOL_DIR/system/priv-app/SamsungSmartSuggestions/SamsungSmartSuggestions.apk/apktool.yml\""
 # ]
+fi
 SET_FLOATING_FEATURE_CONFIG "SEC_FLOATING_FEATURE_FRAMEWORK_SUPPORT_PERSONALIZED_DATA_CORE" "TRUE"
+unset AI_PREBUILT
 LOG_STEP_OUT
 
 # Semantic search
