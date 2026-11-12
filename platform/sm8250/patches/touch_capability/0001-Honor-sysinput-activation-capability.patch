@@ -1,0 +1,33 @@
+Subject: [PATCH] Honor the driver's sysinput activation capability
+
+The donor Touch class unconditionally enables the state,early activation
+protocol. SM8250's driver reports support_feature=269 (0x10d), without
+SUPPORT_SYSINPUT_ENABLED (0x20), and retains the boolean input/enabled path.
+InputReader already uses that feature mask to select the legacy power path.
+
+Use the reported bit for Touch.supportActivate as well, so the newer HAL
+does not duplicate legacy power handling or write a nonexistent enabled node.
+Keep all touch commands/properties and the working legacy power path intact.
+Drivers that advertise 0x20 continue using HAL activation.
+
+--- a/smali/com/samsung/android/hardware/secinputdev/device/Touch.smali
++++ b/smali/com/samsung/android/hardware/secinputdev/device/Touch.smali
+@@ -438,7 +438,18 @@
+ .method protected supportActivate()Z
+     .locals 1
+ 
++    iget v0, p0, Lcom/samsung/android/hardware/secinputdev/device/SemInputDevice;->supportFeature:I
++
++    and-int/lit8 v0, v0, 0x20
++
++    if-eqz v0, :legacy_power_control
++
+     const/4 v0, 0x1
+ 
+     return v0
++
++    :legacy_power_control
++    const/4 v0, 0x0
++
++    return v0
+ .end method

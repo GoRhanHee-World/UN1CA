@@ -1,0 +1,4 @@
+id=touch_capability
+name=Legacy touch power compatibility
+author=GoRhanHee
+description=Honors the touch driver's sysinput activation capability while retaining legacy power control.
