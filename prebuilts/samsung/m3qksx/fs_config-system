@@ -134,3 +134,6 @@ system/priv-app/Bixby/Bixby.apk 0 0 644 capabilities=0x0
 system/etc/permissions/privapp-permissions-com.samsung.android.bixby.agent.xml 0 0 644 capabilities=0x0
 system/etc/permissions/signature-permissions-com.samsung.android.bixby.agent.xml 0 0 644 capabilities=0x0
 system/etc/sysconfig/preinstalled-packages-com.samsung.android.bixby.agent.xml 0 0 644 capabilities=0x0
+system/etc/sysconfig/bixbyagent.xml 0 0 644 capabilities=0x0
+system/etc/permissions/privapp-permissions-com.samsung.android.visionintelligence_v3.7.xml 0 0 644 capabilities=0x0
+system/etc/permissions/signature-permissions-com.samsung.android.visionintelligence_v3.7.xml 0 0 644 capabilities=0x0

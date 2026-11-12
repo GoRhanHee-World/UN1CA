@@ -134,3 +134,6 @@
 /system/etc/permissions/privapp-permissions-com\.samsung\.android\.bixby\.agent\.xml u:object_r:system_file:s0
 /system/etc/permissions/signature-permissions-com\.samsung\.android\.bixby\.agent\.xml u:object_r:system_file:s0
 /system/etc/sysconfig/preinstalled-packages-com\.samsung\.android\.bixby\.agent\.xml u:object_r:system_file:s0
+/system/etc/sysconfig/bixbyagent\.xml u:object_r:system_file:s0
+/system/etc/permissions/privapp-permissions-com\.samsung\.android\.visionintelligence_v3\.7\.xml u:object_r:system_file:s0
+/system/etc/permissions/signature-permissions-com\.samsung\.android\.visionintelligence_v3\.7\.xml u:object_r:system_file:s0
