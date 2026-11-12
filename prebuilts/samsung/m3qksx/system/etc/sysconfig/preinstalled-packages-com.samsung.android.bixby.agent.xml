@@ -1,0 +1,5 @@
+<config>
+    <install-in-user-type package="com.samsung.android.bixby.agent">
+        <install-in user-type="FULL" />
+    </install-in-user-type>
+</config>
