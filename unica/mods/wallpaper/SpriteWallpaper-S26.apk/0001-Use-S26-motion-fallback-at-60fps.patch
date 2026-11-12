@@ -1,0 +1,33 @@
+Subject: [PATCH] Use S26 directional motion fallback at 60fps
+
+Keep the resource-provided transition table as the primary source. Replace
+the S24/S25 fallback selected by the device shipping API with S26 timings,
+matching the converted pack. Preserve HOME_LEFT/UP/RIGHT and TOUCH variants.
+
+--- a/smali/com/samsung/android/wallpaper/live/infinity/c.smali
++++ b/smali/com/samsung/android/wallpaper/live/infinity/c.smali
+@@ -43,22 +43,10 @@
+ 
+ # direct methods
+ .method static constructor <clinit>()V
+-    .locals 2
++    .locals 1
+ 
+-    sget v0, Landroid/os/Build$VERSION;->SEM_FIRST_SDK_INT:I
++    const-string v0, "AOD LOCK 0 179 1500 0.17 0.17 0.1 1\nAOD HOME 0 479 3000 0.33 0 0.1 1\nLOCK HOME_LEFT 180 479 3000 0.17 0.17 0.1 1\nLOCK HOME_UP 480 779 3000 0.17 0.17 0.1 1\nLOCK HOME_RIGHT 780 1079 3000 0.17 0.17 0.1 1\nLOCK TOUCH_LEFT 180 346 3000 0.17 0.17 0.1 1\nLOCK TOUCH_UP 480 646 3000 0.17 0.17 0.1 1\nLOCK TOUCH_RIGHT 780 946 3000 0.17 0.17 0.1 1"
+ 
+-    const/16 v1, 0x23
+-
+-    if-ge v0, v1, :cond_0
+-
+-    const-string v0, "AOD AOD 0 300 1200 0.17 0.17 0.1 1\nAOD LOCK 0 720 1800 0.33 0 0.1 1\nAOD HOME 0 2952 2500 0.33 0 0.1 1\nLOCK HOME 720 2952 1200 0.17 0.17 0.1 1\nLOCK TOUCH 720 1800 1000 0.17 0.17 0.1 1"
+-
+-    goto :goto_0
+-
+-    :cond_0
+-    const-string v0, "AOD AOD 0 300 1200 0.17 0.17 0.1 1\nAOD LOCK 0 700 1000 0.33 0 0.1 1\nAOD HOME 0 2040 2500 0.33 0 0.1 1\nLOCK HOME 700 2040 1500 0.17 0.17 0.1 1\nLOCK TOUCH 700 1750 1500 0.17 0.17 0.1 1"
+-
+-    :goto_0
+     sput-object v0, Lcom/samsung/android/wallpaper/live/infinity/c;->q:Ljava/lang/String;
+ 
+     return-void
