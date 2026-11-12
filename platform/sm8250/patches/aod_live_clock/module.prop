@@ -1,0 +1,4 @@
+id=aod_live_clock
+name=SM8250 AOD native bridge
+author=GoRhanHee
+description=Restores Android 17 live-clock Binder dispatch to the existing Samsung native implementation.
