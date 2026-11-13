@@ -1,0 +1,19 @@
+Subject: [PATCH] Enable the S26 notification highlights settings entry
+
+Match the S26 config_na_enable resource. Both the notification AI preference
+controllers and the manifest's AI assist/priority/summary activities use this
+resource. The donor already provides the framework and SystemUI implementation,
+and Miracle installs the S26 classification services with AI version 20263.
+Keep account consent and the user's classification/summary switches intact.
+
+--- a/res/values/bools.xml
++++ b/res/values/bools.xml
+@@ -45,7 +45,7 @@
+     <bool name="config_materialPreferenceIconSpaceReserved">false</bool>
+     <bool name="config_media_vibration_supported">true</bool>
+     <bool name="config_msid_enable">false</bool>
+-    <bool name="config_na_enable">false</bool>
++    <bool name="config_na_enable">true</bool>
+     <bool name="config_network_selection_list_aggregation_enabled">false</bool>
+     <bool name="config_nfc_detection_point">false</bool>
+     <bool name="config_night_light_suggestion_enabled">true</bool>
