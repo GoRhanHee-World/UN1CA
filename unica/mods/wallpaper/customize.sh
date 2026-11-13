@@ -92,16 +92,16 @@ ADD_TO_WORK_DIR "$SOURCE_FIRMWARE" "system" \
     "system/priv-app/SpriteWallpaper/SpriteWallpaper.apk" 0 0 644 "u:object_r:system_file:s0"
 if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge "37" ]; then
     APPLY_PATCH "system" "system/priv-app/SpriteWallpaper/SpriteWallpaper.apk" \
-        "$MODPATH/SpriteWallpaper-S26.apk/0001-Use-S26-motion-fallback-at-60fps.patch"
+        "$SRC_DIR/unica/mods/miracle/wallpaper/SpriteWallpaper-S26.apk/0001-Use-S26-motion-fallback-at-60fps.patch"
     APPLY_PATCH "system" "system/priv-app/wallpaper-res/wallpaper-res.apk" \
-        "$MODPATH/wallpaper-res-S26.apk/0001-Adjust-S26-metadata-for-60fps.patch"
+        "$SRC_DIR/unica/mods/miracle/wallpaper/wallpaper-res-S26.apk/0001-Adjust-S26-metadata-for-60fps.patch"
 else
     APPLY_PATCH "system" "system/priv-app/SpriteWallpaper/SpriteWallpaper.apk" \
-        "$MODPATH/SpriteWallpaper.apk/0001-Force-Paradigm-wallpapers-motion-animator.patch"
+        "$SRC_DIR/unica/mods/paradigm/wallpaper/SpriteWallpaper.apk/0001-Force-Paradigm-wallpapers-motion-animator.patch"
     APPLY_PATCH "system" "system/priv-app/SpriteWallpaper/SpriteWallpaper.apk" \
-        "$MODPATH/SpriteWallpaper.apk/0002-Adjust-motion-animator-for-60fps-video-files.patch"
+        "$SRC_DIR/unica/mods/paradigm/wallpaper/SpriteWallpaper.apk/0002-Adjust-motion-animator-for-60fps-video-files.patch"
     APPLY_PATCH "system" "system/priv-app/wallpaper-res/wallpaper-res.apk" \
-        "$MODPATH/wallpaper-res.apk/0001-Adjust-metadata-for-60fps-video-files.patch"
+        "$SRC_DIR/unica/mods/paradigm/wallpaper/wallpaper-res.apk/0001-Adjust-metadata-for-60fps-video-files.patch"
 fi
 
 unset WALLPAPER_SOURCE

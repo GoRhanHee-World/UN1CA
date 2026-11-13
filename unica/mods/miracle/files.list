@@ -28,6 +28,7 @@ system/etc/permissions/privapp-permissions-com.samsung.android.liveeffectservice
 system/etc/permissions/privapp-permissions-com.samsung.android.photoremasterservice.xml
 system/etc/permissions/privapp-permissions-com.samsung.android.rubin.app.xml
 system/etc/permissions/privapp-permissions-com.samsung.android.scs.xml
+system/etc/permissions/privapp-permissions-com.samsung.android.sead.xml
 system/etc/permissions/privapp-permissions-com.samsung.android.smartsuggestions.xml
 system/etc/permissions/privapp-permissions-com.samsung.android.visionintelligence_v3.7.xml
 system/etc/permissions/privapp-permissions-com.samsung.mediasearch.xml
@@ -82,6 +83,7 @@ system/priv-app/AIOSKernelService/AIOSKernelService.apk
 system/priv-app/Bixby/Bixby.apk
 system/priv-app/BixbyInterpreter/BixbyInterpreter.apk
 system/priv-app/CallAssistant/CallAssistant.apk
+system/priv-app/EnvironmentAdaptiveDisplay/EnvironmentAdaptiveDisplay.apk
 system/priv-app/LiveEffectService/LiveEffectService.apk
 system/priv-app/MediaSearch/MediaSearch.apk
 system/priv-app/Moments/Moments.apk

@@ -2,29 +2,8 @@
 SKIPUNZIP=1
 
 if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge "37" ]; then
-    LOG_STEP_IN "- Adding Galaxy S26 AI apps and media backend"
-    while IFS= read -r AI_FILE; do
-        if [[ "$AI_FILE" == *.apk ]] && [ -d "$WORK_DIR/system/${AI_FILE%/*}" ]; then
-            # Remove compressed APKs and compiled artifacts from the old app.
-            DELETE_FROM_WORK_DIR "system" "${AI_FILE%/*}"
-        fi
-        AI_LABEL="u:object_r:system_file:s0"
-        [[ "$AI_FILE" == system/lib64/* ]] && AI_LABEL="u:object_r:system_lib_file:s0"
-        ADD_TO_WORK_DIR "m3qksx" "system" "$AI_FILE" 0 0 644 "$AI_LABEL"
-        if [[ "$AI_FILE" == *.apk ]]; then
-            SET_METADATA "system" "${AI_FILE%/*}" 0 0 755 "u:object_r:system_file:s0"
-        fi
-    done < "$MODPATH/s26/files.list"
-    unset AI_FILE AI_LABEL
-
-    # These alternate packages must not compete with the S26 implementation.
-    for AI_DIR in PhotoEditor_Full SemanticSearchCore SamsungCoreServices-Stub; do
-        if [ -d "$WORK_DIR/system/system/priv-app/$AI_DIR" ]; then
-            DELETE_FROM_WORK_DIR "system" "system/priv-app/$AI_DIR"
-        fi
-    done
-    unset AI_DIR
-    LOG_STEP_OUT
+    LOG "- Using Miracle features for Android 17"
+    return 0
 fi
 
 if [ ! "$(GET_PROP "system" "ro.unica.codename")" ]; then
@@ -105,15 +84,9 @@ APPLY_PATCH "system_ext" "priv-app/SystemUI/SystemUI.apk" \
 fi
 LOG_STEP_OUT
 
-# Match the AI apps to the source framework generation.
-if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge "37" ]; then
-    SET_FLOATING_FEATURE_CONFIG "SEC_FLOATING_FEATURE_COMMON_CONFIG_AI_VERSION" "20263"
-    SET_FLOATING_FEATURE_CONFIG "SEC_FLOATING_FEATURE_FRAMEWORK_CONFIG_NOW_NUDGE_VERSION" "2"
-    SET_FLOATING_FEATURE_CONFIG "SEC_FLOATING_FEATURE_MMFW_SUPPORT_TARGET_TRACKING" "TRUE"
-else
-    SET_FLOATING_FEATURE_CONFIG "SEC_FLOATING_FEATURE_COMMON_CONFIG_AI_VERSION" "20253"
-    ADD_TO_WORK_DIR "pa2qxxx" "system" "system/app/SketchBook/SketchBook.apk" 0 0 644 "u:object_r:system_file:s0"
-fi
+# Set AI Version to 20253 (latest)
+SET_FLOATING_FEATURE_CONFIG "SEC_FLOATING_FEATURE_COMMON_CONFIG_AI_VERSION" "20253"
+ADD_TO_WORK_DIR "pa2qxxx" "system" "system/app/SketchBook/SketchBook.apk" 0 0 644 "u:object_r:system_file:s0"
 
 # Media Context Analyzer
 LOG_STEP_IN "- Adding Media Context Analyzer feature"
@@ -134,9 +107,6 @@ LOG_STEP_OUT
 # Audio eraser
 # Requires SEC_PRODUCT_FEATURE_MMFW_SUPPORT_MEDIA_CONTEXT_ANALYZER
 LOG_STEP_IN "- Adding Audio eraser feature"
-if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge "37" ]; then
-    LOG "- Using Galaxy S26 editor, native interfaces and separator model"
-else
 ADD_TO_WORK_DIR "pa2qxxx" "system" "system/etc/audio_ae_intervals.conf" 0 0 644 "u:object_r:system_file:s0"
 ADD_TO_WORK_DIR "pa2qxxx" "system" "system/etc/fastScanner.tflite" 0 0 644 "u:object_r:system_file:s0"
 ADD_TO_WORK_DIR "pa2qxxx" "system" "system/etc/mss_v0.13.0_4ch.sorione" 0 0 644 "u:object_r:system_file:s0"
@@ -148,7 +118,6 @@ ADD_TO_WORK_DIR "pa2qxxx" "system" "system/lib64/libmultisourceseparator.so" 0 0
 ADD_TO_WORK_DIR "pa2qxxx" "system" "system/lib64/libsbs.so" 0 0 644 "u:object_r:system_lib_file:s0"
 ADD_TO_WORK_DIR "pa2qxxx" "system" "system/lib64/libtensorflowlite_gpu_delegate.so" 0 0 644 "u:object_r:system_lib_file:s0"
 ADD_TO_WORK_DIR "pa2qxxx" "system" "system/lib64/libveframework.videoeditor.samsung.so" 0 0 644 "u:object_r:system_lib_file:s0"
-fi
 SET_FLOATING_FEATURE_CONFIG "SEC_FLOATING_FEATURE_AUDIO_CONFIG_MULTISOURCE_SEPARATOR" "{FastScanning_6, SourceSeparator_4, Version_1.3.0}"
 LOG_STEP_OUT
 
@@ -156,10 +125,6 @@ LOG_STEP_OUT
 # Requires SEC_FLOATING_FEATURE_COMMON_CONFIG_AI_VERSION >= 20251
 # or SEC_FLOATING_FEATURE_FRAMEWORK_SUPPORT_AI_BRIEF_FOR_UT
 LOG_STEP_IN "- Adding Now brief feature"
-if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge "37" ]; then
-    # Rebuild with the ROM certificate, as for the legacy full flavor below.
-    DECODE_APK "system" "system/priv-app/SamsungSmartSuggestions/SamsungSmartSuggestions.apk"
-else
 ADD_TO_WORK_DIR "pa2qxxx" "system" \
     "system/etc/default-permissions/default-permissions-com.samsung.android.app.moments.xml" 0 0 644 "u:object_r:system_file:s0"
 ADD_TO_WORK_DIR "pa2qxxx" "system" \
@@ -179,17 +144,12 @@ DECODE_APK "system" "system/priv-app/SamsungSmartSuggestions/SamsungSmartSuggest
 LOG "- Patching versionCode in SamsungSmartSuggestions.apk"
 EVAL "sed -i \"s/710500000/711100100/g\" \"$APKTOOL_DIR/system/priv-app/SamsungSmartSuggestions/SamsungSmartSuggestions.apk/apktool.yml\""
 # ]
-fi
 SET_FLOATING_FEATURE_CONFIG "SEC_FLOATING_FEATURE_FRAMEWORK_SUPPORT_PERSONALIZED_DATA_CORE" "TRUE"
 LOG_STEP_OUT
 
 # Semantic search
 # Requires SEC_FLOATING_FEATURE_COMMON_CONFIG_AI_VERSION >= 20251
 LOG_STEP_IN "- Adding Semantic search feature"
-if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge "37" ]; then
-    # Both S26 search packages include their own matching model assets.
-    LOG "- Using Galaxy S26 MediaSearch, SemanticSearchCore and Settings Intelligence"
-else
 ADD_TO_WORK_DIR "pa2qxxx" "system" \
     "system/etc/default-permissions/default-permissions-com.samsung.mediasearch.xml" 0 0 644 "u:object_r:system_file:s0"
 ADD_TO_WORK_DIR "pa2qxxx" "system" \
@@ -211,6 +171,7 @@ ADD_TO_WORK_DIR "pa2qxxx" "system" \
 DECODE_APK "system" "system/priv-app/SecSettingsIntelligence/SecSettingsIntelligence.apk"
 LOG "- Enabling Semantic search feature in /system/system/priv-app/SecSettingsIntelligence/SecSettingsIntelligence.apk"
 EVAL "cp -a \"$MODPATH/semanticsearch/SecSettingsIntelligence.apk/res/raw/\"* \"$APKTOOL_DIR/system/priv-app/SecSettingsIntelligence/SecSettingsIntelligence.apk/res/raw\""
+if [ "$SOURCE_PLATFORM_SDK_VERSION" -lt "37" ]; then
     SMALI_PATCH "system" "system/priv-app/SecSettingsIntelligence/SecSettingsIntelligence.apk" \
         "smali_classes2/com/samsung/android/settings/intelligence/Rune.smali" "replaceall" \
         "const-string v1, \\\"\\\"" \
