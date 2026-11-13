@@ -226,12 +226,34 @@ fi
 
 # Ensure IMAGE_CODEC_SAMSUNG support (pre-API 35)
 if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "35" ]; then
-    if [ "$(GET_FLOATING_FEATURE_CONFIG "SEC_FLOATING_FEATURE_CAMERA_CONFIG_VENDOR_LIB_INFO")" ] && \
-            [[ "$(GET_FLOATING_FEATURE_CONFIG "SEC_FLOATING_FEATURE_CAMERA_CONFIG_VENDOR_LIB_INFO")" != *"image_codec.samsung"* ]]; then
-        PATCHED=true
-        SET_FLOATING_FEATURE_CONFIG "SEC_FLOATING_FEATURE_CAMERA_CONFIG_VENDOR_LIB_INFO" \
-            "$(GET_FLOATING_FEATURE_CONFIG "SEC_FLOATING_FEATURE_CAMERA_CONFIG_VENDOR_LIB_INFO"),image_codec.samsung.v1"
+    CAMERA_VENDOR_LIB_INFO="$(GET_FLOATING_FEATURE_CONFIG "SEC_FLOATING_FEATURE_CAMERA_CONFIG_VENDOR_LIB_INFO")"
+    if [ "$CAMERA_VENDOR_LIB_INFO" ]; then
+        IMAGE_CODEC_FEATURE="image_codec.samsung.v1"
+        if ! $TARGET_CAMERA_SUPPORT_MASS_APP_FLAVOR; then
+            # The full camera app and its native nodes come from the donor.
+            # One UI 9 no longer recognizes the legacy v1 node name.
+            CAMERA_SOURCE_PATH="$(cut -d "/" -f 1 <<< "$SOURCE_FIRMWARE")_$(cut -d "/" -f 2 <<< "$SOURCE_FIRMWARE")"
+            CAMERA_SOURCE_LIB_INFO="$(GET_FLOATING_FEATURE_CONFIG "$FW_DIR/$CAMERA_SOURCE_PATH/system/system/etc/floating_feature.xml" "SEC_FLOATING_FEATURE_CAMERA_CONFIG_VENDOR_LIB_INFO")"
+            for CAMERA_FEATURE in ${CAMERA_SOURCE_LIB_INFO//,/ }; do
+                if [[ "$CAMERA_FEATURE" == image_codec.samsung.v* ]]; then
+                    IMAGE_CODEC_FEATURE="$CAMERA_FEATURE"
+                fi
+            done
+        fi
+
+        CAMERA_UPDATED_LIB_INFO=""
+        for CAMERA_FEATURE in ${CAMERA_VENDOR_LIB_INFO//,/ }; do
+            [[ "$CAMERA_FEATURE" == image_codec.samsung.v* ]] && continue
+            CAMERA_UPDATED_LIB_INFO+="$CAMERA_FEATURE,"
+        done
+        CAMERA_UPDATED_LIB_INFO+="$IMAGE_CODEC_FEATURE"
+        if [[ "$CAMERA_VENDOR_LIB_INFO" != "$CAMERA_UPDATED_LIB_INFO" ]]; then
+            PATCHED=true
+            SET_FLOATING_FEATURE_CONFIG "SEC_FLOATING_FEATURE_CAMERA_CONFIG_VENDOR_LIB_INFO" "$CAMERA_UPDATED_LIB_INFO"
+        fi
     fi
+    unset CAMERA_VENDOR_LIB_INFO CAMERA_SOURCE_PATH CAMERA_SOURCE_LIB_INFO CAMERA_FEATURE \
+        CAMERA_UPDATED_LIB_INFO IMAGE_CODEC_FEATURE
 fi
 
 # Ensure Knox Matrix support
