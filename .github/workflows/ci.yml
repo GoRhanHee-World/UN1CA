@@ -6,9 +6,10 @@ on:
       target:
         description: Device to build
         required: true
-        default: x1q
+        default: all
         type: choice
         options:
+          - all
           - x1q
           - y2q
           - z3q
@@ -53,14 +54,18 @@ jobs:
       - name: Generate CI matrix
         id: generate-matrix
         env:
-          SELECTED_TARGET: ${{ inputs.target || 'x1q' }}
+          SELECTED_TARGET: ${{ inputs.target || 'all' }}
         run: |
-          matrix="$(jq -cn --arg target "$SELECTED_TARGET" '[$target]')"
+          if [[ "$SELECTED_TARGET" == "all" ]]; then
+            matrix='["x1q","y2q","z3q"]'
+          else
+            matrix="$(jq -cn --arg target "$SELECTED_TARGET" '[$target]')"
+          fi
           echo "$matrix"
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
 
   build:
-    name: Build
+    name: Build (${{ matrix.target }})
     if: github.event_name == 'workflow_dispatch'
     needs: [shellcheck, generate-matrix]
     runs-on: ubuntu-24.04
