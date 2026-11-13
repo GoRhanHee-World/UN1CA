@@ -1,12 +1,6 @@
 # Samsung Internet Browser
 # https://play.google.com/store/apps/details?id=com.sec.android.app.sbrowser
-if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge "37" ]; then
-    LOG "- Using Galaxy S26 Samsung Internet app"
-else
-    LOG "- Downloading Samsung Internet app"
-    DOWNLOAD_FILE "$(GET_GALAXY_STORE_DOWNLOAD_URL "com.sec.android.app.sbrowser")" \
-        "$WORK_DIR/system/system/preload/SBrowser/SBrowser.apk"
-fi
+LOG "- Using Galaxy S26 Samsung Internet app"
 
 while IFS= read -r i; do
     i="${i//$WORK_DIR\/system\//}"

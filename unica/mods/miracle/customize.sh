@@ -1,11 +1,6 @@
 # shellcheck disable=SC2034
 SKIPUNZIP=1
 
-if [ "$SOURCE_PLATFORM_SDK_VERSION" -lt "37" ]; then
-    LOG "- Using Paradigm features before Android 17"
-    return 0
-fi
-
 LOG_STEP_IN "- Adding Galaxy S26 apps and media backend"
 while IFS= read -r AI_FILE; do
     if [[ "$AI_FILE" == *.apk ]] && [ -d "$WORK_DIR/system/${AI_FILE%/*}" ]; then

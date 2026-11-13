@@ -68,12 +68,8 @@ ENCODE_MP4()
 }
 # ]
 
-WALLPAPER_SOURCE="pa2qxxx"
-if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge 37 ]; then
-    # SM-S948N / S948NKSS6BZK1: six stills and six 90fps S26 Ultra videos.
-    WALLPAPER_SOURCE="m3qksx"
-fi
-ADD_TO_WORK_DIR "$WALLPAPER_SOURCE" "system" \
+# SM-S948N / S948NKSS6BZK1: six stills and six 90fps S26 Ultra videos.
+ADD_TO_WORK_DIR "m3qksx" "system" \
     "system/priv-app/wallpaper-res/wallpaper-res.apk" 0 0 644 "u:object_r:system_file:s0"
 DECODE_APK "system" "system/priv-app/wallpaper-res/wallpaper-res.apk"
 for f in "$APKTOOL_DIR/system/priv-app/wallpaper-res/wallpaper-res.apk/res/"drawable-nodpi*/dex_wallpaper_*.webp; do
@@ -90,19 +86,9 @@ for f in "$APKTOOL_DIR/system/priv-app/wallpaper-res/wallpaper-res.apk/res/raw/v
 done
 ADD_TO_WORK_DIR "$SOURCE_FIRMWARE" "system" \
     "system/priv-app/SpriteWallpaper/SpriteWallpaper.apk" 0 0 644 "u:object_r:system_file:s0"
-if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge "37" ]; then
-    APPLY_PATCH "system" "system/priv-app/SpriteWallpaper/SpriteWallpaper.apk" \
-        "$SRC_DIR/unica/mods/miracle/wallpaper/SpriteWallpaper-S26.apk/0001-Use-S26-motion-fallback-at-60fps.patch"
-    APPLY_PATCH "system" "system/priv-app/wallpaper-res/wallpaper-res.apk" \
-        "$SRC_DIR/unica/mods/miracle/wallpaper/wallpaper-res-S26.apk/0001-Adjust-S26-metadata-for-60fps.patch"
-else
-    APPLY_PATCH "system" "system/priv-app/SpriteWallpaper/SpriteWallpaper.apk" \
-        "$SRC_DIR/unica/mods/paradigm/wallpaper/SpriteWallpaper.apk/0001-Force-Paradigm-wallpapers-motion-animator.patch"
-    APPLY_PATCH "system" "system/priv-app/SpriteWallpaper/SpriteWallpaper.apk" \
-        "$SRC_DIR/unica/mods/paradigm/wallpaper/SpriteWallpaper.apk/0002-Adjust-motion-animator-for-60fps-video-files.patch"
-    APPLY_PATCH "system" "system/priv-app/wallpaper-res/wallpaper-res.apk" \
-        "$SRC_DIR/unica/mods/paradigm/wallpaper/wallpaper-res.apk/0001-Adjust-metadata-for-60fps-video-files.patch"
-fi
+APPLY_PATCH "system" "system/priv-app/SpriteWallpaper/SpriteWallpaper.apk" \
+    "$SRC_DIR/unica/mods/miracle/wallpaper/SpriteWallpaper-S26.apk/0001-Use-S26-motion-fallback-at-60fps.patch"
+APPLY_PATCH "system" "system/priv-app/wallpaper-res/wallpaper-res.apk" \
+    "$SRC_DIR/unica/mods/miracle/wallpaper/wallpaper-res-S26.apk/0001-Adjust-S26-metadata-for-60fps.patch"
 
-unset WALLPAPER_SOURCE
 unset -f ENCODE_MP4 COMPRESS_WEBP
