@@ -1,4 +1,9 @@
 # shellcheck shell=bash
+LOG_STEP_IN "- Matching SketchBook's native registration to its bundled Java SDK"
+DECODE_APK "system" "system/app/SketchBook/SketchBook.apk" || return 1
+source "$SRC_DIR/platform/$TARGET_PLATFORM/mods/miracle/sketchbook.sh" || return 1
+LOG_STEP_OUT
+
 LOG_STEP_IN "- Adding Galaxy S26 My FanCam GPU backend"
 
 # Keep the Gallery analyzer separate from the editor's newer tracking ABI.

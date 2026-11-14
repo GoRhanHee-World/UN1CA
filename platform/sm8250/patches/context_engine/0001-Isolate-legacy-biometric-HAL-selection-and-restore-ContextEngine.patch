@@ -1,0 +1,154 @@
+Subject: [PATCH] Isolate legacy biometric HAL selection and restore ContextEngine
+
+diff --git a/smali/com/android/server/biometrics/SemBiometricFeature.smali b/smali/com/android/server/biometrics/SemBiometricFeature.smali
+index c35f83be..1187fde6 100644
+--- a/smali/com/android/server/biometrics/SemBiometricFeature.smali
++++ b/smali/com/android/server/biometrics/SemBiometricFeature.smali
+@@ -65,9 +65,8 @@
+
+     const-string/jumbo v1, "jdm"
+
+-    invoke-static {v0, v1}, Lcom/android/server/aod/AODConfig$$ExternalSyntheticOutline0;->m(Ljava/lang/String;Ljava/lang/String;)Z
+-
+-    move-result v0
++    # Preserve all three legacy biometric HAL flags without changing global identity.
++    const/4 v0, 0x1
+
+     sput-boolean v0, Lcom/android/server/biometrics/SemBiometricFeature;->FEATURE_JDM_HAL:Z
+
+diff --git a/smali/com/android/server/SystemServiceManager.smali b/smali/com/android/server/SystemServiceManager.smali
+index 7b986feb..59ec5eb0 100644
+--- a/smali/com/android/server/SystemServiceManager.smali
++++ b/smali/com/android/server/SystemServiceManager.smali
+@@ -1359,6 +1359,15 @@
+ .method public final startBootPhase(Lcom/android/server/utils/TimingsTraceAndSlog;I)V
+     .locals 9
+
++    const/16 v0, 0x3e8
++
++    if-ne p2, v0, :sm8250_context_engine_done
++
++    iget-object v0, p0, Lcom/android/server/SystemServiceManager;->mContext:Landroid/content/Context;
++
++    invoke-static {v0}, Lcom/android/server/Sm8250ContextEngineMigration;->run(Landroid/content/Context;)V
++
++    :sm8250_context_engine_done
+     const-string/jumbo v0, "OnBootPhase_"
+
+     iget v1, p0, Lcom/android/server/SystemServiceManager;->mCurrentPhase:I
+diff --git a/smali/com/android/server/Sm8250ContextEngineMigration.smali b/smali/com/android/server/Sm8250ContextEngineMigration.smali
+new file mode 100644
+index 00000000..26c2806d
+--- /dev/null
++++ b/smali/com/android/server/Sm8250ContextEngineMigration.smali
+@@ -0,0 +1,110 @@
++.class public final Lcom/android/server/Sm8250ContextEngineMigration;
++.super Ljava/lang/Object;
++
++# Run after PackageManager and Settings are ready, before boot receivers start.
++.method public static run(Landroid/content/Context;)V
++    .locals 4
++
++    :try_start
++    const-class v0, Landroid/os/UserManager;
++    invoke-virtual {p0, v0}, Landroid/content/Context;->getSystemService(Ljava/lang/Class;)Ljava/lang/Object;
++    move-result-object v0
++    check-cast v0, Landroid/os/UserManager;
++    const/4 v1, 0x1
++    invoke-virtual {v0, v1}, Landroid/os/UserManager;->getUserHandles(Z)Ljava/util/List;
++    move-result-object v0
++    invoke-interface {v0}, Ljava/util/List;->iterator()Ljava/util/Iterator;
++    move-result-object v0
++
++    :next_user
++    invoke-interface {v0}, Ljava/util/Iterator;->hasNext()Z
++    move-result v1
++    if-eqz v1, :done
++    invoke-interface {v0}, Ljava/util/Iterator;->next()Ljava/lang/Object;
++    move-result-object v1
++    check-cast v1, Landroid/os/UserHandle;
++    const/4 v2, 0x0
++    invoke-virtual {p0, v1, v2}, Landroid/content/Context;->createContextAsUser(Landroid/os/UserHandle;I)Landroid/content/Context;
++    move-result-object v2
++    invoke-virtual {v1}, Landroid/os/UserHandle;->getIdentifier()I
++    move-result v1
++    invoke-static {v2, v1}, Lcom/android/server/Sm8250ContextEngineMigration;->migrateUser(Landroid/content/Context;I)V
++    goto :next_user
++    :try_end
++    .catch Ljava/lang/Exception; {:try_start .. :try_end} :failed
++
++    :failed
++    move-exception v0
++    const-string v1, "Sm8250ContextEngine"
++    const-string v2, "Unable to enumerate users for ContextEngine migration"
++    invoke-static {v1, v2, v0}, Landroid/util/Slog;->w(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    :done
++    return-void
++.end method
++
++.method private static migrateUser(Landroid/content/Context;I)V
++    .locals 10
++
++    :try_start
++    invoke-virtual {p0}, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
++    move-result-object v0
++    const-string v1, "com.samsung.android.mcfds"
++    const-string v2, "unica_sm8250_context_engine_migrated_v1"
++    const/4 v4, 0x0
++    invoke-static {v0, v2, v4, p1}, Landroid/provider/Settings$Secure;->getIntForUser(Landroid/content/ContentResolver;Ljava/lang/String;II)I
++    move-result v4
++    if-nez v4, :done
++
++    invoke-virtual {p0}, Landroid/content/Context;->getPackageManager()Landroid/content/pm/PackageManager;
++    move-result-object v3
++    const/4 v4, 0x0
++    invoke-virtual {v3, v1, v4}, Landroid/content/pm/PackageManager;->getPackageInfo(Ljava/lang/String;I)Landroid/content/pm/PackageInfo;
++
++    const-string v5, "com.samsung.android.ce.ContextEngineSystemService"
++    const-string v6, "com.samsung.android.ce.ContextEngineReceiver"
++    filled-new-array {v5, v6}, [Ljava/lang/String;
++    move-result-object v4
++    const/4 v5, 0x0
++
++    :next_component
++    array-length v6, v4
++    if-ge v5, v6, :mark_done
++    aget-object v6, v4, v5
++    new-instance v7, Landroid/content/ComponentName;
++    invoke-direct {v7, v1, v6}, Landroid/content/ComponentName;-><init>(Ljava/lang/String;Ljava/lang/String;)V
++    invoke-virtual {v3, v7}, Landroid/content/pm/PackageManager;->getComponentEnabledSetting(Landroid/content/ComponentName;)I
++    move-result v8
++    const/4 v9, 0x2
++    # MCFDeviceSync used DISABLED, not DISABLED_USER. Leave other states alone.
++    if-ne v8, v9, :advance
++    const/4 v8, 0x0
++    const/4 v9, 0x1
++    invoke-virtual {v3, v7, v8, v9}, Landroid/content/pm/PackageManager;->setComponentEnabledSetting(Landroid/content/ComponentName;II)V
++
++    :advance
++    add-int/lit8 v5, v5, 0x1
++    goto :next_component
++
++    :mark_done
++    const/4 v4, 0x1
++    invoke-static {v0, v2, v4, p1}, Landroid/provider/Settings$Secure;->putIntForUser(Landroid/content/ContentResolver;Ljava/lang/String;II)Z
++    :try_end
++    .catch Landroid/content/pm/PackageManager$NameNotFoundException; {:try_start .. :try_end} :not_installed
++    .catch Ljava/lang/Exception; {:try_start .. :try_end} :failed
++    goto :done
++
++    :not_installed
++    move-exception v0
++    # Retry on the next boot if this user installs MCFDeviceSync later.
++    goto :done
++
++    :failed
++    move-exception v0
++    const-string v1, "Sm8250ContextEngine"
++    const-string v2, "ContextEngine migration failed; will retry next boot"
++    invoke-static {v1, v2, v0}, Landroid/util/Slog;->w(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    :done
++    return-void
++.end method

@@ -1,0 +1,6 @@
+id=context_engine
+name=SM8250 ContextEngine and legacy biometric HAL compatibility
+version=v1
+versionCode=1
+author=GoRhanHee
+description=Keep legacy biometric HAL selection local to the framework so MCFDeviceSync can support ContextEngine, and migrate its previously disabled components once per user.
