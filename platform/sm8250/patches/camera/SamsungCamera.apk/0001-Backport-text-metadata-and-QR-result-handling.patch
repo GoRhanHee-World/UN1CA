@@ -1,0 +1,174 @@
+Subject: [PATCH] Use legacy scene metadata and distinguish QR misses from engine errors
+
+diff --git a/smali_classes2/com/samsung/android/camera/core2/local/vendorkey/SemCaptureResult.smali b/smali_classes2/com/samsung/android/camera/core2/local/vendorkey/SemCaptureResult.smali
+index 612045ab..d3240b15 100644
+--- a/smali_classes2/com/samsung/android/camera/core2/local/vendorkey/SemCaptureResult.smali
++++ b/smali_classes2/com/samsung/android/camera/core2/local/vendorkey/SemCaptureResult.smali
+@@ -2360,8 +2360,20 @@
+
+ .method public static a(Landroid/hardware/camera2/CaptureResult;Landroid/hardware/camera2/CaptureResult$Key;)Ljava/lang/Object;
+     .locals 4
+
++    sget-object v2, Lcom/samsung/android/camera/core2/local/vendorkey/SemCaptureResult;->Y0:Landroid/hardware/camera2/CaptureResult$Key;
++
++    if-ne p1, v2, :unica_standard_key
++
++    invoke-static {p0}, Lcom/samsung/android/camera/core2/local/vendorkey/SemCaptureResult;->unicaLegacyTextDetectionInfo(Landroid/hardware/camera2/CaptureResult;)Ljava/lang/Integer;
++
++    move-result-object v0
++
++    return-object v0
++
++    :unica_standard_key
++
+     const/4 v0, 0x0
+
+     const-string v1, "SemCaptureResult"
+
+@@ -2439,4 +2451,61 @@
+     move-result-object p0
+
+     return-object p0
+ .end method
++
++# Legacy HALs expose sceneDetectionInfo, not textDetectionInfo. Keep the
++# existing native scene detector as a fallback when no HAL result is present.
++.method private static unicaLegacyTextDetectionInfo(Landroid/hardware/camera2/CaptureResult;)Ljava/lang/Integer;
++    .locals 4
++
++    const/4 v0, 0x0
++
++    if-eqz p0, :unica_text_result
++
++    sget v0, Lcom/samsung/android/camera/core2/callback/forwarder/TextDetectionInfoCallbackForwarder;->sceneDetectionEvent:I
++
++    sget-object v1, Lcom/samsung/android/camera/core2/local/vendorkey/SemCaptureResult;->I0:Landroid/hardware/camera2/CaptureResult$Key;
++
++    invoke-static {p0, v1}, Lcom/samsung/android/camera/core2/local/vendorkey/SemCaptureResult;->a(Landroid/hardware/camera2/CaptureResult;Landroid/hardware/camera2/CaptureResult$Key;)Ljava/lang/Object;
++
++    move-result-object p0
++
++    check-cast p0, [J
++
++    if-eqz p0, :unica_scene_ready
++
++    array-length v1, p0
++
++    const/4 v2, 0x1
++
++    if-le v1, v2, :unica_scene_ready
++
++    aget-wide v1, p0, v2
++
++    long-to-int v0, v1
++
++    sput v0, Lcom/samsung/android/camera/core2/callback/forwarder/TextDetectionInfoCallbackForwarder;->sceneDetectionEvent:I
++
++    :unica_scene_ready
++    const/4 v1, 0x2
++
++    if-eq v0, v1, :unica_text_scene
++
++    const/16 v1, 0x27
++
++    if-eq v0, v1, :unica_text_scene
++
++    const/4 v0, 0x0
++
++    goto :unica_text_result
++
++    :unica_text_scene
++    const/4 v0, 0x1
++
++    :unica_text_result
++    invoke-static {v0}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
++
++    move-result-object v0
++
++    return-object v0
++.end method
+diff --git a/smali_classes2/com/samsung/android/camera/core2/maker/t.smali b/smali_classes2/com/samsung/android/camera/core2/maker/t.smali
+index 9dc384df..f7e6f5a3 100644
+--- a/smali_classes2/com/samsung/android/camera/core2/maker/t.smali
++++ b/smali_classes2/com/samsung/android/camera/core2/maker/t.smali
+@@ -25,8 +25,10 @@
+ # virtual methods
+ .method public final b(I[J)V
+     .locals 0
+
++    sput p1, Lcom/samsung/android/camera/core2/callback/forwarder/TextDetectionInfoCallbackForwarder;->sceneDetectionEvent:I
++
+     iget-object p0, p0, Lcom/samsung/android/camera/core2/maker/t;->a:Lcom/samsung/android/camera/core2/maker/AutoBeautyPhotoMaker;
+
+     invoke-static {p0, p1, p2}, Lcom/samsung/android/camera/core2/maker/AutoBeautyPhotoMaker;->G0(Lcom/samsung/android/camera/core2/maker/AutoBeautyPhotoMaker;I[J)V
+
+diff --git a/smali_classes2/com/samsung/android/camera/core2/node/qrCode/SaivQRCodeNode.smali b/smali_classes2/com/samsung/android/camera/core2/node/qrCode/SaivQRCodeNode.smali
+index a05cad5e..763848bf 100644
+--- a/smali_classes2/com/samsung/android/camera/core2/node/qrCode/SaivQRCodeNode.smali
++++ b/smali_classes2/com/samsung/android/camera/core2/node/qrCode/SaivQRCodeNode.smali
+@@ -573,9 +573,9 @@
+     invoke-virtual {p2, p1}, Lcom/samsung/android/qrengine/QRBarcodeDecoder;->process([B)I
+
+     move-result p1
+
+-    if-lez p1, :cond_1
++    if-ltz p1, :cond_1
+
+     iget-object p1, p0, Lcom/samsung/android/camera/core2/node/qrCode/SaivQRCodeNode;->mBarcodeRecognizer:Lcom/samsung/android/qrengine/QRBarcodeDecoder;
+
+     invoke-virtual {p1}, Lcom/samsung/android/qrengine/QRBarcodeDecoder;->getRecognizedObjectCount()I
+diff --git a/smali_classes4/com/samsung/android/qrengine/QRBarcodeDecoder.smali b/smali_classes4/com/samsung/android/qrengine/QRBarcodeDecoder.smali
+index b4d4d838..54e550cd 100644
+--- a/smali_classes4/com/samsung/android/qrengine/QRBarcodeDecoder.smali
++++ b/smali_classes4/com/samsung/android/qrengine/QRBarcodeDecoder.smali
+@@ -3225,8 +3225,39 @@
+     .locals 18
+
+     move-object/from16 v0, p0
+
++    iget-boolean v1, v0, Lcom/samsung/android/qrengine/QRBarcodeDecoder;->mIsEngineInited:Z
++
++    if-eqz v1, :unica_qr_invalid
++
++    iget v1, v0, Lcom/samsung/android/qrengine/QRBarcodeDecoder;->mEngineId:I
++
++    if-ltz v1, :unica_qr_invalid
++
++    iget v1, v0, Lcom/samsung/android/qrengine/QRBarcodeDecoder;->mImageWidth:I
++
++    if-lez v1, :unica_qr_invalid
++
++    iget v1, v0, Lcom/samsung/android/qrengine/QRBarcodeDecoder;->mImageHeight:I
++
++    if-lez v1, :unica_qr_invalid
++
++    iget v1, v0, Lcom/samsung/android/qrengine/QRBarcodeDecoder;->mStrideWidth:I
++
++    if-lez v1, :unica_qr_invalid
++
++    iget v1, v0, Lcom/samsung/android/qrengine/QRBarcodeDecoder;->mStrideHeight:I
++
++    if-gtz v1, :unica_qr_ready
++
++    :unica_qr_invalid
++    const/4 v1, -0x1
++
++    return v1
++
++    :unica_qr_ready
++
+     iget-object v1, v0, Lcom/samsung/android/qrengine/QRBarcodeDecoder;->mDetectRoi:[I
+
+     const/4 v2, 0x0
+
+@@ -3349,9 +3380,9 @@
+     invoke-static {v1}, Landroid/text/TextUtils;->isEmpty(Ljava/lang/CharSequence;)Z
+
+     move-result v3
+
+-    const/4 v4, -0x1
++    const/4 v4, 0x0
+
+     if-eqz v3, :cond_1
+
+     return v4
