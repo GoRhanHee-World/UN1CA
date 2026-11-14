@@ -51,3 +51,12 @@ LOG_STEP_IN "- Adding camera PRO mode EV-fix"
 ADD_TO_WORK_DIR "r9qxxx" "vendor" \
     "lib64/X12QS_libTsAe.so" 0 0 644 "u:object_r:vendor_file:s0"
 LOG_STEP_OUT
+
+if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge 37 ] && [ "$TARGET_PLATFORM_SDK_VERSION" -lt 34 ]; then
+    LOG_STEP_IN "- Adapting camera text metadata and QR results to the legacy HAL"
+    # The common legacy patch adds the text forwarder's scene event field later.
+    # These edits affect separate classes and can be applied in the platform phase.
+    APPLY_PATCH "system" "system/priv-app/SamsungCamera/SamsungCamera.apk" \
+        "$MODPATH/SamsungCamera.apk/0001-Backport-text-metadata-and-QR-result-handling.patch" || return 1
+    LOG_STEP_OUT
+fi
