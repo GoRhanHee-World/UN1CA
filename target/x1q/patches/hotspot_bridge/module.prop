@@ -1,6 +1,0 @@
-id=x1q_hotspot_bridge
-name=Galaxy S20 legacy Wi-Fi HAL hotspot compatibility
-version=v1
-versionCode=1
-author=GoRhanHee
-description=Normalize unsupported multi-AP hotspot configurations before saving and starting tethering on x1q.
