@@ -122,7 +122,7 @@ jobs:
         run: |
           sudo apt update
           sudo env DEBIAN_FRONTEND=noninteractive apt install -yq \
-            attr ccache clang ffmpeg libbrotli-dev libbz2-dev \
+            attr ccache clang ffmpeg jq libbrotli-dev libbz2-dev \
             libgtest-dev libprotobuf-dev libunwind-dev libpcre2-dev \
             libzstd-dev lld protobuf-compiler webp
           sudo apt install -yq linux-modules-extra-$(uname -r) || echo "Runner kernel modules are already supplied or unavailable"

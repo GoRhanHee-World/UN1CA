@@ -21,10 +21,15 @@ else
 fi
 
 LOG_STEP_IN "- Removing unsupported SM8250 performance controls"
+if ! command -v jq > /dev/null; then
+    LOGE "jq is required to adapt the SM8250 Hyper configuration"
+    return 1
+fi
 for HYPER_CONFIG in config_chipset.json config_vendor.json; do
     if [ -f "$WORK_DIR/vendor/etc/hyper/$HYPER_CONFIG" ]; then
-        EVAL "python3 \"$MODPATH/files/fix_hyper_config.py\" \"$WORK_DIR/vendor/etc/hyper/$HYPER_CONFIG\""
+        EVAL "bash \"$MODPATH/files/fix_hyper_config.sh\" \"$WORK_DIR/vendor/etc/hyper/$HYPER_CONFIG\"" || return 1
     fi
 done
 unset HYPER_CONFIG
+EVAL "bash \"$MODPATH/files/fix_perf_config.sh\" \"$WORK_DIR/vendor/etc/perf\"" || return 1
 LOG_STEP_OUT

@@ -1,0 +1,5 @@
+
+;; UN1CA SM8250 fs-verity: the 4.19 SELinux hook checks FS_IOC_ENABLE_VERITY
+;; as an ioctl. ResilientAtomicFile uses it on package-restrictions.xml.
+;; Keep the existing file permissions and allow only this ioctl and file type.
+(allowx system_server users_system_data_file (ioctl file (0x6685)))
