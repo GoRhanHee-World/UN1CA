@@ -44,3 +44,13 @@ done
 
 unset FANCAM_LIB FANCAM_MODELS FANCAM_MODEL FANCAM_TARGET FANCAM_EXT FANCAM_PATH
 LOG_STEP_OUT
+
+LOG_STEP_IN "- Pairing VideoScan with its S26 analyzer native ABI"
+# The common mod installs the legacy A56 backend first. Replace the complete
+# native stack here, after the S26 app is installed, only for this platform.
+for VIDEOSCAN_LIB in libcontextanalyzer_jni.media.samsung.so libmediacontextanalyzer.so libvideo-highlight-arm64-v8a.so libauto-reframing-arm64-v8a.so; do
+    ADD_TO_WORK_DIR "$SRC_DIR/platform/$TARGET_PLATFORM/mods/miracle" "system" "system/lib64/$VIDEOSCAN_LIB" \
+        0 0 644 "u:object_r:system_lib_file:s0" || return 1
+done
+unset VIDEOSCAN_LIB
+LOG_STEP_OUT
