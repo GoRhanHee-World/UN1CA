@@ -1,0 +1,4 @@
+id=fsverity
+name=Legacy fs-verity ioctl permissions
+version=1.0
+description=Allows system_server to protect package restrictions on the legacy kernel.
