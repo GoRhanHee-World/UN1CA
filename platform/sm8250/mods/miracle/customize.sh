@@ -44,3 +44,18 @@ done
 
 unset FANCAM_LIB FANCAM_MODELS FANCAM_MODEL FANCAM_TARGET FANCAM_EXT FANCAM_PATH
 LOG_STEP_OUT
+
+LOG_STEP_IN "- Pairing VideoScan with its S26 analyzer native ABI"
+# Keep the A56 global backend for its existing consumers. The S26 JNI uses
+# the same MCA3 interface as the private, GPU-adapted analyzer installed above.
+ADD_TO_WORK_DIR "$SRC_DIR/platform/$TARGET_PLATFORM/mods/miracle" "system" \
+    "system/lib64/libcontextanalyzer_jni.media.samsung.so" \
+    0 0 644 "u:object_r:system_lib_file:s0" || return 1
+for VIDEOSCAN_PATH in apex system; do
+    LOG "- Redirecting VideoScan $VIDEOSCAN_PATH analyzer path to the GPU backend"
+    HEX_PATCH "$WORK_DIR/system/system/lib64/libcontextanalyzer_jni.media.samsung.so" \
+        "6c69626d65646961636f6e74657874616e616c797a65722e736f00" \
+        "6c69626d63615f66616e63616d2e736f0000000000000000000000" || return 1
+done
+unset VIDEOSCAN_PATH
+LOG_STEP_OUT
