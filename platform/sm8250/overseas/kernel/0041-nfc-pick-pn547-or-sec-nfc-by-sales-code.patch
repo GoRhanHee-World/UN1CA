@@ -1,0 +1,225 @@
+diff --git a/arch/arm64/boot/dts/samsung/x1q/kona-sec-x1q-kor-overlay-r13.dts b/arch/arm64/boot/dts/samsung/x1q/kona-sec-x1q-kor-overlay-r13.dts
+index 2987ed0..7f123b5 100644
+--- a/arch/arm64/boot/dts/samsung/x1q/kona-sec-x1q-kor-overlay-r13.dts
++++ b/arch/arm64/boot/dts/samsung/x1q/kona-sec-x1q-kor-overlay-r13.dts
+@@ -35,3 +35,21 @@
+ 	};
+ };
+ 
++
++/* MinsOS 0041: the Samsung NFC of the Japanese units (felica_x1q_r10.dtsi), which share this board-id
++ * with Korea and so get this overlay. Same GPIOs as pn547@2B; pn547.c and sec_nfc.c pick one by sales
++ * code. No pinctrl: the JPN dtsi's qupv3_se16_spi_nc would park the eSE SPI pins of a Korean unit.
++ */
++&qupv3_se15_i2c {
++	sec-nfc@27 {
++		compatible = "sec-nfc";
++		reg = <0x27>;
++		interrupt-parent = <&tlmm>;
++		interrupts = <31 0>;
++		sec-nfc,irq-gpio = <&tlmm 31 0>;
++		sec-nfc,ven-gpio = <&tlmm 8 0>;
++		sec-nfc,firm-gpio = <&tlmm 9 0>;
++		sec-nfc,nfc_pvdd-supply = <&pm8150a_l1>;
++		sec-nfc,ldo_control;
++	};
++};
+diff --git a/arch/arm64/boot/dts/samsung/x1q/kona-sec-x1q-kor-overlay-r14.dts b/arch/arm64/boot/dts/samsung/x1q/kona-sec-x1q-kor-overlay-r14.dts
+index 6426636..2848564 100644
+--- a/arch/arm64/boot/dts/samsung/x1q/kona-sec-x1q-kor-overlay-r14.dts
++++ b/arch/arm64/boot/dts/samsung/x1q/kona-sec-x1q-kor-overlay-r14.dts
+@@ -34,3 +34,21 @@
+ 		};
+ 	};
+ };
++
++/* MinsOS 0041: the Samsung NFC of the Japanese units (felica_x1q_r10.dtsi), which share this board-id
++ * with Korea and so get this overlay. Same GPIOs as pn547@2B; pn547.c and sec_nfc.c pick one by sales
++ * code. No pinctrl: the JPN dtsi's qupv3_se16_spi_nc would park the eSE SPI pins of a Korean unit.
++ */
++&qupv3_se15_i2c {
++	sec-nfc@27 {
++		compatible = "sec-nfc";
++		reg = <0x27>;
++		interrupt-parent = <&tlmm>;
++		interrupts = <31 0>;
++		sec-nfc,irq-gpio = <&tlmm 31 0>;
++		sec-nfc,ven-gpio = <&tlmm 8 0>;
++		sec-nfc,firm-gpio = <&tlmm 9 0>;
++		sec-nfc,nfc_pvdd-supply = <&pm8150a_l1>;
++		sec-nfc,ldo_control;
++	};
++};
+diff --git a/arch/arm64/boot/dts/samsung/y2q/kona-sec-y2q-kor-overlay-r13.dts b/arch/arm64/boot/dts/samsung/y2q/kona-sec-y2q-kor-overlay-r13.dts
+index cac454b..4614507 100644
+--- a/arch/arm64/boot/dts/samsung/y2q/kona-sec-y2q-kor-overlay-r13.dts
++++ b/arch/arm64/boot/dts/samsung/y2q/kona-sec-y2q-kor-overlay-r13.dts
+@@ -47,3 +47,21 @@
+ 		 0x2f 0x74
+ 		 0x03 0x78>;
+ };
++
++/* MinsOS 0041: the Samsung NFC of the Japanese units (felica_x1q_r10.dtsi), which share this board-id
++ * with Korea and so get this overlay. Same GPIOs as pn547@2B; pn547.c and sec_nfc.c pick one by sales
++ * code. No pinctrl: the JPN dtsi's qupv3_se16_spi_nc would park the eSE SPI pins of a Korean unit.
++ */
++&qupv3_se15_i2c {
++	sec-nfc@27 {
++		compatible = "sec-nfc";
++		reg = <0x27>;
++		interrupt-parent = <&tlmm>;
++		interrupts = <31 0>;
++		sec-nfc,irq-gpio = <&tlmm 31 0>;
++		sec-nfc,ven-gpio = <&tlmm 8 0>;
++		sec-nfc,firm-gpio = <&tlmm 9 0>;
++		sec-nfc,nfc_pvdd-supply = <&pm8150a_l1>;
++		sec-nfc,ldo_control;
++	};
++};
+diff --git a/arch/arm64/boot/dts/samsung/y2q/kona-sec-y2q-kor-overlay-r14.dts b/arch/arm64/boot/dts/samsung/y2q/kona-sec-y2q-kor-overlay-r14.dts
+index 51efa28..31ae16c 100644
+--- a/arch/arm64/boot/dts/samsung/y2q/kona-sec-y2q-kor-overlay-r14.dts
++++ b/arch/arm64/boot/dts/samsung/y2q/kona-sec-y2q-kor-overlay-r14.dts
+@@ -47,3 +47,21 @@
+ 		 0x2f 0x74
+ 		 0x03 0x78>;
+ };
++
++/* MinsOS 0041: the Samsung NFC of the Japanese units (felica_x1q_r10.dtsi), which share this board-id
++ * with Korea and so get this overlay. Same GPIOs as pn547@2B; pn547.c and sec_nfc.c pick one by sales
++ * code. No pinctrl: the JPN dtsi's qupv3_se16_spi_nc would park the eSE SPI pins of a Korean unit.
++ */
++&qupv3_se15_i2c {
++	sec-nfc@27 {
++		compatible = "sec-nfc";
++		reg = <0x27>;
++		interrupt-parent = <&tlmm>;
++		interrupts = <31 0>;
++		sec-nfc,irq-gpio = <&tlmm 31 0>;
++		sec-nfc,ven-gpio = <&tlmm 8 0>;
++		sec-nfc,firm-gpio = <&tlmm 9 0>;
++		sec-nfc,nfc_pvdd-supply = <&pm8150a_l1>;
++		sec-nfc,ldo_control;
++	};
++};
+diff --git a/drivers/nfc/pn547.c b/drivers/nfc/pn547.c
+index bf5bcf4..63423f2 100644
+--- a/drivers/nfc/pn547.c
++++ b/drivers/nfc/pn547.c
+@@ -1657,6 +1657,39 @@ static ssize_t nfc_support_show(struct class *class,
+ 
+ static CLASS_ATTR_RO(nfc_support);
+ 
++/*
++ * MinsOS 0041 (11-04): one dtbo serves the Korean, Hong Kong and Japanese S20 and S20+. Board-ids 13
++ * and 14 exist in every region, so a Japanese unit on those boards gets the KOR overlay, which now
++ * carries both pn547@2B (NXP SN100U, Korea and Hong Kong) and sec-nfc@27 (Samsung SENN82AB, Japan) on
++ * the same GPIOs. The kernel command line has no model, so the sales code decides: KDI (au) and DCM
++ * (docomo) units have the Samsung chip. This only matters when both nodes are in the tree - a JPN
++ * overlay (board-id 15, the development boards) deletes pn547@2B and is left as it is.
++ */
++static bool minsos_nfc_node(const char *compat)
++{
++	struct device_node *np = of_find_compatible_node(NULL, NULL, compat);
++	bool avail = np && of_device_is_available(np);
++
++	of_node_put(np);
++	return avail;
++}
++
++static bool minsos_nfc_jpn_sales(void)
++{
++	static const char * const codes[] = { "KDI", "DCM" };
++	const char *key = "androidboot.sales_code=";
++	const char *p = strstr(saved_command_line, key);
++	int i;
++
++	if (!p)
++		return false;
++	p += strlen(key);
++	for (i = 0; i < ARRAY_SIZE(codes); i++)
++		if (!strncmp(p, codes[i], 3) && (p[3] == ' ' || p[3] == '\0'))
++			return true;
++	return false;
++}
++
+ static int pn547_probe(struct i2c_client *client, const struct i2c_device_id *id)
+ {
+ 	int ret;
+@@ -1675,6 +1708,11 @@ static int pn547_probe(struct i2c_client *client, const struct i2c_device_id *id
+ 	return -ENODEV;
+ #endif
+ 
++	if (minsos_nfc_node("sec-nfc") && minsos_nfc_jpn_sales()) {
++		pr_info("pn547: Samsung NFC unit (sales code), leaving the bus to sec-nfc\n");
++		return -ENODEV;
++	}
++
+ 	NFC_LOG_INFO("entered\n");
+ 
+ 	nfc_logger_init();
+diff --git a/drivers/nfc/sec_nfc.c b/drivers/nfc/sec_nfc.c
+index ca5d5b7..1166e14 100644
+--- a/drivers/nfc/sec_nfc.c
++++ b/drivers/nfc/sec_nfc.c
+@@ -43,6 +43,8 @@
+ #include <linux/poll.h>
+ #include <linux/sched.h>
+ #include <linux/i2c.h>
++#include <linux/init.h>
++#include <linux/of.h>
+ #include "sec_nfc.h"
+ #include "./nfc_logger/nfc_logger.h"
+ 
+@@ -1052,6 +1054,39 @@ MODULE_DEVICE_TABLE(i2c, sec_nfc_id_table);
+ #define SEC_NFC_INIT(driver)	i2c_add_driver(driver)
+ #define SEC_NFC_EXIT(driver)	i2c_del_driver(driver)
+ 
++/*
++ * MinsOS 0041 (11-04): one dtbo serves the Korean, Hong Kong and Japanese S20 and S20+. Board-ids 13
++ * and 14 exist in every region, so a Japanese unit on those boards gets the KOR overlay, which now
++ * carries both pn547@2B (NXP SN100U, Korea and Hong Kong) and sec-nfc@27 (Samsung SENN82AB, Japan) on
++ * the same GPIOs. The kernel command line has no model, so the sales code decides: KDI (au) and DCM
++ * (docomo) units have the Samsung chip. This only matters when both nodes are in the tree - a JPN
++ * overlay (board-id 15, the development boards) deletes pn547@2B and is left as it is.
++ */
++static bool minsos_nfc_node(const char *compat)
++{
++	struct device_node *np = of_find_compatible_node(NULL, NULL, compat);
++	bool avail = np && of_device_is_available(np);
++
++	of_node_put(np);
++	return avail;
++}
++
++static bool minsos_nfc_jpn_sales(void)
++{
++	static const char * const codes[] = { "KDI", "DCM" };
++	const char *key = "androidboot.sales_code=";
++	const char *p = strstr(saved_command_line, key);
++	int i;
++
++	if (!p)
++		return false;
++	p += strlen(key);
++	for (i = 0; i < ARRAY_SIZE(codes); i++)
++		if (!strncmp(p, codes[i], 3) && (p[3] == ' ' || p[3] == '\0'))
++			return true;
++	return false;
++}
++
+ static int sec_nfc_probe(struct i2c_client *client,
+ 		const struct i2c_device_id *id)
+ {
+@@ -1063,6 +1098,11 @@ static int sec_nfc_probe(struct i2c_client *client,
+ 	return -ENODEV;
+ #endif
+ 
++	if (minsos_nfc_node("pn547") && !minsos_nfc_jpn_sales()) {
++		pr_info("sec-nfc: NXP NFC unit, leaving the bus to pn547\n");
++		return -ENODEV;
++	}
++
+ 	nfc_logger_init();
+ 
+ 	ret = __sec_nfc_probe(&client->dev);

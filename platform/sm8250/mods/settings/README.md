@@ -4,6 +4,8 @@ The common Settings mod calls this platform hook after installing the UN1CA
 Settings page. Only x1q, y2q and z3q on Android 17 or newer receive the collector.
 The report activity is not exported; it runs inside Settings and performs
 collection on a worker thread.
+`patch_settings.sh` installs the activity, menu, resources and separate dex
+directory using shell and standard command-line tools.
 
 Settings > UN1CA Settings > Create problem report collects logcat buffers,
 `dumpsys input`, the last day's DropBox entries and readable recovery logs into

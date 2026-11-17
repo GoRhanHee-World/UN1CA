@@ -1,0 +1,2 @@
+# Unified diff context intentionally preserves the upstream kernel whitespace.
+*.patch -whitespace

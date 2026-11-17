@@ -85,3 +85,6 @@ TARGET_WLAN_SUPPORT_MOBILEAP_WIFISHARING_LITE="false"
 TARGET_WLAN_SUPPORT_SWITCH_FOR_INDIVIDUAL_APPS="true"
 TARGET_WLAN_SUPPORT_TWT_CONTROL="false"
 TARGET_WLAN_SUPPORT_WIFI_TO_CELLULAR="true"
+
+# Optional overseas S20 variants; Korean-only remains the default.
+source "$SRC_DIR/platform/sm8250/overseas/config.sh" || return 1

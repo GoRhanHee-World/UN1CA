@@ -8,7 +8,7 @@ KERNEL_TMP="$(mktemp -d "$TMP_DIR/kernel-x1q.XXXXXX")"
 
 # Preserve the boot header and ramdisk already used by this ROM.
 DOWNLOAD_FILE "https://github.com/ssch71/not_samsung.sm8250-4.19/releases/download/$KERNEL_BASE_TAG/boot.img" "$KERNEL_TMP/boot.img"
-DOWNLOAD_FILE "https://github.com/GoRhanHee-World/android_samsung_kernel_sm8250/releases/download/$KERNEL_TAG/$KERNEL_ZIP" "$KERNEL_TMP/kernel.zip"
+source "$SRC_DIR/platform/sm8250/overseas/kernel_payload.sh" || return 1
 
 LOG "- Extracting the boot image"
 EVAL "unpack_bootimg --boot_img \"$KERNEL_TMP/boot.img\" --out \"$KERNEL_TMP/out\" --format mkbootimg -0 > \"$KERNEL_TMP/mkbootimg.args\"" || return 1

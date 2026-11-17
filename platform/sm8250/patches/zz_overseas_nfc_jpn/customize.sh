@@ -1,4 +1,18 @@
+# shellcheck shell=bash
+# Read by apply_modules.sh before sourcing this file.
+# shellcheck disable=SC2034
 SKIPUNZIP=1
+case "$TARGET_CODENAME" in
+    x1q|y2q|z3q) ;;
+    *) return 0 ;;
+esac
+# The generated installer model list persists the overseas build selection.
+case ":${TARGET_ASSERT_MODEL:-}:" in
+    *:SM-G9810:*|*:SM-G9860:*|*:SM-G9880:*) ;;
+    *) return 0 ;;
+esac
+[ "$SOURCE_PLATFORM_SDK_VERSION" -ge 37 ] || { ABORT "S20 overseas modules require Android 17 or newer"; return 1; }
+
 
 # 11-04 owner "NFC 수정 ㄱㄱ": NFC on the Japanese S20+ (SCG02 au, SC-52A docomo).
 #
@@ -32,7 +46,7 @@ esac
 LOG_STEP_IN "- NFC on the Japanese $TARGET_CODENAME: Samsung SENN82AB HAL from stock ${_JP%/*}"
 
 _JD="$FW_DIR/${_JP/\//_}/vendor"
-[ -d "$_JD" ] || ABORT "[$TARGET_CODENAME] stock ${_JP%/*} is not extracted at $_JD (ops/s20_series/extract_stock.sh)"
+[ -d "$_JD" ] || { ABORT "[$TARGET_CODENAME] stock ${_JP%/*} is not extracted at $_JD (see platform/sm8250/overseas/README.md)"; return 1; }
 
 # path  uid gid mode label  sha256 (stock SCG02KDS1DXB1 / SCG01KDS1DXB1: equal except the RF register file)
 while read -r _F _U _G _M _L _S; do
@@ -40,9 +54,9 @@ while read -r _F _U _G _M _L _S; do
     [ "$_S" != RF ] || _S=$_RF
     ADD_TO_WORK_DIR "$_JP" "vendor" "$_F" "$_U" "$_G" "$_M" "$_L"
     [ "$(sha256sum "$WORK_DIR/vendor/$_F" | cut -d' ' -f1)" = "$_S" ] \
-        || ABORT "[$TARGET_CODENAME] vendor/$_F is not the stock ${_JP%/*} file"
+        || { ABORT "[$TARGET_CODENAME] vendor/$_F is not the stock ${_JP%/*} file"; return 1; }
     grep -q "^vendor/$_F " "$WORK_DIR/configs/fs_config-vendor" \
-        || ABORT "[$TARGET_CODENAME] vendor/$_F has no fs_config entry"
+        || { ABORT "[$TARGET_CODENAME] vendor/$_F has no fs_config entry"; return 1; }
 done <<'EOF'
 bin/hw/sec.android.hardware.nfc@1.2-service 0 2000 755 u:object_r:hal_nfc_default_exec:s0 6ede5f1b2c33ba66c00a4d4dc1b4e6e26ff3eccaacef81e17a0626f961cc1124
 lib64/nfc_nci_fn.so 0 0 644 u:object_r:vendor_file:s0 0c5d1084258d9f8d23ea179e6e4eafb5117fb242772be2cda2422d4d248a7275
@@ -51,20 +65,20 @@ etc/sec_senn82ab_rfreg.bin 0 0 644 u:object_r:vendor_configs_file:s0 RF
 firmware/sec_senn82ab_firmware.bin 0 0 644 u:object_r:vendor_firmware_file:s0 27f1fde1caa1e9095898d8f09a6f8dc0f04513bbf109e6da5f32d1676c86b72d
 EOF
 cmp -s "$WORK_DIR/vendor/lib64/vendor.samsung.hardware.nfc@2.0.so" "$_JD/lib64/vendor.samsung.hardware.nfc@2.0.so" \
-    || ABORT "[$TARGET_CODENAME] vendor.samsung.hardware.nfc@2.0.so differs from stock SCG02's - the SCG02 HAL was built against it"
+    || { ABORT "[$TARGET_CODENAME] vendor.samsung.hardware.nfc@2.0.so differs from stock SCG02's - the SCG02 HAL was built against it"; return 1; }
 
 ADD_TO_WORK_DIR "$MODPATH/files" "vendor" "etc/init/minsos_nfc_jpn.rc" 0 0 644 "u:object_r:vendor_configs_file:s0"
 
 # The chip name moves from build.prop (read-only, first writer wins) to minsos_nfc_jpn.rc.
 [ "$(GET_PROP "vendor" "ro.vendor.nfc.feature.chipname")" = "NXP_SN100U" ] \
-    || ABORT "[$TARGET_CODENAME] vendor build.prop chip name is not NXP_SN100U - re-check before moving it"
+    || { ABORT "[$TARGET_CODENAME] vendor build.prop chip name is not NXP_SN100U - re-check before moving it"; return 1; }
 SET_PROP "vendor" "ro.vendor.nfc.feature.chipname" --delete
 [ -z "$(GET_PROP "vendor" "ro.vendor.nfc.feature.chipname")" ] \
-    || ABORT "[$TARGET_CODENAME] ro.vendor.nfc.feature.chipname is still in vendor build.prop"
+    || { ABORT "[$TARGET_CODENAME] ro.vendor.nfc.feature.chipname is still in vendor build.prop"; return 1; }
 
 # The NXP rc must still be there and unchanged: it is what Korean and Hong Kong units start.
 grep -q '^service vendor.nfc_hal_service /vendor/bin/hw/nxp.android.hardware.nfc@1.2-service$' \
     "$WORK_DIR/vendor/etc/init/nxp.android.hardware.nfc@1.2-service.rc" \
-    || ABORT "[$TARGET_CODENAME] the NXP NFC HAL rc is missing or changed"
+    || { ABORT "[$TARGET_CODENAME] the NXP NFC HAL rc is missing or changed"; return 1; }
 unset _JP _JD _RF _F _U _G _M _L _S
 LOG_STEP_OUT
