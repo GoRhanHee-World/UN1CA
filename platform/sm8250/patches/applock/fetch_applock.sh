@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Put Samsung's AppLock app and its privapp-permissions file where the minsos_applock mod expects
+# Put Samsung's AppLock app and its privapp-permissions file where the S20 AppLock module expects
 # them, and refuse anything that is not byte-for-byte the pair that was verified by hand.
 #
-#   tools/fetch_applock.sh                    # download both
-#   tools/fetch_applock.sh /path/to/AppLock.apk   # use a local APK, still hash-gated
+#   platform/sm8250/patches/applock/fetch_applock.sh                    # download both
+#   platform/sm8250/patches/applock/fetch_applock.sh /path/to/AppLock.apk   # use a local APK, still hash-gated
 #
 # Neither file is in git: .gitignore keeps borrowed Samsung binaries out of this repo (copyright,
 # and in this case 3.6 MB), the same rule the KernelSU manager APK lives under. The mod ABORTs the

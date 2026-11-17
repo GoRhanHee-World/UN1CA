@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # Samsung AppLock package and permission allowlist from MinsOS ea15a25e.
 # Read by apply_modules.sh before sourcing this file.
 # shellcheck disable=SC2034

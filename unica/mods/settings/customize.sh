@@ -124,4 +124,9 @@ fi
 
 unset PATCH_INST CONTENT
 
+# Apply platform additions after the common Settings page has been installed.
+if [ -f "$SRC_DIR/platform/$TARGET_PLATFORM/mods/settings/customize.sh" ]; then
+    source "$SRC_DIR/platform/$TARGET_PLATFORM/mods/settings/customize.sh" || return 1
+fi
+
 LOG_STEP_OUT
