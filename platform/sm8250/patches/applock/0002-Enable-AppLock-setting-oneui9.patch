@@ -1,0 +1,65 @@
+From 9007000000000000000000000000000000000007 Mon Sep 17 00:00:00 2001
+From: MinsOS <minsos@localhost>
+Date: Sat, 5 Sep 2026 16:00:00 +0900
+Subject: [PATCH] Enable AppLock setting (One UI 9, y2q)
+
+---
+--- a/smali_classes3/com/samsung/android/settings/usefulfeature/applock/AppLockPreferenceController.smali	2026-09-05 16:21:12.652813816 +0900
++++ b/smali_classes3/com/samsung/android/settings/usefulfeature/applock/AppLockPreferenceController.smali	2026-09-05 16:21:12.652970203 +0900
+@@ -127,23 +127,27 @@
+ .end method
+ 
+ .method public getAvailabilityStatus()I
+-    .locals 0
++    .locals 2
+ 
+-    sget-object p0, Lcom/android/settings/Utils;->sBuilder:Ljava/lang/StringBuilder;
++    invoke-static {}, Landroid/os/UserHandle;->myUserId()I
+ 
+-    sget-boolean p0, Lcom/samsung/android/settings/Rune;->SUPPORT_SMARTMANAGER_CN:Z
++    move-result v0
+ 
+-    if-eqz p0, :cond_0
++    if-nez v0, :cond_0
+ 
+-    invoke-static {}, Landroid/os/UserHandle;->myUserId()I
++    iget-object v0, p0, Lcom/android/settingslib/core/AbstractPreferenceController;->mContext:Landroid/content/Context;
+ 
+-    move-result p0
++    const-string v1, "com.samsung.android.applock"
+ 
+-    if-nez p0, :cond_0
++    invoke-static {v0, v1}, Lcom/android/settings/Utils;->hasPackage(Landroid/content/Context;Ljava/lang/String;)Z
+ 
+-    const/4 p0, 0x0
++    move-result v0
+ 
+-    return p0
++    if-eqz v0, :cond_0
++
++    const/4 v0, 0x0
++
++    return v0
+ 
+     :cond_0
+     const/4 p0, 0x3
+@@ -299,10 +303,16 @@
+ 
+     invoke-virtual {v0, v1, v2}, Landroid/content/Intent;->setClassName(Ljava/lang/String;Ljava/lang/String;)Landroid/content/Intent;
+ 
++:try_start_0
+     iget-object v1, p0, Lcom/android/settingslib/core/AbstractPreferenceController;->mContext:Landroid/content/Context;
+ 
+     invoke-virtual {v1, v0}, Landroid/content/Context;->startActivity(Landroid/content/Intent;)V
++:try_end_0
++    .catch Landroid/content/ActivityNotFoundException; {:try_start_0 .. :try_end_0} :catch_0
++
++    goto :goto_0
+ 
++    :catch_0
+     :cond_1
+     :goto_0
+     invoke-super {p0, p1}, Lcom/android/settings/core/BasePreferenceController;->handlePreferenceTreeClick(Landroidx/preference/Preference;)Z
+
+-- 
+2.51.0

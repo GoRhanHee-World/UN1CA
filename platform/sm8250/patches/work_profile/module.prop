@@ -1,0 +1,6 @@
+id=sm8250_work_profile
+name=Galaxy S20 series work profile compatibility
+version=v1
+versionCode=1
+author=MinsOS, GoRhanHee
+description=Allow managed work profiles with the S20 legacy KeyMint implementation on One UI 9.

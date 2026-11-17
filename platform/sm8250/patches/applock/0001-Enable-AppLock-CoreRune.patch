@@ -1,0 +1,31 @@
+From 9007000000000000000000000000000000000007 Mon Sep 17 00:00:00 2001
+From: MinsOS <minsos@localhost>
+Date: Sat, 5 Sep 2026 16:00:00 +0900
+Subject: [PATCH] Enable AppLock CoreRune (One UI 8.5)
+
+In stock firmware, CoreRune.FW_SUPPORT_APPLOCK and CoreRune.FW_APPLOCK are
+only enabled if SEC_FLOATING_FEATURE_SMARTMANAGER_CONFIG_PACKAGE_NAME equals
+"com.samsung.android.sm_cn" (China Smart Manager).
+
+Setting CoreRune.FW_SUPPORT_APPLOCK = true and CoreRune.FW_APPLOCK = true
+opens the framework gates in AppLockPolicy, ActivityStarter, and
+ActivityTaskManagerService so that application locking is supported by the OS.
+
+---
+diff --git a/smali_classes6/com/samsung/android/rune/CoreRune.smali b/smali_classes6/com/samsung/android/rune/CoreRune.smali
+index 0000000..0000000 100644
+--- a/smali_classes6/com/samsung/android/rune/CoreRune.smali
++++ b/smali_classes6/com/samsung/android/rune/CoreRune.smali
+@@ -3511,9 +3511,7 @@
+ 
+     const-string v9, "com.samsung.android.sm_cn"
+ 
+-    invoke-virtual {v2, v9}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+-
+-    move-result v2
++    const/4 v2, 0x1
+ 
+     sput-boolean v2, Lcom/samsung/android/rune/CoreRune;->FW_SUPPORT_APPLOCK:Z
+ 
+-- 
+2.51.0

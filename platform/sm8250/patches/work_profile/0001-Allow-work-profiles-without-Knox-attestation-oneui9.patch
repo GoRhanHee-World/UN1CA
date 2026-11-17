@@ -1,0 +1,37 @@
+From 0000000000000000000000000000000000009012 Mon Sep 17 00:00:00 2001
+From: MinsOS <minsos@local>
+Date: Sun, 19 Oct 2026 21:00:00 +0900
+Subject: [PATCH] create work profiles without the Knox key attestation (One UI 9, y2q)
+
+Settings mod 9012-oneui85 (492de9d, I-73) re-derived on the S928N UserManagerService.
+createUserInternalUncheckedNoTracing attests a key named KnoxTestKeyUMS before it creates an
+enterprise (work) profile. The A13 vendor keymint rejects the new Samsung attestation tag, the
+attestation returns no certificate chain, the branch logs "Device integrity status is abnormal.",
+finds no engineering-mode token and returns null, so the profile is never created.
+
+Jump from :cond_3b (where both DRK branches meet, outside every try block) to :goto_29, the label
+the success path reaches after AttestationUtils.deleteKey. On One UI 9 the 8.5 label :goto_2a is a
+different place further down, so the tablet patch cannot be copied. The new edge carries the state
+of the :cond_42 edge (the one that skips the whole check) except v0, v6, v8 and v9; after :goto_29
+v0 and v6 are written before any read (try_1c/try_1d), v8 before its first read (isEphemeral), v9
+before its first read (move-object/from16 v9, v22 or p9), and the catchall_4/catchall_9 handlers
+read none of them. The isKnoxKeyInstallable check before it still runs.
+---
+--- a/smali_classes2/com/android/server/pm/UserManagerService.smali
++++ b/smali_classes2/com/android/server/pm/UserManagerService.smali
+@@ -7061,6 +7061,12 @@
+     return-object p1
+ 
+     :cond_3b
++    # MinsOS: skip the Knox key attestation that gates an enterprise (work) profile. The A13 vendor
++    # keymint returns no certificate chain for it, so every work profile failed with "Device integrity
++    # status is abnormal." (Shelter, pm create-user --managed; I-73 on the T970). :goto_29 is where the
++    # check continues when it passes (the goto after AttestationUtils.deleteKey). Only v0/v6/v8/v9 differ
++    # from the :cond_42 edge that already lands there, and each is written again before it is read.
++    goto :goto_29
+     :try_start_19
+     const-string v0, "KnoxTestKeyUMS"
+     :try_end_19
+-- 
+2.43.0
+
