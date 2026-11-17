@@ -7,5 +7,5 @@ esac
 [ "$SOURCE_PLATFORM_SDK_VERSION" -ge 37 ] || return 0
 
 LOG "- Adding the S20 series problem report collector to UN1CA Settings"
-python3 "$SRC_DIR/platform/sm8250/mods/settings/patch_settings.py" \
+bash "$SRC_DIR/platform/sm8250/mods/settings/patch_settings.sh" \
     "$APKTOOL_DIR/system/priv-app/SecSettings/SecSettings.apk" || return 1

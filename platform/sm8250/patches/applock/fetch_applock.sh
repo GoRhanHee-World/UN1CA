@@ -75,7 +75,12 @@ get "$XML_DEST" "$XML_URL" "$XML_SIZE" "$XML_SHA"
 # that still means something on the day someone re-pins these hashes to a newer dump. A
 # device-signed AppLock is the whole point: the lock state lives in system_server's own
 # SharedPreferences, and a resigned build is a different app to the platform.
-python3 "$REPO/platform/sm8250/patches/applock/apk_cert.py" "$APK_DEST" --expect-size 1240 \
-    --expect-hash 34df0e7a9f1cf1892e45c056b4973cd81ccf148a4050d11aea4ac5a65f900a42 \
-    || { echo "!! AppLock.apk is not signed by Samsung's platform certificate"; exit 1; }
-echo "certificate and identity match: com.samsung.android.applock 3.0.0, CN=Samsung Cert"
+CERT_TMP=$(mktemp -d)
+trap 'rm -rf "$CERT_TMP"' EXIT
+unzip -p "$APK_DEST" META-INF/CERT.RSA > "$CERT_TMP/signature.p7"
+openssl pkcs7 -inform DER -in "$CERT_TMP/signature.p7" -print_certs \
+    | openssl x509 -outform DER > "$CERT_TMP/certificate.der"
+check "$CERT_TMP/certificate.der" 1240 \
+    34df0e7a9f1cf1892e45c056b4973cd81ccf148a4050d11aea4ac5a65f900a42 \
+    || { echo "!! AppLock.apk does not carry the pinned Samsung certificate"; exit 1; }
+echo "pinned APK and Samsung certificate match: com.samsung.android.applock 3.0.0"
