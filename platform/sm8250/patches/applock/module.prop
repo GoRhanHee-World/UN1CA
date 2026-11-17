@@ -1,0 +1,6 @@
+id=sm8250_applock
+name=Galaxy S20 series Samsung App Lock
+version=v1
+versionCode=1
+author=MinsOS, GoRhanHee
+description=Install Samsung App Lock and its privileged permission allowlist on x1q, y2q, and z3q.
