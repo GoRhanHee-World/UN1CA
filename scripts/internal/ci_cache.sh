@@ -20,7 +20,7 @@ tools()
             java -version 2>&1
             python3 --version
             dpkg-query -W -f='${binary:Package}=${Version}\n' \
-                clang lld cmake make libc6 libstdc++6 libbrotli-dev libbz2-dev \
+                clang lld make libc6 libstdc++6 libbrotli-dev libbz2-dev \
                 libgtest-dev libprotobuf-dev libunwind-dev libpcre2-dev \
                 libzstd-dev protobuf-compiler
         } | sha256sum | cut -d ' ' -f 1
