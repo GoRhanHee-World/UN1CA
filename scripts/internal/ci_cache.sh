@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Cache host tools and converted wallpapers, never firmware or patched ROM files.
+# Cache build inputs and host tools, never firmware or patched ROM files.
 set -euo pipefail
 
 cache_output()
@@ -38,6 +38,17 @@ tools()
     cache_output ccache_prefix "ccache-v1-$environment-"
 }
 
+prebuilts()
+{
+    local key
+    local -a paths
+    mapfile -t paths < "$SRC_DIR/.github/prebuilt-paths"
+    # Tree IDs cover file contents, executable bits and symlinks without
+    # fetching the large blobs from a partial clone.
+    key=$(git -C "$SRC_DIR" ls-tree HEAD -- "${paths[@]}" | sha256sum | cut -d ' ' -f 1)
+    cache_output prebuilts_key "prebuilts-v1-$key"
+}
+
 wallpaper()
 {
     local key
@@ -57,10 +68,12 @@ wallpaper()
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
     if [ "${1:-}" = tools ]; then
         tools
+    elif [ "${1:-}" = prebuilts ]; then
+        prebuilts
     elif [ "${1:-}" = wallpaper ]; then
         wallpaper
     else
-        echo "Usage: $0 <tools|wallpaper>" >&2
+        echo "Usage: $0 <tools|prebuilts|wallpaper>" >&2
         exit 1
     fi
 fi

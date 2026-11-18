@@ -1,0 +1,30 @@
+name: Cached prebuilt binaries
+description: Restore the selected S20 prebuilts before fetching missing Git blobs.
+runs:
+  using: composite
+  steps:
+    - name: Calculate prebuilt cache key
+      id: key
+      shell: bash
+      env:
+        SRC_DIR: ${{ github.workspace }}
+      run: bash scripts/internal/ci_cache.sh prebuilts
+
+    - name: Restore prebuilt binaries
+      id: cache
+      uses: actions/cache/restore@v5
+      with:
+        path: prebuilts
+        key: ${{ steps.key.outputs.prebuilts_key }}
+
+    - name: Download uncached prebuilt binaries
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: git sparse-checkout add --stdin < .github/prebuilt-paths
+
+    - name: Save prebuilt binaries
+      if: steps.cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v5
+      with:
+        path: prebuilts
+        key: ${{ steps.key.outputs.prebuilts_key }}

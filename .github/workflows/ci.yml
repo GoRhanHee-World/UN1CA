@@ -101,25 +101,9 @@ jobs:
             unica
             platform/sm8250
             target/${{ matrix.target }}
-            prebuilts/bootable
-            prebuilts/samsung/a17xxx
-            prebuilts/samsung/a34xxx
-            prebuilts/samsung/a52qnsxx
-            prebuilts/samsung/a56xnaxx
-            prebuilts/samsung/a73xqxx
-            prebuilts/samsung/b0qxxx
-            prebuilts/samsung/b0sxxx
-            prebuilts/samsung/dm3qksx
-            prebuilts/samsung/dm3qxxx
-            prebuilts/samsung/gta9pxxx
-            prebuilts/samsung/gts11xx
-            prebuilts/samsung/m3qksx
-            prebuilts/samsung/m44xktt
-            prebuilts/samsung/p3qxxx
-            prebuilts/samsung/pa1qxxx
-            prebuilts/samsung/pa3qzcx
-            prebuilts/samsung/r11sxxx
-            prebuilts/samsung/r9qxxx
+
+      - name: Restore or download prebuilts
+        uses: ./.github/actions/prebuilts
 
       - name: Generate build config
         run: |
