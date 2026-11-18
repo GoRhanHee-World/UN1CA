@@ -349,7 +349,7 @@ PREPARE_SCRIPT "$@"
 for i in "${FIRMWARES[@]}"; do
     PARSE_FIRMWARE_STRING "$i" || exit 1
 
-    LATEST_FIRMWARE="$(GET_BUILD_FIRMWARE "$MODEL" "$CSC")" || exit 1
+    LATEST_FIRMWARE="$(GET_LATEST_FIRMWARE "$MODEL" "$CSC")" || exit 1
     if [ ! "$LATEST_FIRMWARE" ]; then
         LOGE "Latest available firmware could not be fetched"
         exit 1

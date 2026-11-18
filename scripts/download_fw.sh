@@ -113,7 +113,7 @@ PREPARE_SCRIPT "$@"
 for i in "${FIRMWARES[@]}"; do
     PARSE_FIRMWARE_STRING "$i" || exit 1
 
-    LATEST_FIRMWARE="$(GET_BUILD_FIRMWARE "$MODEL" "$CSC")" || exit 1
+    LATEST_FIRMWARE="$(GET_LATEST_FIRMWARE "$MODEL" "$CSC")" || exit 1
     if [ ! "$LATEST_FIRMWARE" ]; then
         LOGE "Latest available firmware could not be fetched"
         exit 1
@@ -125,13 +125,6 @@ for i in "${FIRMWARES[@]}"; do
     LOG "- Latest available firmware: $LATEST_FIRMWARE"
 
     LOG_STEP_IN
-
-    if [ -n "${FIRMWARE_VERSION_MANIFEST:-}" ] && \
-            [ -f "$ODIN_DIR/${MODEL}_${CSC}/.downloaded" ] && \
-            [ "$(cat "$ODIN_DIR/${MODEL}_${CSC}/.downloaded")" != "$LATEST_FIRMWARE" ]; then
-        LOGE "Restored firmware does not match the resolved version for $MODEL/$CSC"
-        exit 1
-    fi
 
     if ! $FORCE; then
         # Skip if firmware has been extracted and equal/newer than the one in FUS
