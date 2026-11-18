@@ -1,0 +1,34 @@
+Subject: [PATCH] Remove permanent-lock attempt warning threshold
+
+diff --git a/smali_classes6/com/android/internal/widget/LockPatternUtils.smali b/smali_classes6/com/android/internal/widget/LockPatternUtils.smali
+--- a/smali_classes6/com/android/internal/widget/LockPatternUtils.smali
++++ b/smali_classes6/com/android/internal/widget/LockPatternUtils.smali
+@@ -2865,22 +2865,12 @@
+ .end method
+ 
+ .method public blacklist getAttemptsForPermanentLock()I
+-    .locals 0
+-
+-    invoke-virtual {p0}, Lcom/android/internal/widget/LockPatternUtils;->getLskfRetryHardeningPolicy()Z
+-
+-    move-result p0
+-
+-    if-eqz p0, :cond_0
+-
+-    const/16 p0, 0xd
+-
+-    return p0
+-
+-    :cond_0
+-    const/16 p0, 0x32
+-
+-    return p0
++    .locals 1
++
++    # No finite warning threshold; SystemUI enforcement is disabled separately.
++    const v0, 0x7fffffff
++
++    return v0
+ .end method
+ 
+ .method public blacklist getBiometricAttemptDeadline(I)J

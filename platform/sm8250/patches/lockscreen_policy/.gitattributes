@@ -1,0 +1,2 @@
+# Unified diff context preserves the original smali whitespace.
+*.patch -whitespace

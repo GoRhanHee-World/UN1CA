@@ -1,0 +1,89 @@
+Subject: [PATCH] Disable permanent lock in both keyguard paths
+
+diff --git a/smali/com/android/keyguard/KeyguardSecUpdateMonitorImpl.smali b/smali/com/android/keyguard/KeyguardSecUpdateMonitorImpl.smali
+--- a/smali/com/android/keyguard/KeyguardSecUpdateMonitorImpl.smali
++++ b/smali/com/android/keyguard/KeyguardSecUpdateMonitorImpl.smali
+@@ -18362,60 +18362,16 @@
+ .end method
+ 
+ .method public final updatePermanentLock(I)Z
+-    .locals 4
+-
+-    iget-object v0, p0, Lcom/android/keyguard/KeyguardSecUpdateMonitorImpl;->mLockPatternUtils:Lcom/android/internal/widget/LockPatternUtils;
+-
+-    invoke-virtual {v0, p1}, Lcom/android/internal/widget/LockPatternUtils;->getCurrentFailedPasswordAttempts(I)I
+-
+-    move-result v0
+-
+-    invoke-virtual {p0}, Lcom/android/keyguard/KeyguardSecUpdateMonitorImpl;->getMaxFailedUnlockAttempts()I
+-
+-    move-result v1
+-
+-    const/4 v2, 0x0
+-
+-    const/4 v3, 0x1
+-
+-    if-lt v0, v1, :cond_0
+-
+-    move v0, v3
+-
+-    goto :goto_0
+-
+-    :cond_0
+-    move v0, v2
+-
+-    :goto_0
+-    iget-boolean v1, p0, Lcom/android/keyguard/KeyguardSecUpdateMonitorImpl;->mPermanentLock:Z
+-
+-    if-eq v1, v0, :cond_1
+-
+-    const-string/jumbo v1, "updatePermanentLock() userId "
+-
+-    const-string v2, ", PML:"
+-
+-    invoke-static {p1, v1, v2}, Landroid/support/v4/media/MediaBrowserCompat$MediaBrowserImplApi21$$ExternalSyntheticOutline0;->m(ILjava/lang/String;Ljava/lang/String;)Ljava/lang/StringBuilder;
+-
+-    move-result-object p1
+-
+-    iget-boolean v1, p0, Lcom/android/keyguard/KeyguardSecUpdateMonitorImpl;->mPermanentLock:Z
+-
+-    const-string v2, "->"
+-
+-    invoke-static {p1, v1, v2, v0}, Lcom/android/keyguard/EmergencyButton$$ExternalSyntheticOutline0;->m(Ljava/lang/StringBuilder;ZLjava/lang/String;Z)Ljava/lang/String;
+-
+-    move-result-object p1
+-
+-    iput-boolean v0, p0, Lcom/android/keyguard/KeyguardSecUpdateMonitorImpl;->mPermanentLock:Z
+-
+-    invoke-static {p1}, Lcom/android/keyguard/KeyguardSecUpdateMonitorImpl;->addAdditionalLog(Ljava/lang/String;)V
+-
+-    return v3
+-
+-    :cond_1
+-    return v2
++    .locals 2
++
++    # Clear stale cached state and notify callers only when it changed.
++    iget-boolean v0, p0, Lcom/android/keyguard/KeyguardSecUpdateMonitorImpl;->mPermanentLock:Z
++
++    const/4 v1, 0x0
++
++    iput-boolean v1, p0, Lcom/android/keyguard/KeyguardSecUpdateMonitorImpl;->mPermanentLock:Z
++
++    return v0
+ .end method
+ 
+ .method public final updateRemoteLockInfo(Lcom/android/internal/widget/RemoteLockInfo;)V
+diff --git a/smali/com/android/systemui/authentication/domain/interactor/AuthenticationInteractor$isPermanentLock$1.smali b/smali/com/android/systemui/authentication/domain/interactor/AuthenticationInteractor$isPermanentLock$1.smali
+--- a/smali/com/android/systemui/authentication/domain/interactor/AuthenticationInteractor$isPermanentLock$1.smali
++++ b/smali/com/android/systemui/authentication/domain/interactor/AuthenticationInteractor$isPermanentLock$1.smali
+@@ -94,7 +94,8 @@
+ 
+     if-lt v0, v1, :cond_0
+ 
+-    const/4 p0, 0x1
++    # Failed credential attempts must not permanently disable the bouncer.
++    const/4 p0, 0x0
+ 
+     goto :goto_0
+ 

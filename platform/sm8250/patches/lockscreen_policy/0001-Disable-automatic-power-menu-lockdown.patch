@@ -1,0 +1,61 @@
+Subject: [PATCH] Disable automatic power-menu lockdown
+
+diff --git a/smali_classes6/com/samsung/android/globalactions/presentation/SamsungGlobalActionsPresenter.smali b/smali_classes6/com/samsung/android/globalactions/presentation/SamsungGlobalActionsPresenter.smali
+--- a/smali_classes6/com/samsung/android/globalactions/presentation/SamsungGlobalActionsPresenter.smali
++++ b/smali_classes6/com/samsung/android/globalactions/presentation/SamsungGlobalActionsPresenter.smali
+@@ -200,52 +200,9 @@
+ .end method
+ 
+ .method private synthetic blacklist lambda$onShowDialog$3()V
+-    .locals 2
+-
+-    iget-object v0, p0, Lcom/samsung/android/globalactions/presentation/SamsungGlobalActionsPresenter;->mSystemCondition:Lcom/samsung/android/globalactions/util/ConditionChecker;
+-
+-    sget-object v1, Lcom/samsung/android/globalactions/util/SystemConditions;->IS_CURRENT_USER_SECURE:Lcom/samsung/android/globalactions/util/SystemConditions;
+-
+-    invoke-interface {v0, v1}, Lcom/samsung/android/globalactions/util/ConditionChecker;->isEnabled(Ljava/lang/Object;)Z
+-
+-    move-result v0
+-
+-    if-eqz v0, :cond_1
+-
+-    iget-object v0, p0, Lcom/samsung/android/globalactions/presentation/SamsungGlobalActionsPresenter;->mSystemCondition:Lcom/samsung/android/globalactions/util/ConditionChecker;
+-
+-    sget-object v1, Lcom/samsung/android/globalactions/util/SystemConditions;->IS_STRONG_AUTH_FOR_LOCK_DOWN:Lcom/samsung/android/globalactions/util/SystemConditions;
+-
+-    invoke-interface {v0, v1}, Lcom/samsung/android/globalactions/util/ConditionChecker;->isEnabled(Ljava/lang/Object;)Z
+-
+-    move-result v0
+-
+-    if-eqz v0, :cond_1
+-
+-    iget v0, p0, Lcom/samsung/android/globalactions/presentation/SamsungGlobalActionsPresenter;->mSideKeyType:I
+-
+-    const/4 v1, 0x2
+-
+-    if-ne v0, v1, :cond_0
+-
+-    iget-object v0, p0, Lcom/samsung/android/globalactions/presentation/SamsungGlobalActionsPresenter;->mSystemCondition:Lcom/samsung/android/globalactions/util/ConditionChecker;
+-
+-    sget-object v1, Lcom/samsung/android/globalactions/util/SystemConditions;->IS_LOCKDOWN_OPTION_ENABLED:Lcom/samsung/android/globalactions/util/SystemConditions;
+-
+-    invoke-interface {v0, v1}, Lcom/samsung/android/globalactions/util/ConditionChecker;->isEnabled(Ljava/lang/Object;)Z
+-
+-    move-result v0
+-
+-    if-eqz v0, :cond_1
+-
+-    :cond_0
+-    iget-object v0, p0, Lcom/samsung/android/globalactions/presentation/SamsungGlobalActionsPresenter;->mLockPatternUtilsWrapper:Lcom/samsung/android/globalactions/util/LockPatternUtilsWrapper;
+-
+-    const/4 v1, 0x0
+-
+-    invoke-virtual {v0, v1}, Lcom/samsung/android/globalactions/util/LockPatternUtilsWrapper;->lockDownDelayed(I)V
+-
+-    :cond_1
++    .locals 0
++
++    # Opening the power menu must not enter lockdown. Keep its panel cleanup.
+     invoke-virtual {p0}, Lcom/samsung/android/globalactions/presentation/SamsungGlobalActionsPresenter;->hideQuickPanel()V
+ 
+     return-void

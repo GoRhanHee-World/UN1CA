@@ -1,0 +1,6 @@
+id=lockscreen_policy
+name=Disable automatic power-menu lockdown and permanent screen lock
+version=v1
+versionCode=1
+author=GoRhanHee
+description=Keep the S20 unlocked when opening the power menu and disable SystemUI permanent lock after failed credential attempts. Manual lockdown, retry timeouts and device-policy wipe remain available.
