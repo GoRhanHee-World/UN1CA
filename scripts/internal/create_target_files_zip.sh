@@ -5,7 +5,8 @@
 # [
 source "$SRC_DIR/scripts/utils/install_utils.sh" || exit 1
 
-trap 'rm -rf "$TMP_DIR"' EXIT INT
+DIRECTORY_OUTPUT=false
+trap 'if ! $DIRECTORY_OUTPUT; then rm -rf "$TMP_DIR"; fi' EXIT INT
 
 # https://android.googlesource.com/platform/build/+/refs/tags/android-15.0.0_r1/tools/releasetools/build_super_image.py#72
 BUILD_SUPER_EMPTY()
@@ -106,8 +107,11 @@ GET_SUPER_GROUP_SIZE()
 }
 # ]
 
-if [ "$#" != "1" ]; then
-    echo "Usage: create_target_files_zip <output>" >&2
+if [ "$#" = 2 ] && [ "$1" = --directory ]; then
+    DIRECTORY_OUTPUT=true
+    TMP_DIR="$(realpath -m "$2")"
+elif [ "$#" != 1 ]; then
+    echo "Usage: create_target_files_zip [--directory] <output>" >&2
     exit 1
 fi
 
@@ -157,6 +161,10 @@ fi
 
 LOG "- Generating build_info.txt"
 GENERATE_BUILD_INFO
+
+if $DIRECTORY_OUTPUT; then
+    exit 0
+fi
 
 LOG "- Creating zip"
 rm -f "$OUTPUT_FILE"

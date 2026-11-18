@@ -208,24 +208,34 @@ GENERATE_UPDATER_SCRIPT()
 # ]
 
 if [ "$#" != "2" ]; then
-    echo "Usage: build_full_ota_zip <file> <output>" >&2
+    echo "Usage: build_full_ota_zip <target-files zip or directory> <output>" >&2
     exit 1
 fi
 
 TARGET_ZIP="$1"
 OUTPUT_FILE="$2"
 
-if ! unzip -l "$TARGET_ZIP" | grep -q "build_info.txt" || unzip -l "$TARGET_ZIP" | grep -q "META-INF"; then
-    LOGE "File not valid: ${TARGET_ZIP//$SRC_DIR\//}"
-    exit 1
-fi
+if [ -d "$TARGET_ZIP" ]; then
+    # Consume the freshly generated staging directory without copying or
+    # compressing its partition images into an intermediate archive.
+    if [ ! -f "$TARGET_ZIP/build_info.txt" ] || [ -e "$TARGET_ZIP/META-INF" ]; then
+        LOGE "Invalid target-files directory: $TARGET_ZIP"
+        exit 1
+    fi
+    TMP_DIR="$(realpath "$TARGET_ZIP")"
+else
+    if ! unzip -l "$TARGET_ZIP" | grep -q "build_info.txt" || unzip -l "$TARGET_ZIP" | grep -q "META-INF"; then
+        LOGE "File not valid: ${TARGET_ZIP//$SRC_DIR\//}"
+        exit 1
+    fi
 
-[ -d "$TMP_DIR" ] && rm -rf "$TMP_DIR"
+    [ -d "$TMP_DIR" ] && rm -rf "$TMP_DIR"
+    mkdir -p "$TMP_DIR"
+    LOG "- Extracting target files"
+    EVAL "unzip -o \"$TARGET_ZIP\" -d \"$TMP_DIR\"" || exit 1
+fi
 mkdir -p "$TMP_DIR/META-INF/com/google/android"
 cp -a "$SRC_DIR/prebuilts/bootable/deprecated-ota/updater" "$TMP_DIR/META-INF/com/google/android/update-binary"
-
-LOG "- Extracting target files"
-EVAL "unzip -o \"$TARGET_ZIP\" -d \"$TMP_DIR\"" || exit 1
 
 BUILD_INFO="$(cat "$TMP_DIR/build_info.txt")"
 rm -f "$TMP_DIR/build_info.txt"

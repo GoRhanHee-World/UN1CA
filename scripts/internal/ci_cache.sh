@@ -101,6 +101,22 @@ verify_firmware()
     done < "$FIRMWARE_VERSION_MANIFEST"
 }
 
+wallpaper()
+{
+    local key
+    key=$(
+        {
+            git -C "$SRC_DIR" ls-tree -r HEAD -- prebuilts/samsung/m3qksx/system/priv-app/wallpaper-res
+            sha256sum "$SRC_DIR/unica/mods/wallpaper/customize.sh"
+            ffmpeg -version
+            cwebp -version
+            printf '%s\n' "$TARGET_COMMON_SUPPORT_DYN_RESOLUTION_CONTROL" "$TARGET_PRODUCT_SHIPPING_API_LEVEL"
+        } | sha256sum | cut -d ' ' -f 1
+    )
+    cache_output wallpaper_key "wallpaper-v1-$key"
+    printf 'WALLPAPER_CACHE_DIR=%s\n' "$OUT_DIR/cache/wallpapers/$key" >> "$GITHUB_ENV"
+}
+
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
     if [ "${1:-}" = tools ]; then
         tools
@@ -108,8 +124,10 @@ if [ "${BASH_SOURCE[0]}" = "$0" ]; then
         firmware
     elif [ "${1:-}" = verify-firmware ]; then
         verify_firmware
+    elif [ "${1:-}" = wallpaper ]; then
+        wallpaper
     else
-        echo "Usage: $0 <tools|firmware|verify-firmware>" >&2
+        echo "Usage: $0 <tools|firmware|verify-firmware|wallpaper>" >&2
         exit 1
     fi
 fi

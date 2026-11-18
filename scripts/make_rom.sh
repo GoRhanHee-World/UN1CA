@@ -59,6 +59,9 @@ PREPARE_SCRIPT()
         elif [[ "$1" == "--build-rom-zip" ]] || [[ "$1" == "-z" ]]; then
             BUILD_TARGET_FILES=true
             BUILD_FLASHABLE_ZIP=true
+        elif [[ "$1" == "--flashable-only" ]]; then
+            BUILD_TARGET_FILES=false
+            BUILD_FLASHABLE_ZIP=true
         else
             if [[ "$1" == "-"* ]]; then
                 LOGE "Unknown option: $1"
@@ -95,6 +98,7 @@ PRINT_USAGE()
     echo " -f, --force : Force ROM build" >&2
     echo " -x, --no-target-files : Do not build target-files zip" >&2
     echo " -z, --build-rom-zip : Build flashable zip" >&2
+    echo " --flashable-only : Build flashable zip without an intermediate target-files zip" >&2
 }
 # ]
 
@@ -174,9 +178,15 @@ if $BUILD_TARGET_FILES || $BUILD_FLASHABLE_ZIP; then
     fi
     ZIP_FILE_NAME+="-target_files.zip"
 
-    if [ ! -f "$OUT_DIR/$ZIP_FILE_NAME" ]; then
+    TARGET_FILES_PATH="$OUT_DIR/$ZIP_FILE_NAME"
+    if ! $BUILD_TARGET_FILES; then
+        TARGET_FILES_PATH="$OUT_DIR/target/$TARGET_CODENAME/target_files"
+        LOG_STEP_IN true "Creating target-files directory"
+        "$SRC_DIR/scripts/internal/create_target_files_zip.sh" --directory "$TARGET_FILES_PATH" || exit 1
+        LOG_STEP_OUT
+    elif [ ! -f "$TARGET_FILES_PATH" ]; then
         LOG_STEP_IN true "Creating target-files zip"
-        "$SRC_DIR/scripts/internal/create_target_files_zip.sh" "$OUT_DIR/$ZIP_FILE_NAME" || exit 1
+        "$SRC_DIR/scripts/internal/create_target_files_zip.sh" "$TARGET_FILES_PATH" || exit 1
         LOG_STEP_OUT
     else
         LOGW "File already exists: ${OUT_DIR//$SRC_DIR\//}/$ZIP_FILE_NAME"
@@ -184,7 +194,7 @@ if $BUILD_TARGET_FILES || $BUILD_FLASHABLE_ZIP; then
 
     if $BUILD_FLASHABLE_ZIP; then
         LOG_STEP_IN true "Creating flashable zip"
-        "$SRC_DIR/scripts/build_flashable_zip.sh" "$OUT_DIR/$ZIP_FILE_NAME" || exit 1
+        "$SRC_DIR/scripts/build_flashable_zip.sh" "$TARGET_FILES_PATH" || exit 1
         LOG_STEP_OUT
     fi
 fi

@@ -66,23 +66,43 @@ ENCODE_MP4()
     EVAL "$CMD" || return 1
     EVAL "mv -f \"$FILE_PATH/temp.mp4\" \"$FILE_PATH/$FILE_NAME\"" || return 1
 }
+
+CACHE_WALLPAPER()
+{
+    local FILE="$1"
+    local CACHE_FILE="${WALLPAPER_CACHE_DIR:-}/${FILE#"$WALLPAPER_RES_DIR"/}"
+
+    if [ -n "${WALLPAPER_CACHE_DIR:-}" ] && [ -s "$CACHE_FILE" ]; then
+        LOG "- Reusing converted $(basename "$FILE")"
+        cp -a "$CACHE_FILE" "$FILE" || return 1
+        return 0
+    fi
+
+    "$2" "$FILE" || return 1
+    if [ -n "${WALLPAPER_CACHE_DIR:-}" ]; then
+        mkdir -p "$(dirname "$CACHE_FILE")" || return 1
+        cp -a "$FILE" "$CACHE_FILE" || return 1
+    fi
+    return 0
+}
 # ]
 
 # SM-S948N / S948NKSS6BZK1: six stills and six 90fps S26 Ultra videos.
 ADD_TO_WORK_DIR "m3qksx" "system" \
     "system/priv-app/wallpaper-res/wallpaper-res.apk" 0 0 644 "u:object_r:system_file:s0"
 DECODE_APK "system" "system/priv-app/wallpaper-res/wallpaper-res.apk"
+WALLPAPER_RES_DIR="$APKTOOL_DIR/system/priv-app/wallpaper-res/wallpaper-res.apk/res"
 for f in "$APKTOOL_DIR/system/priv-app/wallpaper-res/wallpaper-res.apk/res/"drawable-nodpi*/dex_wallpaper_*.webp; do
     [ -f "$f" ] || continue
-    COMPRESS_WEBP "$f"
+    CACHE_WALLPAPER "$f" COMPRESS_WEBP || return 1
 done
 for f in "$APKTOOL_DIR/system/priv-app/wallpaper-res/wallpaper-res.apk/res/"drawable-nodpi*/wallpaper_*.webp; do
     [ -f "$f" ] || continue
-    COMPRESS_WEBP "$f"
+    CACHE_WALLPAPER "$f" COMPRESS_WEBP || return 1
 done
 for f in "$APKTOOL_DIR/system/priv-app/wallpaper-res/wallpaper-res.apk/res/raw/video_"*.mp4; do
     [ -f "$f" ] || continue
-    ENCODE_MP4 "$f"
+    CACHE_WALLPAPER "$f" ENCODE_MP4 || return 1
 done
 ADD_TO_WORK_DIR "$SOURCE_FIRMWARE" "system" \
     "system/priv-app/SpriteWallpaper/SpriteWallpaper.apk" 0 0 644 "u:object_r:system_file:s0"
@@ -91,4 +111,5 @@ APPLY_PATCH "system" "system/priv-app/SpriteWallpaper/SpriteWallpaper.apk" \
 APPLY_PATCH "system" "system/priv-app/wallpaper-res/wallpaper-res.apk" \
     "$SRC_DIR/unica/mods/miracle/wallpaper/wallpaper-res-S26.apk/0001-Adjust-S26-metadata-for-60fps.patch"
 
-unset -f ENCODE_MP4 COMPRESS_WEBP
+unset WALLPAPER_RES_DIR
+unset -f ENCODE_MP4 COMPRESS_WEBP CACHE_WALLPAPER

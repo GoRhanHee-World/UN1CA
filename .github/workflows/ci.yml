@@ -27,9 +27,20 @@ jobs:
     name: Shellcheck
     runs-on: ubuntu-24.04
 
+    outputs:
+      matrix: ${{ steps.generate-matrix.outputs.matrix }}
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v7
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /platform/**/*.sh
+            /scripts/**/*.sh
+            /target/**/*.sh
+            /unica/**/*.sh
+            /external/make.sh
 
       - name: Run shellcheck
         run: |
@@ -38,18 +49,6 @@ jobs:
             shellcheck -e SC1090,SC1091 -s bash "$f" || CODE=1
           done < <(find platform scripts target unica -name "*.sh" -not -name "*ssi.sh" -not -name "config.sh" -not -name "sff.sh")
           exit $CODE
-
-  generate-matrix:
-    name: Generate matrix
-    needs: shellcheck
-    runs-on: ubuntu-24.04
-
-    outputs:
-      matrix: ${{ steps.generate-matrix.outputs.matrix }}
-
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v7
 
       - name: Generate CI matrix
         id: generate-matrix
@@ -67,13 +66,13 @@ jobs:
   build:
     name: Build (${{ matrix.target }})
     if: github.event_name == 'workflow_dispatch'
-    needs: [shellcheck, generate-matrix]
+    needs: shellcheck
     runs-on: ubuntu-24.04
 
     strategy:
       fail-fast: false
       matrix:
-        target: ${{ fromJSON(needs.generate-matrix.outputs.matrix) }}
+        target: ${{ fromJSON(needs.shellcheck.outputs.matrix) }}
 
     steps:
       - name: Use Ubuntu archive mirror
@@ -100,6 +99,33 @@ jobs:
         uses: actions/checkout@v7
         with:
           submodules: 'recursive'
+          sparse-checkout: |
+            .github
+            external
+            scripts
+            security
+            unica
+            platform/sm8250
+            target/${{ matrix.target }}
+            prebuilts/bootable
+            prebuilts/samsung/a17xxx
+            prebuilts/samsung/a34xxx
+            prebuilts/samsung/a52qnsxx
+            prebuilts/samsung/a56xnaxx
+            prebuilts/samsung/a73xqxx
+            prebuilts/samsung/b0qxxx
+            prebuilts/samsung/b0sxxx
+            prebuilts/samsung/dm3qksx
+            prebuilts/samsung/dm3qxxx
+            prebuilts/samsung/gta9pxxx
+            prebuilts/samsung/gts11xx
+            prebuilts/samsung/m3qksx
+            prebuilts/samsung/m44xktt
+            prebuilts/samsung/p3qxxx
+            prebuilts/samsung/pa1qxxx
+            prebuilts/samsung/pa3qzcx
+            prebuilts/samsung/r11sxxx
+            prebuilts/samsung/r9qxxx
 
       - name: Generate build config
         run: |
@@ -150,8 +176,26 @@ jobs:
       - name: Extract stock firmwares
         run: ./scripts/extract_fw.sh
 
+      - name: Calculate wallpaper cache key
+        id: wallpaper-key
+        run: bash "$SRC_DIR/scripts/internal/ci_cache.sh" wallpaper
+
+      - name: Restore converted wallpapers
+        id: wallpapers
+        uses: actions/cache/restore@v5
+        with:
+          path: ${{ env.WALLPAPER_CACHE_DIR }}
+          key: ${{ steps.wallpaper-key.outputs.wallpaper_key }}
+
       - name: Build ROM
-        run: ./scripts/make_rom.sh -z
+        run: ./scripts/make_rom.sh --flashable-only
+
+      - name: Save converted wallpapers
+        if: steps.wallpapers.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: ${{ env.WALLPAPER_CACHE_DIR }}
+          key: ${{ steps.wallpaper-key.outputs.wallpaper_key }}
 
       - name: Upload ROM
         uses: actions/upload-artifact@v7

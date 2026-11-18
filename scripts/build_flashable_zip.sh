@@ -39,8 +39,13 @@ PREPARE_SCRIPT()
     if [ ! "$TARGET_ZIP" ]; then
         PRINT_USAGE
         exit 1
-    elif [ ! -f "$TARGET_ZIP" ]; then
+    elif [ ! -f "$TARGET_ZIP" ] && [ ! -d "$TARGET_ZIP" ]; then
         LOGE "File not found: ${TARGET_ZIP//$SRC_DIR\//}"
+        exit 1
+    fi
+
+    if $INCREMENTAL && [ -d "$TARGET_ZIP" ]; then
+        LOGE "Incremental builds require a target-files zip"
         exit 1
     fi
 
@@ -54,8 +59,12 @@ PREPARE_SCRIPT()
     if [ ! "$OUTPUT_FILE" ]; then
         local TARGET_BUILD_INFO
 
-        EVAL "unzip -p \"$TARGET_ZIP\" \"build_info.txt\"" || exit 1
-        TARGET_BUILD_INFO="$(unzip -p "$TARGET_ZIP" "build_info.txt")"
+        if [ -d "$TARGET_ZIP" ]; then
+            TARGET_BUILD_INFO="$(cat "$TARGET_ZIP/build_info.txt")" || exit 1
+        else
+            EVAL "unzip -p \"$TARGET_ZIP\" \"build_info.txt\"" || exit 1
+            TARGET_BUILD_INFO="$(unzip -p "$TARGET_ZIP" "build_info.txt")"
+        fi
 
         OUTPUT_FILE="$OUT_DIR/UN1CA_"
         OUTPUT_FILE+="$(grep "^version" <<< "$TARGET_BUILD_INFO" | cut -d "=" -f 2 -s)"
@@ -81,7 +90,8 @@ PREPARE_SCRIPT()
 
 PRINT_USAGE()
 {
-    echo "Usage: build_flashable_zip [options] <file>" >&2
+    echo "Usage: build_flashable_zip [options] <target-files zip or directory>" >&2
+    echo " Directory input is consumed when generating a full OTA" >&2
     echo " -i, --incremental : Generate an incremental zip using the given target-files zip as source" >&2
     echo " -o, --output : Specify the output zip path, defaults to $OUT_DIR" >&2
 }
