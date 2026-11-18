@@ -1,7 +1,7 @@
 out/
 
 # Keep patch development sources and tests local.
-/tests/
+tests/
 /platform/*/patches/**/src/
 /platform/*/patches/**/tests/
 /target/*/patches/**/src/

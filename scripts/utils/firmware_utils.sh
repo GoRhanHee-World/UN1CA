@@ -107,6 +107,26 @@ GET_LATEST_FIRMWARE()
         | perl -nE 'say $1 if /<latest[^>]*>(.*?)<\/latest>/'
 }
 
+# GET_BUILD_FIRMWARE <model> <csc>
+# CI resolves versions before cache restoration; use the same version for the
+# download and extraction even if Samsung publishes an update during the job.
+GET_BUILD_FIRMWARE()
+{
+    if [ -z "${FIRMWARE_VERSION_MANIFEST:-}" ]; then
+        GET_LATEST_FIRMWARE "$1" "$2"
+        return $?
+    fi
+
+    local VERSION
+    VERSION="$(awk -F '\t' -v model="$1" -v csc="$2" \
+        '$1 == model && $2 == csc {print $3}' "$FIRMWARE_VERSION_MANIFEST")" || return 1
+    if [ -z "$VERSION" ] || [[ "$VERSION" == *$'\n'* ]]; then
+        LOGE "Missing or duplicate resolved firmware for $1/$2"
+        return 1
+    fi
+    printf '%s\n' "$VERSION"
+}
+
 # PARSE_FIRMWARE_STRING <string>
 # Parses the supplied string and stores each value in MODEL/CSC/IMEI/SERIAL_NO variables.
 # - The supplied string must be in the following format: <MODEL>/<CSC>/<IMEI/SN>

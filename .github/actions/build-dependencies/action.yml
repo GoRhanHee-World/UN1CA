@@ -1,0 +1,66 @@
+name: Cached build dependencies
+description: Share completed host tools and compiler cache across device builds.
+runs:
+  using: composite
+  steps:
+    - name: Calculate host tool cache keys
+      id: keys
+      shell: bash
+      run: bash "$SRC_DIR/scripts/internal/ci_cache.sh" tools
+
+    - name: Restore host tools
+      id: tools
+      uses: actions/cache/restore@v5
+      with:
+        path: ${{ env.TOOLS_DIR }}
+        key: ${{ steps.keys.outputs.tools_key }}
+
+    - name: Restore compiler cache
+      if: steps.tools.outputs.cache-hit != 'true'
+      id: ccache
+      uses: actions/cache/restore@v5
+      with:
+        path: ${{ env.OUT_DIR }}/ccache
+        key: ${{ steps.keys.outputs.ccache_prefix }}${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ strategy.job-index }}
+        restore-keys: ${{ steps.keys.outputs.ccache_prefix }}
+
+    - name: Build missing dependencies
+      shell: bash
+      env:
+        CCACHE_DIR: ${{ env.OUT_DIR }}/ccache
+        CCACHE_BASEDIR: ${{ env.SRC_DIR }}
+        CCACHE_MAXSIZE: 2G
+        CCACHE_COMPILERCHECK: content
+      run: |
+        ccache --zero-stats
+        ./scripts/build_dependencies.sh
+        ./scripts/build_dependencies.sh --check-tools
+
+    - name: Show compiler cache statistics
+      if: always()
+      shell: bash
+      env:
+        CCACHE_DIR: ${{ env.OUT_DIR }}/ccache
+      run: |
+        ccache --show-stats
+        {
+          echo '### Host tools and ccache'
+          echo 'Tools cache hit: ${{ steps.tools.outputs.cache-hit }}'
+          echo '```'
+          ccache --show-stats
+          echo '```'
+        } >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Save host tools
+      if: success() && steps.tools.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v5
+      with:
+        path: ${{ env.TOOLS_DIR }}
+        key: ${{ steps.keys.outputs.tools_key }}
+
+    - name: Save compiler cache
+      if: success() && steps.tools.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v5
+      with:
+        path: ${{ env.OUT_DIR }}/ccache
+        key: ${{ steps.ccache.outputs.cache-primary-key }}

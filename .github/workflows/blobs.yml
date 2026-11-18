@@ -108,7 +108,7 @@ jobs:
           echo "$TOOLS_DIR/bin" >> "$GITHUB_PATH"
 
       - name: Build dependencies
-        run: ./scripts/build_dependencies.sh
+        uses: ./.github/actions/build-dependencies
 
       - name: Update prebuilt blobs
         run: |

@@ -113,7 +113,7 @@ PREPARE_SCRIPT "$@"
 for i in "${FIRMWARES[@]}"; do
     PARSE_FIRMWARE_STRING "$i" || exit 1
 
-    LATEST_FIRMWARE="$(GET_LATEST_FIRMWARE "$MODEL" "$CSC")"
+    LATEST_FIRMWARE="$(GET_BUILD_FIRMWARE "$MODEL" "$CSC")" || exit 1
     if [ ! "$LATEST_FIRMWARE" ]; then
         LOGE "Latest available firmware could not be fetched"
         exit 1
@@ -125,6 +125,13 @@ for i in "${FIRMWARES[@]}"; do
     LOG "- Latest available firmware: $LATEST_FIRMWARE"
 
     LOG_STEP_IN
+
+    if [ -n "${FIRMWARE_VERSION_MANIFEST:-}" ] && \
+            [ -f "$ODIN_DIR/${MODEL}_${CSC}/.downloaded" ] && \
+            [ "$(cat "$ODIN_DIR/${MODEL}_${CSC}/.downloaded")" != "$LATEST_FIRMWARE" ]; then
+        LOGE "Restored firmware does not match the resolved version for $MODEL/$CSC"
+        exit 1
+    fi
 
     if ! $FORCE; then
         # Skip if firmware has been extracted and equal/newer than the one in FUS
@@ -151,10 +158,14 @@ for i in "${FIRMWARES[@]}"; do
     LOG "- Downloading firmware..."
     [ -f "$ODIN_DIR/${MODEL}_${CSC}/.downloaded" ] && rm -rf "$ODIN_DIR/${MODEL}_${CSC}"
     mkdir -p "$ODIN_DIR/${MODEL}_${CSC}"
+    # FUS expects four components, with PDA as the fallback for Wi-Fi-only
+    # firmware's empty modem component and for the final data version.
+    IFS='/' read -r PDA_VERSION CSC_VERSION MODEM_VERSION DATA_VERSION <<< "$LATEST_FIRMWARE"
+    FUS_VERSION="$PDA_VERSION/$CSC_VERSION/${MODEM_VERSION:-$PDA_VERSION}/${DATA_VERSION:-$PDA_VERSION}"
     # Anan's samloader stores its logs in the current working directory, let's move into OUT_DIR just for this time
     (
     cd "$OUT_DIR" || exit 1
-    samloader -m "$MODEL" -r "$CSC" -i "$IMEI" -s "$SERIAL_NO" download -O "$ODIN_DIR/${MODEL}_${CSC}" 1> /dev/null || exit 1
+    samloader -m "$MODEL" -r "$CSC" -i "$IMEI" -s "$SERIAL_NO" download -v "$FUS_VERSION" -O "$ODIN_DIR/${MODEL}_${CSC}" 1> /dev/null || exit 1
     )
 
     ZIP_FILE="$(find "$ODIN_DIR/${MODEL}_${CSC}" -name "*.zip" | sort -r | head -n 1)"
