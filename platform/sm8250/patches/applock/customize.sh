@@ -4,11 +4,6 @@
 # shellcheck disable=SC2034
 SKIPUNZIP=1
 
-case "$TARGET_CODENAME" in
-    x1q|y2q|z3q) ;;
-    *) return 0 ;;
-esac
-
 [ "$SOURCE_PLATFORM_SDK_VERSION" -ge 37 ] || return 0
 
 SM8250_APPLOCK_APK="system/priv-app/AppLock/AppLock.apk"
