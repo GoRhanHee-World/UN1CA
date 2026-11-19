@@ -1,0 +1,14 @@
+Subject: [PATCH] Hide automatic lockdown notice in power menu
+
+diff --git a/smali_classes6/com/samsung/android/globalactions/presentation/view/GlobalActionsContentView.smali b/smali_classes6/com/samsung/android/globalactions/presentation/view/GlobalActionsContentView.smali
+--- a/smali_classes6/com/samsung/android/globalactions/presentation/view/GlobalActionsContentView.smali
++++ b/smali_classes6/com/samsung/android/globalactions/presentation/view/GlobalActionsContentView.smali
+@@ -708,7 +708,7 @@
+     iget-object v1, p0, Lcom/samsung/android/globalactions/presentation/view/GlobalActionsContentView;->mAutoLockdownSection:Landroid/view/View;
+ 
+     const/16 v2, 0x8
+ 
+-    if-eqz v0, :cond_9
++    goto :cond_9
+ 
+     invoke-virtual {v1, v4}, Landroid/view/View;->setVisibility(I)V
