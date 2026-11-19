@@ -76,9 +76,7 @@ system/lib64/libmultisourceseparator.so
 system/lib64/libsbs.so
 system/lib64/libtensorflowlite_gpu_delegate.so
 system/lib64/libveframework.videoeditor.samsung.so
-system/preload/Notes40/Notes40.apk
 system/preload/SBrowser/SBrowser.apk
-system/preload/VoiceNote/VoiceNote.apk
 system/priv-app/AIOSKernelService/AIOSKernelService.apk
 system/priv-app/Bixby/Bixby.apk
 system/priv-app/BixbyInterpreter/BixbyInterpreter.apk
