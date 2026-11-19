@@ -116,25 +116,16 @@ index 2eacbb3..cd5bc13 100644
  .method public static isAdminApplication(Lcom/android/server/pm/pkg/AndroidPackage;)Z
      .locals 5
  
-@@ -15917,6 +15998,8 @@
-     :goto_18
-     invoke-interface {v3, v4}, Lcom/android/internal/pm/parsing/pkg/ParsedPackage;->setSigningDetails(Landroid/content/pm/SigningDetails;)Lcom/android/internal/pm/parsing/pkg/ParsedPackage;
- 
-+    invoke-virtual {v1, v3}, Lcom/android/server/pm/InstallPackageHelper;->applyCustomSignatures(Lcom/android/internal/pm/parsing/pkg/ParsedPackage;)V
-+
-     goto :goto_19
- 
-     :cond_25
-@@ -15942,6 +16025,8 @@
- 
-     invoke-interface {v3, v0}, Lcom/android/internal/pm/parsing/pkg/ParsedPackage;->setSigningDetails(Landroid/content/pm/SigningDetails;)Lcom/android/internal/pm/parsing/pkg/ParsedPackage;
- 
-+    invoke-virtual {v1, v3}, Lcom/android/server/pm/InstallPackageHelper;->applyCustomSignatures(Lcom/android/internal/pm/parsing/pkg/ParsedPackage;)V
-+
-     :goto_19
+@@ -15947,6 +16028,8 @@
      const-string/jumbo v0, "PackageManager"
  
-@@ -22501,6 +22586,8 @@
++    invoke-virtual {v1, v3}, Lcom/android/server/pm/InstallPackageHelper;->applyCustomSignatures(Lcom/android/internal/pm/parsing/pkg/ParsedPackage;)V
++
+     const-string/jumbo v4, "verifying app can be installed or not"
+ 
+     invoke-static {v0, v4}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;)I
+ 
+@@ -22501,6 +22584,8 @@
  
      const/4 v9, 0x1
  
@@ -143,7 +134,7 @@ index 2eacbb3..cd5bc13 100644
      invoke-static {v1, v10, v2, v9}, Lcom/android/server/pm/ScanPackageUtils;->applyPolicy(Lcom/android/internal/pm/parsing/pkg/ParsedPackage;ILcom/android/server/pm/pkg/AndroidPackage;Z)V
  
      iget-object v2, v15, Lcom/android/server/pm/InstallPackageHelper;->mPm:Lcom/android/server/pm/PackageManagerService;
-@@ -23995,6 +24082,8 @@
+@@ -23995,6 +24080,8 @@
  
      iget-object v2, v2, Lcom/android/server/pm/PackageManagerService;->mPlatformPackage:Lcom/android/server/pm/pkg/AndroidPackage;
  
