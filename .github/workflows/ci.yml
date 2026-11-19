@@ -68,6 +68,9 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     needs: shellcheck
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: write
 
     strategy:
       fail-fast: false
@@ -148,7 +151,18 @@ jobs:
       - name: Build dependencies
         uses: ./.github/actions/build-dependencies
 
-      - name: Download stock firmwares
+      - name: Restore or download base firmware
+        uses: ./.github/actions/firmware
+        with:
+          firmware: ${{ env.SOURCE_FIRMWARE }}
+
+      - name: Restore or download x1q target firmware
+        if: matrix.target == 'x1q'
+        uses: ./.github/actions/firmware
+        with:
+          firmware: ${{ env.TARGET_FIRMWARE }}
+
+      - name: Download remaining stock firmwares
         uses: nick-fields/retry@v4
         with:
           timeout_minutes: 180
@@ -156,7 +170,7 @@ jobs:
           retry_on: error
           command: ./scripts/download_fw.sh
 
-      - name: Extract stock firmwares
+      - name: Extract remaining stock firmwares
         run: ./scripts/extract_fw.sh
 
       - name: Calculate wallpaper cache key

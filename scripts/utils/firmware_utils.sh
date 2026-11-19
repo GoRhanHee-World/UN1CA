@@ -102,6 +102,12 @@ GET_LATEST_FIRMWARE()
     _CHECK_NON_EMPTY_PARAM "MODEL" "$1" || return 1
     _CHECK_NON_EMPTY_PARAM "CSC" "$2" || return 1
 
+    # CI pins the version used by both the firmware cache key and its contents.
+    if [ -n "${FIRMWARE_VERSIONS_DIR:-}" ] && [ -f "$FIRMWARE_VERSIONS_DIR/${1}_${2}" ]; then
+        cat "$FIRMWARE_VERSIONS_DIR/${1}_${2}"
+        return 0
+    fi
+
     curl -s --retry 3 -m 3 -A "samsung $1 SyncML DM Client" \
         "https://fota-cloud-dn.ospserver.net/firmware/$2/$1/version.xml" \
         | perl -nE 'say $1 if /<latest[^>]*>(.*?)<\/latest>/'

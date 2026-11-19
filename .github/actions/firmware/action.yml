@@ -1,0 +1,56 @@
+name: Cached stock firmware
+description: Cache the latest extracted stock firmware and retire previous versions.
+inputs:
+  firmware:
+    description: Stock firmware model, CSC and download identity
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Check latest firmware and calculate cache key
+      id: key
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        CACHED_FIRMWARE: ${{ inputs.firmware }}
+      run: bash "$SRC_DIR/scripts/internal/ci_cache.sh" firmware "$CACHED_FIRMWARE"
+
+    - name: Restore extracted firmware
+      id: cache
+      uses: actions/cache/restore@v5
+      with:
+        path: ${{ steps.key.outputs.firmware_path }}
+        key: ${{ steps.key.outputs.firmware_key }}
+
+    - name: Download uncached firmware
+      if: steps.cache.outputs.cache-hit != 'true'
+      uses: nick-fields/retry@v4
+      env:
+        CACHED_FIRMWARE: ${{ inputs.firmware }}
+      with:
+        timeout_minutes: 180
+        max_attempts: 3
+        retry_on: error
+        command: ./scripts/download_fw.sh --ignore-source --ignore-target "$CACHED_FIRMWARE"
+
+    - name: Extract uncached firmware
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        CACHED_FIRMWARE: ${{ inputs.firmware }}
+      run: ./scripts/extract_fw.sh --ignore-source --ignore-target "$CACHED_FIRMWARE"
+
+    - name: Save extracted firmware
+      if: steps.cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v5
+      with:
+        path: ${{ steps.key.outputs.firmware_path }}
+        key: ${{ steps.key.outputs.firmware_key }}
+
+    - name: Remove previous firmware caches
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        FIRMWARE_CACHE_KEY: ${{ steps.key.outputs.firmware_key }}
+        PREVIOUS_CACHES: ${{ steps.key.outputs.previous_caches }}
+      run: bash "$SRC_DIR/scripts/internal/ci_cache.sh" prune-firmware "$FIRMWARE_CACHE_KEY" "$PREVIOUS_CACHES"
