@@ -66,36 +66,76 @@ _B2_NEW="78220694e0630091e12300917b220694e00740f9600000b4e1230091e91c0694690e40f
 
 _HEX="$(xxd -p -c 0 "$_SF64")"
 
-# MinsOS: the y2q One UI 9 donor (S928N) builds ACodec differently, so part B needs its own anchors.
-# Re-derived by gemini for that build 2026-10-18 (`ops/y2q_s24u/r23/issue_wfd/i08/PORT_NOTES.md`), same
-# lengths and same structure as the tablet patch; only the PC-relative call/branch words differ. Hardware
-# verified on the owner's S20+ (r23, bind mount over remotedisplay, real Smart View session to a PC sink:
-# capacity / Can't marshall / clear inputbuffer 0, first video frame sent). Earlier mods (camera,
-# media_encoder_fortify) and the later wfd_i09_clamp touch other bytes of this file on y2q, so the input
-# hash is not fixed here: the set is chosen by content and checked by content below. After a y2q build the
-# finished file must read 426cdd8b0cd1210729d9e3e2af1fe68af5f7dc52937cf423f1f276cbf6f0596c (the tested one).
+# MinsOS: the y2q One UI 9 donor (S928N) and the tablet 2.0.0 One UI 9 donor (X810 FZK2) build ACodec
+# differently, so part B needs its own anchors for each.
+# - S928N: re-derived by gemini 2026-10-18 (`ops/y2q_s24u/r23/issue_wfd/i08/PORT_NOTES.md`). Hardware
+#   verified on the owner's S20+ (r23, bind mount over remotedisplay, real Smart View session to a PC sink:
+#   capacity / Can't marshall / clear inputbuffer 0, first video frame sent). After a y2q build the finished
+#   file must read 426cdd8b0cd1210729d9e3e2af1fe68af5f7dc52937cf423f1f276cbf6f0596c (the tested one).
+# - X810 FZK2 (tablet 2.0.0): re-derived 2026-11-17 (allocateBuffersOnPort @0xdb0c4, onInputBufferFilled
+#   @0xcb770..0xcb7e0), same 28 instructions, registers and stack/struct offsets as 8.5; only the 4 PLT call
+#   words differ from S928N (targets checked through .rela.plt). NOT yet hardware verified. With FZK2 input
+#   I-08 and wfd_i09_clamp commute (fw+camera+fortify -> both orders 385cc583...).
+# - S948N BZK1 (y2q, Nov 2026 security build): re-derived by gemini 2026-11-19 (`ops/y2q_bzk1/i08/PORT_NOTES.md`).
+#   BZJB's libstagefright is byte-identical to the S928N one, so BZJB takes the S928N set; in BZK1 both functions
+#   sit at the same offsets and the patched bytes equal the S928N patch except 4 PLT call words, each moved by the
+#   same +0x28 as all 184 untouched call words of the two functions (`ops/y2q_bzk1/i08/claude_check.py`).
+#   NOT yet hardware verified on BZK1.
+# Earlier mods (camera, media_encoder_fortify) and the later wfd_i09_clamp touch other bytes of this file,
+# so the input hash is not fixed here: the set is chosen by content and checked by content below.
 _S928N_B1_OLD="800240f90c1a905249fdffd029c11f91aafcffd04a5d0a"
 _S928N_B1_NEW="1f95017161030054800240f9f77a0694000440f9e82300"
 _S928N_B2_OLD="010040f91f9501714901899a1f9901718b0301cb6b010c8b6a1dcb936bfcffd06b410c917501899a5f0900f1a2230054c4740694e40300aae1fcfff021ec049102fdffd0422c3591a0008052e30315aa050880528b740694"
 _S928N_B2_NEW="e87a0694e0630091e1230091eb7a0694e00740f9600000b4e1230091ed740694690e40f9369940f9c80240f9085140f9e00316aaa1435fb8e2630091e31340b9a4835cf8851e40b900013fd6d1ffff171f2003d51f2003d5"
-if [ "$(grep -o "$_S928N_B2_NEW" <<< "$_HEX" | wc -l)" = "1" ]; then
+
+_FZK2_B1_OLD="800240f90c1a905249fdfff0291d2191aafcfff04a210d"
+_FZK2_B1_NEW="1f95017161030054800240f91d7b0694000440f9e82300"
+_FZK2_B2_OLD="010040f91f9501714901899a1f9901718b0301cb6b010c8b6a1dcb936bfcfff06bf50c917501899a5f0900f1a2230054ea740694e40300aa01fdff90213c089102fdfff0427c3891a0008052e30315aa05088052b1740694"
+_FZK2_B2_NEW="0e7b0694e0630091e1230091117b0694e00740f9600000b4e123009113750694690e40f9369940f9c80240f9085140f9e00316aaa1435fb8e2630091e31340b9a4835cf8851e40b900013fd6d1ffff171f2003d51f2003d5"
+
+_BZK1_B1_OLD="800240f90c1a905249fdffd0295d2291aafcffd04a610e"
+_BZK1_B1_NEW="1f95017161030054800240f91f7b0694000440f9e82300"
+_BZK1_B2_OLD="010040f91f9501714901899a1f9901718b0301cb6b010c8b6a1dcb936bfcffd06b350e917501899a5f0900f1a2230054ec740694e40300aae1fcfff0217c099102fdffd042bc3991a0008052e30315aa05088052b3740694"
+_BZK1_B2_NEW="107b0694e0630091e1230091137b0694e00740f9600000b4e123009115750694690e40f9369940f9c80240f9085140f9e00316aaa1435fb8e2630091e31340b9a4835cf8851e40b900013fd6d1ffff171f2003d51f2003d5"
+
+if [ "$( { grep -o "$_S928N_B2_NEW" <<< "$_HEX" || true; } | wc -l)" = "1" ]; then
     LOG "- lib64/libstagefright.so already carries the I-08 marshalling patch (S928N build)"
-    unset _SF64 _PRE_SHA _DONE_SHA _A_OLD _A_NEW _B1_OLD _B1_NEW _B2_OLD _B2_NEW _HEX _S928N_B1_OLD _S928N_B1_NEW _S928N_B2_OLD _S928N_B2_NEW
+    unset _SF64 _PRE_SHA _DONE_SHA _A_OLD _A_NEW _B1_OLD _B1_NEW _B2_OLD _B2_NEW _HEX _S928N_B1_OLD _S928N_B1_NEW _S928N_B2_OLD _S928N_B2_NEW _FZK2_B1_OLD _FZK2_B1_NEW _FZK2_B2_OLD _FZK2_B2_NEW _BZK1_B1_OLD _BZK1_B1_NEW _BZK1_B2_OLD _BZK1_B2_NEW
     return 0
 fi
-if [ "$(grep -o "$_B1_OLD" <<< "$_HEX" | wc -l)" = "0" ] \
-        && [ "$(grep -o "$_S928N_B1_OLD" <<< "$_HEX" | wc -l)" = "1" ]; then
-    _B1_OLD="$_S928N_B1_OLD"; _B1_NEW="$_S928N_B1_NEW"; _B2_OLD="$_S928N_B2_OLD"; _B2_NEW="$_S928N_B2_NEW"
-    _DONE_SHA=""
+if [ "$( { grep -o "$_FZK2_B2_NEW" <<< "$_HEX" || true; } | wc -l)" = "1" ]; then
+    LOG "- lib64/libstagefright.so already carries the I-08 marshalling patch (X810 FZK2 build)"
+    unset _SF64 _PRE_SHA _DONE_SHA _A_OLD _A_NEW _B1_OLD _B1_NEW _B2_OLD _B2_NEW _HEX _S928N_B1_OLD _S928N_B1_NEW _S928N_B2_OLD _S928N_B2_NEW _FZK2_B1_OLD _FZK2_B1_NEW _FZK2_B2_OLD _FZK2_B2_NEW _BZK1_B1_OLD _BZK1_B1_NEW _BZK1_B2_OLD _BZK1_B2_NEW
+    return 0
 fi
-unset _S928N_B1_OLD _S928N_B1_NEW _S928N_B2_OLD _S928N_B2_NEW
+if [ "$( { grep -o "$_BZK1_B2_NEW" <<< "$_HEX" || true; } | wc -l)" = "1" ]; then
+    LOG "- lib64/libstagefright.so already carries the I-08 marshalling patch (S948N BZK1 build)"
+    unset _SF64 _PRE_SHA _DONE_SHA _A_OLD _A_NEW _B1_OLD _B1_NEW _B2_OLD _B2_NEW _HEX _S928N_B1_OLD _S928N_B1_NEW _S928N_B2_OLD _S928N_B2_NEW _FZK2_B1_OLD _FZK2_B1_NEW _FZK2_B2_OLD _FZK2_B2_NEW _BZK1_B1_OLD _BZK1_B1_NEW _BZK1_B2_OLD _BZK1_B2_NEW
+    return 0
+fi
+_DONOR_TAG="S928N build"
+if [ "$( { grep -o "$_B1_OLD" <<< "$_HEX" || true; } | wc -l)" = "0" ]; then
+    if [ "$( { grep -o "$_S928N_B1_OLD" <<< "$_HEX" || true; } | wc -l)" = "1" ]; then
+        _B1_OLD="$_S928N_B1_OLD"; _B1_NEW="$_S928N_B1_NEW"; _B2_OLD="$_S928N_B2_OLD"; _B2_NEW="$_S928N_B2_NEW"
+        _DONE_SHA=""
+    elif [ "$( { grep -o "$_FZK2_B1_OLD" <<< "$_HEX" || true; } | wc -l)" = "1" ]; then
+        _B1_OLD="$_FZK2_B1_OLD"; _B1_NEW="$_FZK2_B1_NEW"; _B2_OLD="$_FZK2_B2_OLD"; _B2_NEW="$_FZK2_B2_NEW"
+        _DONE_SHA=""
+        _DONOR_TAG="X810 FZK2 build"
+    elif [ "$( { grep -o "$_BZK1_B1_OLD" <<< "$_HEX" || true; } | wc -l)" = "1" ]; then
+        _B1_OLD="$_BZK1_B1_OLD"; _B1_NEW="$_BZK1_B1_NEW"; _B2_OLD="$_BZK1_B2_OLD"; _B2_NEW="$_BZK1_B2_NEW"
+        _DONE_SHA=""
+        _DONOR_TAG="S948N BZK1 build"
+    fi
+fi
+unset _S928N_B1_OLD _S928N_B1_NEW _S928N_B2_OLD _S928N_B2_NEW _FZK2_B1_OLD _FZK2_B1_NEW _FZK2_B2_OLD _FZK2_B2_NEW _BZK1_B1_OLD _BZK1_B1_NEW _BZK1_B2_OLD _BZK1_B2_NEW
 
 for _p in A B1 B2; do
     eval "_old=\$_${_p}_OLD"
-    _count="$(grep -o "$_old" <<< "$_HEX" | wc -l)"
+    _count="$( { grep -o "$_old" <<< "$_HEX" || true; } | wc -l)"
     if [ "$_count" = "0" ]; then
         LOG "\033[0;33m! Nothing to do (patch $_p anchor not found - different donor build)\033[0m"
-        unset _SF64 _PRE_SHA _DONE_SHA _A_OLD _A_NEW _B1_OLD _B1_NEW _B2_OLD _B2_NEW _HEX _p _old _count
+        unset _SF64 _PRE_SHA _DONE_SHA _A_OLD _A_NEW _B1_OLD _B1_NEW _B2_OLD _B2_NEW _HEX _DONOR_TAG _p _old _count
         return 0
     fi
     [ "$_count" = "1" ] || ABORT "patch $_p anchor matches $_count times in lib64/libstagefright.so - refusing to patch on an ambiguous match"
@@ -118,14 +158,14 @@ else
     # in this build, so it cannot be counted)
     for _p in A B1 B2; do
         eval "_new=\$_${_p}_NEW; _old=\$_${_p}_OLD"
-        [ "$(grep -o "$_old" <<< "$_HEX" | wc -l)" = "0" ] \
-            || ABORT "! lib64/libstagefright.so part $_p still carries its old bytes (S928N build)"
-        [ "$_p" = A ] || [ "$(grep -o "$_new" <<< "$_HEX" | wc -l)" = "1" ] \
-            || ABORT "! lib64/libstagefright.so part $_p did not land exactly once (S928N build)"
+        [ "$( { grep -o "$_old" <<< "$_HEX" || true; } | wc -l)" = "0" ] \
+            || ABORT "! lib64/libstagefright.so part $_p still carries its old bytes ($_DONOR_TAG)"
+        [ "$_p" = A ] || [ "$( { grep -o "$_new" <<< "$_HEX" || true; } | wc -l)" = "1" ] \
+            || ABORT "! lib64/libstagefright.so part $_p did not land exactly once ($_DONOR_TAG)"
     done
     unset _HEX _p _new _old
-    LOG "- lib64/libstagefright.so carries the S20+-verified I-08 bytes (S928N build, $_POST_SHA)"
+    LOG "- lib64/libstagefright.so carries the I-08 marshalling patch ($_DONOR_TAG, $_POST_SHA)"
 fi
 LOG_STEP_OUT
 
-unset _SF64 _PRE_SHA _POST_SHA _DONE_SHA _A_OLD _A_NEW _B1_OLD _B1_NEW _B2_OLD _B2_NEW
+unset _SF64 _PRE_SHA _POST_SHA _DONE_SHA _DONOR_TAG _A_OLD _A_NEW _B1_OLD _B1_NEW _B2_OLD _B2_NEW
