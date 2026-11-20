@@ -32,3 +32,12 @@ target/o1s/patches/variants/vendor/** binary
 target/p3s/patches/variants/vendor/** binary
 target/r9s/patches/vendor/vendor/** binary
 target/t2s/patches/variants/vendor/** binary
+
+# Model containers and the SNAP executables must not undergo EOL conversion.
+*.tflite binary
+*.caffemodel binary
+*.nnc binary
+*.dla binary
+*.dlc binary
+platform/sm8250/mods/miracle/fancam/vendor/** binary
+platform/sm8250/patches/wfd_smartview_fix/system/** binary

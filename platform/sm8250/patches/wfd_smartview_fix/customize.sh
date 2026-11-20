@@ -1,7 +1,14 @@
 #!/usr/bin/env bash
 # Copyright (c) 2026
 
+# shellcheck disable=SC2034
+SKIPUNZIP=1
+if [ "$SOURCE_PLATFORM_SDK_VERSION" -lt 37 ]; then
+    return 0
+fi
+ADD_TO_WORK_DIR "$MODPATH" "system" "." 0 0 755 "u:object_r:system_file:s0" || return 1
 DELETE_FROM_WORK_DIR "system" "system/lib64/libhdcp_client_aidl.so"
+
 DELETE_FROM_WORK_DIR "system" "system/lib64/libhdcp2.so"
 DELETE_FROM_WORK_DIR "system" "system/lib64/libremotedisplay_wfd.so"
 DELETE_FROM_WORK_DIR "system" "system/lib64/libremotedisplayservice.so"
