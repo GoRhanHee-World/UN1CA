@@ -89,7 +89,7 @@ diff --git a/smali/io/mesalabs/unica/CidActivationUtils.smali b/smali/io/mesalab
 new file mode 100644
 --- /dev/null
 +++ b/smali/io/mesalabs/unica/CidActivationUtils.smali
-@@ -0,0 +1,485 @@
+@@ -0,0 +1,487 @@
 +.class public final Lio/mesalabs/unica/CidActivationUtils;
 +.super Ljava/lang/Object;
 +.source "CidActivationUtils.java"
@@ -202,11 +202,6 @@ new file mode 100644
 +
 +    if-eqz p0, :cond_0
 +
-+    invoke-virtual {p1}, Ljava/lang/String;->isEmpty()Z
-+
-+    move-result p0
-+
-+    if-eqz p0, :cond_0
 +
 +    invoke-static {}, Lio/mesalabs/unica/CidActivationUtils;->useFallback()Z
 +
@@ -233,6 +228,14 @@ new file mode 100644
 +.end method
 +
 +.method private static getStore()Landroid/content/SharedPreferences;
++    .locals 1
++    const-string v0, "unica.cid_activation"
++    invoke-static {v0}, Lio/mesalabs/unica/CidActivationUtils;->getStore(Ljava/lang/String;)Landroid/content/SharedPreferences;
++    move-result-object v0
++    return-object v0
++.end method
++
++.method private static getStore(Ljava/lang/String;)Landroid/content/SharedPreferences;
 +    .locals 3
 +
 +    invoke-static {}, Landroid/app/ActivityThread;->currentApplication()Landroid/app/Application;
@@ -254,7 +257,7 @@ new file mode 100644
 +
 +    move-result-object v0
 +
-+    const-string v1, "unica.cid_activation"
++    move-object v1, p0
 +
 +    const/4 v2, 0x4
 +
@@ -350,103 +353,75 @@ new file mode 100644
 +    .locals 8
 +
 +    invoke-static {}, Lio/mesalabs/unica/CidActivationUtils;->getStore()Landroid/content/SharedPreferences;
-+
 +    move-result-object v0
-+
 +    const-string v1, "activated_id"
-+
 +    const-string v2, ""
-+
 +    invoke-interface {v0, v1, v2}, Landroid/content/SharedPreferences;->getString(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-+
 +    move-result-object v3
-+
 +    const-string v4, "pending_id"
-+
 +    invoke-interface {v0, v4, v2}, Landroid/content/SharedPreferences;->getString(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-+
 +    move-result-object v5
-+
 +    const-string v6, "persist.sys.singlesku_activate"
-+
 +    invoke-static {v6, v2}, Landroid/os/SemSystemProperties;->get(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-+
 +    move-result-object v6
++    const-string v7, "ro.csc.sales_code"
++    invoke-static {v7, v2}, Landroid/os/SemSystemProperties;->get(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
++    move-result-object v7
 +
-+    invoke-virtual {v3}, Ljava/lang/String;->isEmpty()Z
-+
-+    move-result v7
-+
-+    if-eqz v7, :cond_2
-+
++    # Never expose an ID from a different CSC or complete an unfinished switch.
 +    invoke-virtual {v5}, Ljava/lang/String;->isEmpty()Z
-+
-+    move-result v7
-+
-+    if-nez v7, :cond_2
-+
-+    const-string v7, "rebooting"
-+
-+    invoke-virtual {v6, v7}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
-+
-+    move-result v7
-+
-+    if-nez v7, :cond_0
-+
-+    const-string v7, "finished"
-+
-+    invoke-virtual {v6, v7}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
-+
-+    move-result v6
-+
-+    if-nez v6, :cond_0
-+
-+    goto :goto_0
-+
-+    :cond_0
-+    const-string v6, "ro.csc.sales_code"
-+
-+    invoke-static {v6, v2}, Landroid/os/SemSystemProperties;->get(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-+
-+    move-result-object v2
-+
-+    invoke-virtual {v5, v2}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
-+
 +    move-result v2
++    if-nez v2, :no_pending
++    invoke-virtual {v5, v7}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++    move-result v2
++    if-eqz v2, :not_activated
++    const-string v2, "rebooting"
++    invoke-virtual {v6, v2}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++    move-result v2
++    if-nez v2, :promote_pending
++    const-string v2, "finished"
++    invoke-virtual {v6, v2}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++    move-result v2
++    if-eqz v2, :not_activated
++    :promote_pending
++    move-object v3, v5
++    goto :commit_id
 +
-+    if-eqz v2, :cond_2
++    :no_pending
++    invoke-virtual {v3, v7}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++    move-result v2
++    if-nez v2, :return_id
++    # Recover completed CSC changes made outside this fallback's write path.
++    const-string v2, "finished"
++    invoke-virtual {v6, v2}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++    move-result v2
++    if-eqz v2, :not_activated
++    const-string v2, "[A-Z0-9]{3}"
++    invoke-virtual {v7, v2}, Ljava/lang/String;->matches(Ljava/lang/String;)Z
++    move-result v2
++    if-eqz v2, :not_activated
++    move-object v3, v7
 +
++    :commit_id
 +    invoke-interface {v0}, Landroid/content/SharedPreferences;->edit()Landroid/content/SharedPreferences$Editor;
-+
 +    move-result-object v0
-+
-+    invoke-interface {v0, v1, v5}, Landroid/content/SharedPreferences$Editor;->putString(Ljava/lang/String;Ljava/lang/String;)Landroid/content/SharedPreferences$Editor;
-+
++    invoke-interface {v0, v1, v3}, Landroid/content/SharedPreferences$Editor;->putString(Ljava/lang/String;Ljava/lang/String;)Landroid/content/SharedPreferences$Editor;
 +    move-result-object v0
-+
 +    invoke-interface {v0, v4}, Landroid/content/SharedPreferences$Editor;->remove(Ljava/lang/String;)Landroid/content/SharedPreferences$Editor;
-+
 +    move-result-object v0
-+
 +    invoke-interface {v0}, Landroid/content/SharedPreferences$Editor;->commit()Z
-+
 +    move-result v0
-+
-+    if-eqz v0, :cond_1
-+
-+    return-object v5
-+
-+    :cond_1
++    if-nez v0, :return_id
 +    new-instance v0, Ljava/lang/IllegalStateException;
-+
 +    const-string v1, "Cannot commit CID activation"
-+
 +    invoke-direct {v0, v1}, Ljava/lang/IllegalStateException;-><init>(Ljava/lang/String;)V
-+
 +    throw v0
 +
-+    :cond_2
-+    :goto_0
++    :not_activated
++    const-string v3, ""
++    return-object v3
++    :return_id
++    invoke-static {v3}, Lio/mesalabs/unica/CidActivationUtils;->syncId(Ljava/lang/String;)V
 +    return-object v3
 +.end method
 +
@@ -574,4 +549,31 @@ new file mode 100644
 +    move-result p0
 +
 +    return p0
++.end method
++
++.method private static syncId(Ljava/lang/String;)V
++    .locals 3
++    const-string v0, "cidmanager.settings"
++    invoke-static {v0}, Lio/mesalabs/unica/CidActivationUtils;->getStore(Ljava/lang/String;)Landroid/content/SharedPreferences;
++    move-result-object v0
++    const-string v1, "activated_id"
++    const-string v2, ""
++    invoke-interface {v0, v1, v2}, Landroid/content/SharedPreferences;->getString(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
++    move-result-object v2
++    invoke-virtual {p0, v2}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++    move-result v2
++    if-nez v2, :done
++    invoke-interface {v0}, Landroid/content/SharedPreferences;->edit()Landroid/content/SharedPreferences$Editor;
++    move-result-object v0
++    invoke-interface {v0, v1, p0}, Landroid/content/SharedPreferences$Editor;->putString(Ljava/lang/String;Ljava/lang/String;)Landroid/content/SharedPreferences$Editor;
++    move-result-object v0
++    invoke-interface {v0}, Landroid/content/SharedPreferences$Editor;->commit()Z
++    move-result v0
++    if-nez v0, :done
++    new-instance v0, Ljava/lang/IllegalStateException;
++    const-string v1, "Cannot synchronize CID activation"
++    invoke-direct {v0, v1}, Ljava/lang/IllegalStateException;-><init>(Ljava/lang/String;)V
++    throw v0
++    :done
++    return-void
 +.end method
