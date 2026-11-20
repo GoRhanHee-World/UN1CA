@@ -16,6 +16,10 @@ UPDATE_BLOBS()
     local BLOBS
     local PREBUILTS_DIR="$SRC_DIR/prebuilts/samsung/$DEVICE"
     local FILE_PATH
+    if [ -f "$PREBUILTS_DIR/files.list" ]; then
+        "$SRC_DIR/scripts/internal/export_prebuilt_manifest.sh" "$FW_DIR/${MODEL}_${CSC}" "$PREBUILTS_DIR"
+        return $?
+    fi
 
     if [ -d "$PREBUILTS_DIR/system" ]; then
         BLOBS+="$(find "$PREBUILTS_DIR/system" ! -type d)"
@@ -89,7 +93,9 @@ LOG_STEP_IN true "Starting update_prebuilt_blobs for prebuilts/samsung/$DEVICE"
 LOG "- Current firmware: $(cat "$SRC_DIR/prebuilts/samsung/$DEVICE/.current" 2> /dev/null)"
 LOG "- Latest available firmware: $LATEST_FIRMWARE"
 
-if [[ "$LATEST_FIRMWARE" == "$(cat "$SRC_DIR/prebuilts/samsung/$DEVICE/.current" 2> /dev/null)" ]]; then
+if [[ "$LATEST_FIRMWARE" == "$(cat "$SRC_DIR/prebuilts/samsung/$DEVICE/.current" 2> /dev/null)" ]] && \
+        { [ ! -f "$SRC_DIR/prebuilts/samsung/$DEVICE/files.list" ] || \
+          [[ "$(sha256sum "$SRC_DIR/prebuilts/samsung/$DEVICE/files.list" | cut -d ' ' -f 1)" == "$(cat "$SRC_DIR/prebuilts/samsung/$DEVICE/.manifest.sha256" 2> /dev/null)" ]]; }; then
     LOG_STEP_IN
     LOG "\033[0;33m! Nothing to do\033[0m"
     exit 0

@@ -1,0 +1,8 @@
+# One UI 9 S23 inputs used by the SM8250 ARM32 runtime and Photo Editor.
+system/build.prop
+system/bin/linker
+system/apex/com.android.runtime.apex
+system/lib/
+system/priv-app/PhotoEditor_*/
+system/etc/permissions/privapp-permissions-com.sec.android.mimage.photoretouching.xml
+system/etc/sysconfig/preinstalled-packages-com.sec.android.mimage.photoretouching.xml
