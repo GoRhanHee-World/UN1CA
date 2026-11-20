@@ -156,11 +156,6 @@ jobs:
         with:
           firmware: ${{ env.SOURCE_FIRMWARE }}
 
-      - name: Restore or download S23 compatibility firmware
-        if: env.TARGET_PLATFORM == 'sm8250'
-        uses: ./.github/actions/firmware
-        with:
-          firmware: SM-S911N/KOO/357748330365787
 
       - name: Restore or download x1q target firmware
         if: matrix.target == 'x1q'

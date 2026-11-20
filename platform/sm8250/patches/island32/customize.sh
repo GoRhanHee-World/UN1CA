@@ -3,7 +3,7 @@ SKIPUNZIP=1
 
 _ISL_SOURCE="dm3qksx"
 if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge 37 ]; then
-    _ISL_SOURCE="SM-S911N/KOO"
+    _ISL_SOURCE="dm1qksx"
 fi
 _SYS="$WORK_DIR/system/system"
 _LIST="$MODPATH/island_lib.txt"
@@ -15,14 +15,15 @@ fi
 
 LOG_STEP_IN "- Installing the ARM32 runtime from $_ISL_SOURCE"
 if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge 37 ]; then
-    _ISL_FW="$FW_DIR/SM-S911N_KOO/system/system"
-    [ -d "$_ISL_FW" ] || _ISL_FW="$FW_DIR/SM-S911N_KOO/system"
+    _ISL_FW="$SRC_DIR/prebuilts/samsung/dm1qksx/system"
+    [ -s "$SRC_DIR/prebuilts/samsung/dm1qksx/.current" ] || { ABORT "Import the dm1qksx Update prebuilt blobs result before building"; return 1; }
     grep -q "^ro.build.version.sdk=37$" "$_ISL_FW/build.prop" || { ABORT "S23 compatibility firmware must be Android 17"; return 1; }
 fi
 if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge 37 ]; then
     # Include the complete matching media dependency set, not just graphics HAL
     # dependencies. No ARM32 zygote is started; this serves native processes.
-    ADD_TO_WORK_DIR "$_ISL_SOURCE" "system" "system/lib" || return 1
+    source "$SRC_DIR/scripts/utils/prebuilt_utils.sh" || return 1
+    ADD_PREBUILT_SYSTEM_TREE "$_ISL_SOURCE" "lib" || return 1
 fi
 if [ "$SOURCE_PLATFORM_SDK_VERSION" -lt 37 ]; then
     while IFS= read -r n; do
