@@ -78,12 +78,21 @@ jobs:
 
       - name: Set up build environment
         run: |
-          sudo apt update
-          DEBIAN_FRONTEND=noninteractive sudo apt install -yq \
+          sudo apt-get update
+          sudo env DEBIAN_FRONTEND=noninteractive apt-get install -yq \
             attr ccache clang ffmpeg libbrotli-dev libbz2-dev \
             libgtest-dev libprotobuf-dev libunwind-dev libpcre2-dev \
-            libzstd-dev linux-modules-extra-$(uname -r) lld protobuf-compiler webp
-          sudo modprobe erofs f2fs
+            libzstd-dev lld protobuf-compiler webp
+          KERNEL_EXTRAS="linux-modules-extra-$(uname -r)"
+          if apt-cache show "$KERNEL_EXTRAS" > /dev/null 2>&1; then
+            sudo env DEBIAN_FRONTEND=noninteractive apt-get install -yq "$KERNEL_EXTRAS"
+          else
+            echo "$KERNEL_EXTRAS is not published for this runner; keeping its supplied modules"
+          fi
+          # EROFS extraction uses fuse.erofs; these kernel modules are optional.
+          for MODULE in erofs f2fs; do
+            sudo modprobe "$MODULE" || echo "Optional kernel module $MODULE is unavailable"
+          done
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           echo -n "${{ secrets.PLATFORM_KEY_PK8 }}" | base64 --decode > security/unica_platform.pk8
