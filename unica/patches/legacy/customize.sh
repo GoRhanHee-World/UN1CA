@@ -509,7 +509,14 @@ if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "35" ]; then
             'configCodec(Lcom/samsung/android/sum/core/message/Message;)V' \
             'const v4, 0x7f420888' \
             'const v4, 0x7f000789'
-        if xxd -p -c 0 "$WORK_DIR/system/system/lib/libstagefright.so" | grep -q "ceec002848d1724c0620"; then
+        # S23 One UI 9 ARM32 library installed by the compatibility snapshot.
+        if xxd -p -c 0 "$WORK_DIR/system/system/lib/libstagefright.so" | grep -F "002847d102205390" > /dev/null; then
+            HEX_PATCH "$WORK_DIR/system/system/lib/libstagefright.so" \
+                "002847d102205390" \
+                "002847e002205390"
+        elif xxd -p -c 0 "$WORK_DIR/system/system/lib/libstagefright.so" | grep -F "002847e002205390" > /dev/null; then
+            LOG "- ARM32 HDR10+ compatibility is already provided by the S23 library"
+        elif xxd -p -c 0 "$WORK_DIR/system/system/lib/libstagefright.so" | grep -q "ceec002848d1724c0620"; then
             HEX_PATCH "$WORK_DIR/system/system/lib/libstagefright.so" \
                 "ceec002848d1724c0620" "ceec002848e0724c0620"
         elif xxd -p -c 0 "$WORK_DIR/system/system/lib/libstagefright.so" | grep -q "aaea002879d1264c0620"; then

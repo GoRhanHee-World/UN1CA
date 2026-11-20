@@ -116,7 +116,7 @@ SMALI_PATCH()
     fi
 
     # Check if provided method is method and exists inside smali
-    if ! grep "^\.method.*" "$FILE_PATH/$SMALI" | grep -q -F -- "$METHOD" "$FILE_PATH/$SMALI"; then
+    if ! awk -v method="$METHOD" '/^\.method/ && index($0, method) { found = 1; exit } END { exit !found }' "$FILE_PATH/$SMALI"; then
         LOGE "Method \"$METHOD\" not found in /$PARTITION/$FILE/$SMALI"
 
         local MATCHES
