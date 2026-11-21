@@ -36,12 +36,15 @@
 # patch on the strength of that hash match plus the client-only, vendor-untouched design (no
 # per-SoC vendor code is involved at all).
 
+# Imported from MinsOS f8aa3918, WFD portion of 9b79d33c, and 6880ef44.
+# UN1CA requires this patch on its ARM64 WFD path, so unknown/partial inputs
+# fail instead of silently disabling the fix.
 _SF64="$WORK_DIR/system/system/lib64/libstagefright.so"
 
 if [ ! -f "$_SF64" ]; then
-    LOG "\033[0;33m! Nothing to do (no lib64/libstagefright.so)\033[0m"
+    ABORT "I-08: missing lib64/libstagefright.so"
     unset _SF64
-    return 0
+    return 1
 fi
 
 _PRE_SHA="$(sha256sum "$_SF64" | cut -d' ' -f1)"
@@ -98,17 +101,23 @@ _BZK1_B1_NEW="1f95017161030054800240f91f7b0694000440f9e82300"
 _BZK1_B2_OLD="010040f91f9501714901899a1f9901718b0301cb6b010c8b6a1dcb936bfcffd06b350e917501899a5f0900f1a2230054ec740694e40300aae1fcfff0217c099102fdffd042bc3991a0008052e30315aa05088052b3740694"
 _BZK1_B2_NEW="107b0694e0630091e1230091137b0694e00740f9600000b4e123009115750694690e40f9369940f9c80240f9085140f9e00316aaa1435fb8e2630091e31340b9a4835cf8851e40b900013fd6d1ffff171f2003d51f2003d5"
 
-if [ "$( { grep -o "$_S928N_B2_NEW" <<< "$_HEX" || true; } | wc -l)" = "1" ]; then
+if [ "$( { grep -o "$_S928N_B2_NEW" <<< "$_HEX" || true; } | wc -l)" = "1" ] &&
+        [ "$( { grep -o "$_S928N_B1_NEW" <<< "$_HEX" || true; } | wc -l)" = "1" ] &&
+        [[ "$_HEX" != *"$_A_OLD"* ]]; then
     LOG "- lib64/libstagefright.so already carries the I-08 marshalling patch (S928N build)"
     unset _SF64 _PRE_SHA _DONE_SHA _A_OLD _A_NEW _B1_OLD _B1_NEW _B2_OLD _B2_NEW _HEX _S928N_B1_OLD _S928N_B1_NEW _S928N_B2_OLD _S928N_B2_NEW _FZK2_B1_OLD _FZK2_B1_NEW _FZK2_B2_OLD _FZK2_B2_NEW _BZK1_B1_OLD _BZK1_B1_NEW _BZK1_B2_OLD _BZK1_B2_NEW
     return 0
 fi
-if [ "$( { grep -o "$_FZK2_B2_NEW" <<< "$_HEX" || true; } | wc -l)" = "1" ]; then
+if [ "$( { grep -o "$_FZK2_B2_NEW" <<< "$_HEX" || true; } | wc -l)" = "1" ] &&
+        [ "$( { grep -o "$_FZK2_B1_NEW" <<< "$_HEX" || true; } | wc -l)" = "1" ] &&
+        [[ "$_HEX" != *"$_A_OLD"* ]]; then
     LOG "- lib64/libstagefright.so already carries the I-08 marshalling patch (X810 FZK2 build)"
     unset _SF64 _PRE_SHA _DONE_SHA _A_OLD _A_NEW _B1_OLD _B1_NEW _B2_OLD _B2_NEW _HEX _S928N_B1_OLD _S928N_B1_NEW _S928N_B2_OLD _S928N_B2_NEW _FZK2_B1_OLD _FZK2_B1_NEW _FZK2_B2_OLD _FZK2_B2_NEW _BZK1_B1_OLD _BZK1_B1_NEW _BZK1_B2_OLD _BZK1_B2_NEW
     return 0
 fi
-if [ "$( { grep -o "$_BZK1_B2_NEW" <<< "$_HEX" || true; } | wc -l)" = "1" ]; then
+if [ "$( { grep -o "$_BZK1_B2_NEW" <<< "$_HEX" || true; } | wc -l)" = "1" ] &&
+        [ "$( { grep -o "$_BZK1_B1_NEW" <<< "$_HEX" || true; } | wc -l)" = "1" ] &&
+        [[ "$_HEX" != *"$_A_OLD"* ]]; then
     LOG "- lib64/libstagefright.so already carries the I-08 marshalling patch (S948N BZK1 build)"
     unset _SF64 _PRE_SHA _DONE_SHA _A_OLD _A_NEW _B1_OLD _B1_NEW _B2_OLD _B2_NEW _HEX _S928N_B1_OLD _S928N_B1_NEW _S928N_B2_OLD _S928N_B2_NEW _FZK2_B1_OLD _FZK2_B1_NEW _FZK2_B2_OLD _FZK2_B2_NEW _BZK1_B1_OLD _BZK1_B1_NEW _BZK1_B2_OLD _BZK1_B2_NEW
     return 0
@@ -130,38 +139,40 @@ if [ "$( { grep -o "$_B1_OLD" <<< "$_HEX" || true; } | wc -l)" = "0" ]; then
 fi
 unset _S928N_B1_OLD _S928N_B1_NEW _S928N_B2_OLD _S928N_B2_NEW _FZK2_B1_OLD _FZK2_B1_NEW _FZK2_B2_OLD _FZK2_B2_NEW _BZK1_B1_OLD _BZK1_B1_NEW _BZK1_B2_OLD _BZK1_B2_NEW
 
+_old=""
 for _p in A B1 B2; do
     eval "_old=\$_${_p}_OLD"
     _count="$( { grep -o "$_old" <<< "$_HEX" || true; } | wc -l)"
     if [ "$_count" = "0" ]; then
-        LOG "\033[0;33m! Nothing to do (patch $_p anchor not found - different donor build)\033[0m"
+        ABORT "I-08: patch $_p anchor missing or partially patched; re-derive for this donor"
         unset _SF64 _PRE_SHA _DONE_SHA _A_OLD _A_NEW _B1_OLD _B1_NEW _B2_OLD _B2_NEW _HEX _DONOR_TAG _p _old _count
-        return 0
+        return 1
     fi
-    [ "$_count" = "1" ] || ABORT "patch $_p anchor matches $_count times in lib64/libstagefright.so - refusing to patch on an ambiguous match"
+    [ "$_count" = "1" ] || { ABORT "patch $_p anchor matches $_count times in lib64/libstagefright.so - refusing to patch on an ambiguous match"; return 1; }
 done
 unset _HEX _p _old _count
 
 LOG_STEP_IN "- Patching lib64/libstagefright.so (I-08: 64-bit client metadata marshalling)"
-HEX_PATCH "$_SF64" "$_A_OLD" "$_A_NEW"   || ABORT "could not patch allocateBuffersOnPort (part A) in lib64/libstagefright.so"
-HEX_PATCH "$_SF64" "$_B1_OLD" "$_B1_NEW" || ABORT "could not patch onInputBufferFilled (part B1) in lib64/libstagefright.so"
-HEX_PATCH "$_SF64" "$_B2_OLD" "$_B2_NEW" || ABORT "could not patch onInputBufferFilled (part B2) in lib64/libstagefright.so"
+HEX_PATCH "$_SF64" "$_A_OLD" "$_A_NEW"   || return 1
+HEX_PATCH "$_SF64" "$_B1_OLD" "$_B1_NEW" || return 1
+HEX_PATCH "$_SF64" "$_B2_OLD" "$_B2_NEW" || return 1
 
 _POST_SHA="$(sha256sum "$_SF64" | cut -d' ' -f1)"
 if [ -n "$_DONE_SHA" ]; then
     [ "$_POST_SHA" = "$_DONE_SHA" ] \
-        || ABORT "! lib64/libstagefright.so after patching is not the T970-verified binary (got $_POST_SHA)"
+        || { ABORT "! lib64/libstagefright.so after patching is not the T970-verified binary (got $_POST_SHA)"; return 1; }
     LOG "- lib64/libstagefright.so matches the T970-verified binary (I-08 marshalling patch)"
 else
     _HEX="$(xxd -p -c 0 "$_SF64")"
     # every OLD is gone; the long B patterns are there exactly once (A's 4-byte NEW also occurs elsewhere
     # in this build, so it cannot be counted)
+    _new=""
     for _p in A B1 B2; do
         eval "_new=\$_${_p}_NEW; _old=\$_${_p}_OLD"
         [ "$( { grep -o "$_old" <<< "$_HEX" || true; } | wc -l)" = "0" ] \
-            || ABORT "! lib64/libstagefright.so part $_p still carries its old bytes ($_DONOR_TAG)"
+            || { ABORT "! lib64/libstagefright.so part $_p still carries its old bytes ($_DONOR_TAG)"; return 1; }
         [ "$_p" = A ] || [ "$( { grep -o "$_new" <<< "$_HEX" || true; } | wc -l)" = "1" ] \
-            || ABORT "! lib64/libstagefright.so part $_p did not land exactly once ($_DONOR_TAG)"
+            || { ABORT "! lib64/libstagefright.so part $_p did not land exactly once ($_DONOR_TAG)"; return 1; }
     done
     unset _HEX _p _new _old
     LOG "- lib64/libstagefright.so carries the I-08 marshalling patch ($_DONOR_TAG, $_POST_SHA)"

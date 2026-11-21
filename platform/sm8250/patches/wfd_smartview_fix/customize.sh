@@ -1,72 +1,49 @@
 #!/usr/bin/env bash
 # Copyright (c) 2026
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 # shellcheck disable=SC2034
 SKIPUNZIP=1
 if [ "$SOURCE_PLATFORM_SDK_VERSION" -lt 37 ]; then
     return 0
 fi
-ADD_TO_WORK_DIR "$MODPATH" "system" "." 0 0 755 "u:object_r:system_file:s0" || return 1
-DELETE_FROM_WORK_DIR "system" "system/lib64/libhdcp_client_aidl.so"
 
-DELETE_FROM_WORK_DIR "system" "system/lib64/libhdcp2.so"
-DELETE_FROM_WORK_DIR "system" "system/lib64/libremotedisplay_wfd.so"
-DELETE_FROM_WORK_DIR "system" "system/lib64/libremotedisplayservice.so"
-DELETE_FROM_WORK_DIR "system" "system/lib64/libsecuibc.so"
-DELETE_FROM_WORK_DIR "system" "system/lib64/libstagefright_hdcp.so"
-DELETE_FROM_WORK_DIR "system" "system/lib64/vendor.samsung.hardware.security.hdcp.wifidisplay-V2-ndk.so"
-DELETE_FROM_WORK_DIR "system" "system/lib64/wfd_log.so"
-
-
-# Hex patch libremotedisplay_wfd.so to bypass unsupported WFD R2 parameters
-if [ -f "$WORK_DIR/system/system/lib/libremotedisplay_wfd.so" ]; then
-    if xxd -p -c 0 "$WORK_DIR/system/system/lib/libremotedisplay_wfd.so" | grep -q "94f80d0318b994f8141301290ed1"; then
-        # r9qxxx (Snapdragon S23 / S21 FE) WFD R2 bypass
-        HEX_PATCH "$WORK_DIR/system/system/lib/libremotedisplay_wfd.so" \
-            "94f80d0318b994f8141301290ed1" \
-            "00f00fb818b994f8141301290ed1"
-    elif xxd -p -c 0 "$WORK_DIR/system/system/lib/libremotedisplay_wfd.so" | grep -q "94f81d0318b994f8241301290ed1"; then
-        # r9sxxx (Exynos S23 / S22) WFD R2 bypass
-        HEX_PATCH "$WORK_DIR/system/system/lib/libremotedisplay_wfd.so" \
-            "94f81d0318b994f8241301290ed1" \
-            "00f00fb818b994f8241301290ed1"
+# Keep the source firmware's WFD executable, libraries, app and framework as a
+# set. The old R9q ARM32 overlay requires Qualcomm display/QSEE interfaces the
+# SM8250 system does not supply. Its AudioTrack/vtable shims cannot repair that.
+# The vendor OMX service stays ARM32; I-08 bridges metadata on the ARM64 client.
+for WFD_FILE in bin/remotedisplay lib64/libremotedisplay.so \
+        lib64/libremotedisplay_wfd.so lib64/libremotedisplayservice.so \
+        lib64/libstagefright.so; do
+    if ! WFD_ELF_HEADER="$(LC_ALL=C readelf -h "$WORK_DIR/system/system/$WFD_FILE" 2>/dev/null)"; then
+        ABORT "Missing or invalid donor WFD file: $WFD_FILE"
+        return 1
     fi
-fi
+    if ! grep -q 'Class:.*ELF64' <<< "$WFD_ELF_HEADER" ||
+            ! grep -q 'Machine:.*AArch64' <<< "$WFD_ELF_HEADER"; then
+        ABORT "WFD requires the source firmware's ARM64 $WFD_FILE; recreate the work directory without the old ARM32 overlay"
+        return 1
+    fi
+done
+unset WFD_FILE WFD_ELF_HEADER
 
-# One UI 9 changed the AudioTrack constructor, so libremotedisplay_wfd.so
-# fails to link and remotedisplay never starts (system_server then dies in
-# WifiDisplayController). Swap its ubsan NEEDED entry for a shim that forwards
-# the old constructor; the shim pulls the ubsan runtime in itself.
-if [ -f "$WORK_DIR/system/system/lib/libremotedisplay_wfd.so" ] && \
-        [ -f "$WORK_DIR/system/system/lib/libwfd_audiotrack_shim.so" ]; then
-    HEX_PATCH "$WORK_DIR/system/system/lib/libremotedisplay_wfd.so" \
-        "006c6962636c616e675f72742e756273616e5f7374616e64616c6f6e652d61726d2d616e64726f69642e736f00" \
-        "006c69627766645f617564696f747261636b5f7368696d2e736f00000000000000000000000000000000000000"
-fi
+# Abort on an unknown donor instead of shipping a Smart View fix that skipped.
+source "$MODPATH/i08_marshal.sh" || return 1
 
-# One UI 9 libgui added IGraphicBufferProducer methods, so the old vtable
-# slot (0x7c) in PlaybackSession::addConsumerUsageBits() now hits
-# getFrameTimestamps() instead of getConsumerUsage() (0x84), and the encoder
-# surface ends up with garbage usage bits (black screen on the sink).
-# Drop the CFI check in front of the call and use its slot to move the
-# vtable pointer forward by 8, so [r4, #0x7c] lands on getConsumerUsage().
-if [ -f "$WORK_DIR/system/system/lib/libremotedisplay_wfd.so" ]; then
-    HEX_PATCH "$WORK_DIR/system/system/lib/libremotedisplay_wfd.so" \
-        "224643f0c2e8e26f" \
-        "2246083400bfe26f"
-fi
-
-# Hex patch libstagefright.so to fix ACodec getProcessNameByPid buffer overflow
+# This ARM32 library is still used by other legacy media clients. Retain its
+# existing FORTIFY fix independently of the WFD executable's architecture.
 if [ -f "$WORK_DIR/system/system/lib/libstagefright.so" ]; then
-    if xxd -p -c 0 "$WORK_DIR/system/system/lib/libstagefright.so" | grep -q "204601214ff400722b46"; then
-        # r11qxxx / Android 16 ARM32 ACodec getProcessNameByPid buffer overflow fix (512 -> 254 bytes)
+    WFD_STAGEFRIGHT_HEX="$(xxd -p -c 0 "$WORK_DIR/system/system/lib/libstagefright.so")"
+    if [[ "$WFD_STAGEFRIGHT_HEX" == *204601214ff400722b46* ]]; then
         HEX_PATCH "$WORK_DIR/system/system/lib/libstagefright.so" \
-            "204601214ff400722b46" \
-            "204601214ff0fe022b46"
-    elif xxd -p -c 0 "$WORK_DIR/system/system/lib/libstagefright.so" | grep -q "01214ff4007230462b460097"; then
-        # Legacy ACodec getProcessNameByPid buffer overflow fix
+            "204601214ff400722b46" "204601214ff0fe022b46" || return 1
+    elif [[ "$WFD_STAGEFRIGHT_HEX" == *01214ff4007230462b460097* ]]; then
         HEX_PATCH "$WORK_DIR/system/system/lib/libstagefright.so" \
-            "01214ff4007230462b460097" \
-            "01214ff0fe0230462b460097"
+            "01214ff4007230462b460097" "01214ff0fe0230462b460097" || return 1
     fi
+    unset WFD_STAGEFRIGHT_HEX
 fi
+
+# Apply explicitly so older Android releases keep their existing WFD behavior.
+APPLY_PATCH "system" "system/framework/services.jar" \
+    "$MODPATH/patches/0001-Recover-from-RemoteDisplay-listen-failure.patch" || return 1

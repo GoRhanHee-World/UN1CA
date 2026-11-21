@@ -1,0 +1,129 @@
+From: GoRhanHee <gorhanhee@users.noreply.github.com>
+Subject: [PATCH] Recover from RemoteDisplay listener startup failure
+
+A missing or incompatible WFD service makes RemoteDisplay.listen throw on
+DisplayManager's handler thread. Report a normal connection failure and
+release RTSP/Miracast state instead of killing system_server. Cover both
+P2P and AP/FCDC entry points and preserve P2P group teardown.
+
+diff --git a/smali/com/android/server/display/WifiDisplayController.smali b/smali/com/android/server/display/WifiDisplayController.smali
+--- a/smali/com/android/server/display/WifiDisplayController.smali
++++ b/smali/com/android/server/display/WifiDisplayController.smali
+@@ -4536,9 +4536,13 @@
+ 
+     iget-object v10, p0, Lcom/android/server/display/WifiDisplayController;->mNativeListener:Lcom/android/server/display/WifiDisplayController$37;
+ 
++    :try_start_wfd_listen
+     invoke-static/range {v5 .. v10}, Landroid/media/RemoteDisplay;->listen(Ljava/lang/String;Landroid/media/RemoteDisplay$Listener;Landroid/os/Handler;Ljava/lang/String;Ljava/lang/String;Landroid/media/RemoteDisplay$NativeListener;)Landroid/media/RemoteDisplay;
+ 
+     move-result-object v0
++    :try_end_wfd_listen
++    .catch Ljava/lang/IllegalStateException; {:try_start_wfd_listen .. :try_end_wfd_listen} :catch_wfd_listen
++    .catch Ljava/lang/LinkageError; {:try_start_wfd_listen .. :try_end_wfd_listen} :catch_wfd_listen
+ 
+     iput-object v0, p0, Lcom/android/server/display/WifiDisplayController;->mRemoteDisplay:Landroid/media/RemoteDisplay;
+ 
+@@ -4569,6 +4573,13 @@
+     :cond_12
+     :goto_8
+     return-void
++
++    :catch_wfd_listen
++    move-exception v0
++
++    invoke-virtual {p0, v0}, Lcom/android/server/display/WifiDisplayController;->handleRemoteDisplayStartFailure(Ljava/lang/Throwable;)V
++
++    return-void
+ .end method
+ 
+ .method public final updateScanState()V
+@@ -4876,3 +4887,60 @@
+ 
+     return-void
+ .end method
++
++.method public final handleRemoteDisplayStartFailure(Ljava/lang/Throwable;)V
++    .locals 3
++
++    const-string v0, "WifiDisplayController"
++
++    const-string v1, "Could not start remote display listener"
++
++    invoke-static {v0, v1, p1}, Landroid/util/Slog;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    iget-object v0, p0, Lcom/android/server/display/WifiDisplayController;->mHandler:Landroid/os/Handler;
++
++    iget-object v1, p0, Lcom/android/server/display/WifiDisplayController;->mRtspTimeout:Lcom/android/server/display/WifiDisplayController$6;
++
++    invoke-virtual {v0, v1}, Landroid/os/Handler;->removeCallbacks(Ljava/lang/Runnable;)V
++
++    const/4 v1, 0x0
++
++    iput-object v1, p0, Lcom/android/server/display/WifiDisplayController;->mRemoteDisplayInterface:Ljava/lang/String;
++
++    iput-boolean v1, p0, Lcom/android/server/display/WifiDisplayController;->mRemoteDisplayConnected:Z
++
++    iget-object v0, p0, Lcom/android/server/display/WifiDisplayController;->mWifiP2pManager:Landroid/net/wifi/p2p/WifiP2pManager;
++
++    if-eqz v0, :wfd_clear_advertisement
++
++    invoke-virtual {v0, v1}, Landroid/net/wifi/p2p/WifiP2pManager;->setMiracastMode(I)V
++
++    :wfd_clear_advertisement
++    invoke-virtual {p0}, Lcom/android/server/display/WifiDisplayController;->unadvertiseDisplay()V
++
++    iget-object v0, p0, Lcom/android/server/display/WifiDisplayController;->mWifiDisplayConfig:Landroid/hardware/display/SemWifiDisplayConfig;
++
++    invoke-virtual {v0}, Landroid/hardware/display/SemWifiDisplayConfig;->getConnectionType()I
++
++    move-result v0
++
++    const/4 v2, 0x1
++
++    if-eq v0, v2, :wfd_report_failure
++
++    # AP/FCDC disconnect only clears state when mRemoteDisplay is non-null.
++    # listen() threw before publishing it, so clear that state here instead.
++    # P2P keeps mConnectedDevice until disconnect() schedules group removal.
++    iput-object v1, p0, Lcom/android/server/display/WifiDisplayController;->mConnectedDevice:Landroid/net/wifi/p2p/WifiP2pDevice;
++
++    iput-object v1, p0, Lcom/android/server/display/WifiDisplayController;->mConnectedDeviceGroupInfo:Landroid/net/wifi/p2p/WifiP2pGroup;
++
++    iput-object v1, p0, Lcom/android/server/display/WifiDisplayController;->mDesiredDevice:Landroid/net/wifi/p2p/WifiP2pDevice;
++
++    :wfd_report_failure
++    const/4 v0, 0x6
++
++    invoke-virtual {p0, v0}, Lcom/android/server/display/WifiDisplayController;->handleConnectionFailure(I)V
++
++    return-void
++.end method
+diff --git a/smali/com/android/server/display/WifiDisplayAdapter$9.smali b/smali/com/android/server/display/WifiDisplayAdapter$9.smali
+--- a/smali/com/android/server/display/WifiDisplayAdapter$9.smali
++++ b/smali/com/android/server/display/WifiDisplayAdapter$9.smali
+@@ -263,9 +263,13 @@
+ 
+     iget-object v8, v1, Lcom/android/server/display/WifiDisplayController;->mNativeListener:Lcom/android/server/display/WifiDisplayController$37;
+ 
++    :try_start_wfd_listen
+     invoke-static/range {v3 .. v8}, Landroid/media/RemoteDisplay;->listen(Ljava/lang/String;Landroid/media/RemoteDisplay$Listener;Landroid/os/Handler;Ljava/lang/String;Ljava/lang/String;Landroid/media/RemoteDisplay$NativeListener;)Landroid/media/RemoteDisplay;
+ 
+     move-result-object p0
++    :try_end_wfd_listen
++    .catch Ljava/lang/IllegalStateException; {:try_start_wfd_listen .. :try_end_wfd_listen} :catch_wfd_listen
++    .catch Ljava/lang/LinkageError; {:try_start_wfd_listen .. :try_end_wfd_listen} :catch_wfd_listen
+ 
+     iput-object p0, v1, Lcom/android/server/display/WifiDisplayController;->mRemoteDisplay:Landroid/media/RemoteDisplay;
+ 
+@@ -279,4 +283,11 @@
+ 
+     :cond_5
+     return-void
++
++    :catch_wfd_listen
++    move-exception p0
++
++    invoke-virtual {v1, p0}, Lcom/android/server/display/WifiDisplayController;->handleRemoteDisplayStartFailure(Ljava/lang/Throwable;)V
++
++    return-void
+ .end method
