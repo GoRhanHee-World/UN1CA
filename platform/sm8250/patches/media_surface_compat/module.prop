@@ -1,0 +1,6 @@
+id=media_surface_compat
+name=Legacy OMX output Surface compatibility
+version=v1
+versionCode=1
+author=MinsOS, GoRhanHee
+description=Preserve buffer generations when reconnecting a Surface on the SM8250 OMX codecs.
