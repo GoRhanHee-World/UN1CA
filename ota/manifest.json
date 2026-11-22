@@ -1,3 +1,12 @@
 {
+  "metadata": {
+    "schema_version": 1,
+    "repository": "https://github.com/GoRhanHee-World/UN1CA",
+    "supported_devices": [
+      "x1q",
+      "y2q",
+      "z3q"
+    ]
+  },
   "response": []
 }

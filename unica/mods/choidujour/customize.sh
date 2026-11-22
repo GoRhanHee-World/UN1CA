@@ -21,6 +21,8 @@ if [ -n "${ROM_OTA_URL:-}" ]; then
     APPLY_PATCH "system" "system/priv-app/ChoiDujour/ChoiDujour.apk" \
         "$MODPATH/ChoiDujour.apk/0001-Use-build-OTA-manifest.patch"
 fi
+APPLY_PATCH "system" "system/priv-app/ChoiDujour/ChoiDujour.apk" \
+    "$MODPATH/ChoiDujour.apk/0002-Use-identity-encoding-for-download-size-checks.patch"
 
 LOG "- Patching /system/system/etc/security/otacerts.zip"
 EVAL "rm \"$WORK_DIR/system/system/etc/security/otacerts.zip\""

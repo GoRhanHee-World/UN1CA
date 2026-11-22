@@ -1,0 +1,42 @@
+Subject: [PATCH] Use identity encoding for HEAD and GET size checks
+
+--- a/smali/qz.smali
++++ b/smali/qz.smali
+@@ -127,6 +127,18 @@
+     iput-wide v6, p0, Lqz;->h:J
+
+     :cond_2
++    return-void
++.end method
++
++.method private static setIdentityEncoding(Ljava/net/HttpURLConnection;)V
++    .locals 2
++
++    const-string v0, "Accept-Encoding"
++
++    const-string v1, "identity"
++
++    invoke-virtual {p0, v0, v1}, Ljava/net/URLConnection;->setRequestProperty(Ljava/lang/String;Ljava/lang/String;)V
++
+     return-void
+ .end method
+
+@@ -253,6 +265,8 @@
+
+     check-cast v14, Ljava/net/HttpURLConnection;
+
++    invoke-static {v14}, Lqz;->setIdentityEncoding(Ljava/net/HttpURLConnection;)V
++
+     const-wide v18, 0x5c18fe7fd5d38297L    # 4.5416768649116196E135
+
+     invoke-static/range {v18 .. v19}, Lpj;->p(J)Ljava/lang/String;
+@@ -543,7 +557,9 @@
+     move-result-object v6
+
+     check-cast v6, Ljava/net/HttpURLConnection;
++
++    invoke-static {v6}, Lqz;->setIdentityEncoding(Ljava/net/HttpURLConnection;)V
+
+     iput-object v6, v1, Lqz;->e:Ljava/net/HttpURLConnection;
+
+     iget-boolean v7, v1, Lqz;->l:Z
