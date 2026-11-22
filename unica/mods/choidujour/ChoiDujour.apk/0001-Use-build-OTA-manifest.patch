@@ -2,7 +2,7 @@ Subject: [PATCH] Use build OTA manifest for manual and scheduled checks
 
 --- a/smali/pj.smali
 +++ b/smali/pj.smali
-@@ -9237,6 +9237,29 @@
+@@ -4958,6 +4958,29 @@
  .method public static p(J)Ljava/lang/String;
      .locals 11
  
@@ -29,6 +29,6 @@ Subject: [PATCH] Use build OTA manifest for manual and scheduled checks
 +
 +    :unica_original_string
 +
-     .line 1
      sget-object v0, Lpj;->n:[Ljava/lang/String;
  
+     if-nez v0, :cond_0
