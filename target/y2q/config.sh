@@ -4,7 +4,7 @@
 # Device configuration file for Galaxy S20+ 5G (Snapdragon) (y2q)
 TARGET_NAME="Galaxy S20+ (Snapdragon)"
 TARGET_CODENAME="y2q"
-TARGET_ASSERT_MODEL=("SM-G986N")
+TARGET_ASSERT_MODEL=("SM-G986N" "SM-G9860" "SCG02" "SC-52A")
 TARGET_PLATFORM="sm8250"
 TARGET_FIRMWARE="SM-G986N/KOO/354203111234565"
 TARGET_EXTRA_FIRMWARES=()
@@ -86,5 +86,5 @@ TARGET_WLAN_SUPPORT_SWITCH_FOR_INDIVIDUAL_APPS="true"
 TARGET_WLAN_SUPPORT_TWT_CONTROL="false"
 TARGET_WLAN_SUPPORT_WIFI_TO_CELLULAR="true"
 
-# Optional overseas S20 variants; Korean-only remains the default.
+# Korean, Hong Kong/China/Taiwan and Japanese S20 variants (MinsOS 2d3b909a).
 source "$SRC_DIR/platform/sm8250/overseas/config.sh" || return 1
