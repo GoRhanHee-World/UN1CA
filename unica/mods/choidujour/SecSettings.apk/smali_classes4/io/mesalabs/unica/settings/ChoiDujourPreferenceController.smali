@@ -92,37 +92,36 @@
 .end method
 
 .method public getSummary()Ljava/lang/CharSequence;
-    .locals 3
+    .locals 4
 
-    new-instance v0, Ljava/util/ArrayList;
+    iget-object v0, p0, Lcom/android/settingslib/core/AbstractPreferenceController;->mContext:Landroid/content/Context;
 
-    invoke-direct {v0}, Ljava/util/ArrayList;-><init>()V
-
-    iget-object v1, p0, Lcom/android/settingslib/core/AbstractPreferenceController;->mContext:Landroid/content/Context;
-
-    const v2, 0x7f142505
-
-    invoke-virtual {v1, v2}, Landroid/content/Context;->getString(I)Ljava/lang/String;
+    invoke-virtual {v0}, Landroid/content/Context;->getResources()Landroid/content/res/Resources;
 
     move-result-object v1
 
-    invoke-virtual {v0, v1}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
+    const-string v2, "sec_download_and_install"
 
-    invoke-virtual {v0}, Ljava/util/ArrayList;->size()I
+    const-string v3, "string"
+
+    const-string p0, "com.android.settings"
+
+    invoke-virtual {v1, v2, v3, p0}, Landroid/content/res/Resources;->getIdentifier(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I
 
     move-result v1
 
-    iget-object p0, p0, Lcom/android/settingslib/core/AbstractPreferenceController;->mContext:Landroid/content/Context;
+    if-eqz v1, :empty
 
-    invoke-static {p0}, Lcom/android/settings/Utils;->getTopLevelSummarySeparator(Landroid/content/Context;)Ljava/lang/String;
+    invoke-virtual {v0, v1}, Landroid/content/Context;->getString(I)Ljava/lang/String;
 
-    move-result-object p0
+    move-result-object v0
 
-    invoke-static {p0, v0, v1}, Lcom/android/settings/Utils;->buildSummaryString(Ljava/lang/String;Ljava/util/List;I)Ljava/lang/String;
+    return-object v0
 
-    move-result-object p0
+    :empty
+    const-string v0, ""
 
-    return-object p0
+    return-object v0
 .end method
 
 .method public bridge synthetic getValue()Lcom/samsung/android/settings/cube/ControlValue;

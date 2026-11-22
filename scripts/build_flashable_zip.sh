@@ -81,7 +81,7 @@ PREPARE_SCRIPT()
             OUTPUT_FILE+="-INCREMENTAL_"
             OUTPUT_FILE+="$(grep "^timestamp" <<< "$SOURCE_BUILD_INFO" | cut -d "=" -f 2 -s)"
         fi
-        if ! $DEBUG || $ROM_IS_OFFICIAL; then
+        if ! $DEBUG || $ROM_IS_OFFICIAL || ${ROM_OTA_ENABLED:-false}; then
             OUTPUT_FILE+="-sign"
         fi
         OUTPUT_FILE+=".zip"

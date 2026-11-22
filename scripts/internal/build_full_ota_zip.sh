@@ -9,7 +9,7 @@ TMP_DIR="$OUT_DIR/target/$TARGET_CODENAME/zip"
 
 PRIVATE_KEY_PATH="$SRC_DIR/security/"
 PUBLIC_KEY_PATH="$SRC_DIR/security/"
-if $ROM_IS_OFFICIAL; then
+if ${ROM_OTA_ENABLED:-false} || $ROM_IS_OFFICIAL; then
     PRIVATE_KEY_PATH+="unica_ota"
     PUBLIC_KEY_PATH+="unica_ota"
 else
@@ -18,6 +18,11 @@ else
 fi
 PRIVATE_KEY_PATH+=".pk8"
 PUBLIC_KEY_PATH+=".x509.pem"
+
+if [ ! -s "$PRIVATE_KEY_PATH" ] || [ ! -s "$PUBLIC_KEY_PATH" ]; then
+    LOGE "OTA signing key missing; run scripts/generate_ota_key.sh --help"
+    exit 1
+fi
 
 trap 'rm -rf "$TMP_DIR"' EXIT INT
 
@@ -301,7 +306,7 @@ EVAL "rm -f \"$TMP_DIR/rom.zip\"" || exit 1
 EVAL "cd \"$TMP_DIR\" && 7z a -tzip -mx=0 -mmt=$(nproc) $TMP_DIR/rom.zip -r *.patch.dat -ir!META-INF/com/android/* -i!*.new.dat.br" || exit 1
 EVAL "cd \"$TMP_DIR\" && 7z a -tzip -mx=3 -mmt=$(nproc) $TMP_DIR/rom.zip -r * -xr!META-INF/com/android/* -x!*.new.dat.br -x!*.patch.dat -x!rom.zip" || exit 1
 
-if ! $DEBUG || $ROM_IS_OFFICIAL; then
+if ! $DEBUG || $ROM_IS_OFFICIAL || ${ROM_OTA_ENABLED:-false}; then
     LOG "- Signing zip"
     EVAL "signapk -w \"$PUBLIC_KEY_PATH\" \"$PRIVATE_KEY_PATH\" \"$TMP_DIR/rom.zip\" \"$OUTPUT_FILE\"" || exit 1
     rm -f "$TMP_DIR/rom.zip"

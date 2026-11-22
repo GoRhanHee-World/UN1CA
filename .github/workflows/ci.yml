@@ -101,6 +101,7 @@ jobs:
             external
             scripts
             security
+            ota
             unica
             platform/sm8250
             target/${{ matrix.target }}
@@ -124,6 +125,17 @@ jobs:
           } >> "$GITHUB_ENV"
           sed -e "/Automatically/d" -e "s/\"//g" "$OUT_DIR/config.sh" >> "$GITHUB_ENV"
           echo "$TOOLS_DIR/bin" >> "$GITHUB_PATH"
+
+      - name: Restore OTA signing key
+        if: env.ROM_OTA_ENABLED == 'true'
+        env:
+          OTA_PK8: ${{ secrets.OTA_KEY_PK8 }}
+          OTA_PEM: ${{ secrets.OTA_KEY_PEM }}
+        run: |
+          test -n "$OTA_PK8" && test -n "$OTA_PEM" || { echo "OTA_KEY_PK8 and OTA_KEY_PEM secrets are required (scripts/generate_ota_key.sh --help)" >&2; exit 1; }
+          umask 077
+          printf '%s' "$OTA_PK8" | base64 --decode > security/unica_ota.pk8
+          printf '%s' "$OTA_PEM" | base64 --decode > security/unica_ota.x509.pem
 
       - name: Set up build environment
         run: |
