@@ -1,6 +1,6 @@
 KERNEL_BASE_TAG="boot-x1q-20261101-211838"
 KERNEL_TAG="x1q-20261118"
-KERNEL_ZIP="not-stock-20261118-ce177d72-x1q.zip"
+KERNEL_ZIP="not-ksu-20261118-ce177d72-x1q.zip"
 
 LOG_STEP_IN "- Repacking not_kernel ($KERNEL_TAG)"
 mkdir -p "$TMP_DIR" "$WORK_DIR/kernel"
