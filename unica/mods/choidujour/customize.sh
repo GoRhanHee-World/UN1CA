@@ -23,6 +23,16 @@ if [ -n "${ROM_OTA_URL:-}" ]; then
 fi
 APPLY_PATCH "system" "system/priv-app/ChoiDujour/ChoiDujour.apk" \
     "$MODPATH/ChoiDujour.apk/0002-Use-identity-encoding-for-download-size-checks.patch"
+APPLY_PATCH "system" "system/priv-app/ChoiDujour/ChoiDujour.apk" \
+    "$MODPATH/ChoiDujour.apk/0003-Prepare-package-before-recovery-reboot.patch"
+
+# uncrypt's realpath(userdata) needs getattr before it can create block.map.
+CHOIDUJOUR_SEPOLICY="$WORK_DIR/system/system/etc/selinux/plat_sepolicy.cil"
+[ -s "$CHOIDUJOUR_SEPOLICY" ] || { ABORT "Missing platform SELinux policy"; return 1; }
+if ! grep -qFx '(allow uncrypt userdata_block_device (blk_file (getattr)))' "$CHOIDUJOUR_SEPOLICY"; then
+    printf '\n(allow uncrypt userdata_block_device (blk_file (getattr)))\n' >> "$CHOIDUJOUR_SEPOLICY" || return 1
+fi
+unset CHOIDUJOUR_SEPOLICY
 
 LOG "- Patching /system/system/etc/security/otacerts.zip"
 EVAL "rm \"$WORK_DIR/system/system/etc/security/otacerts.zip\""

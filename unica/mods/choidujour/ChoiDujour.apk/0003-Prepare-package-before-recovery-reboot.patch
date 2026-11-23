@@ -1,0 +1,221 @@
+Subject: [PATCH] Prepare OTA packages before requesting recovery reboot
+
+--- a/smali/a81.smali
++++ b/smali/a81.smali
+@@ -290,7 +290,138 @@
+ .method public final c(Ljava/io/File;Ljava/lang/String;)V
+     .locals 3
+
++    invoke-static {}, Landroid/os/Looper;->myLooper()Landroid/os/Looper;
++
++    move-result-object v0
++
++    invoke-static {}, Landroid/os/Looper;->getMainLooper()Landroid/os/Looper;
++
++    move-result-object v1
++
++    if-eq v0, v1, :unica_background
++
++    invoke-virtual {p0, p1, p2}, La81;->installPreparedPackage(Ljava/io/File;Ljava/lang/String;)V
++
++    return-void
++
++    :unica_background
++    new-instance v0, LUnicaRecoveryInstallTask;
++
++    invoke-direct {v0, p0, p1, p2}, LUnicaRecoveryInstallTask;-><init>(La81;Ljava/io/File;Ljava/lang/String;)V
++
++    new-instance v1, Ljava/lang/Thread;
++
++    const-string v2, "UN1CA-install"
++
++    invoke-direct {v1, v0, v2}, Ljava/lang/Thread;-><init>(Ljava/lang/Runnable;Ljava/lang/String;)V
++
++    iput-object v1, p0, La81;->a:Ljava/lang/Thread;
++
++    sput-object p2, La81;->f:Ljava/lang/String;
++
++    const/4 v0, 0x0
++
++    iput-boolean v0, p0, La81;->b:Z
++
++    iget-object v0, p0, La81;->d:Lo81;
++
++    invoke-virtual {v0, p2}, Lo81;->b(Ljava/lang/String;)Lx71;
++
++    move-result-object v2
++
++    sget-object p1, Lb81;->n:Lb81;
++
++    iput-object p1, v2, Lx71;->j:Lb81;
++
++    invoke-virtual {v0, p2}, Lo81;->g(Ljava/lang/String;)V
++
++    invoke-virtual {v1}, Ljava/lang/Thread;->start()V
++
++    return-void
++.end method
++
++.method public final installPreparedPackage(Ljava/io/File;Ljava/lang/String;)V
++    .locals 4
++
+     :try_start_0
++    new-instance v0, Ljava/io/File;
++
++    const-string v1, "/cache/recovery/openrecoveryscript"
++
++    invoke-direct {v0, v1}, Ljava/io/File;-><init>(Ljava/lang/String;)V
++
++    invoke-virtual {v0}, Ljava/io/File;->delete()Z
++
++    new-instance v0, Ljava/io/File;
++
++    const-string v1, "/cache/recovery/block.map"
++
++    invoke-direct {v0, v1}, Ljava/io/File;-><init>(Ljava/lang/String;)V
++
++    invoke-virtual {v0}, Ljava/io/File;->exists()Z
++
++    move-result v1
++
++    if-eqz v1, :unica_process
++
++    invoke-virtual {v0}, Ljava/io/File;->delete()Z
++
++    move-result v0
++
++    if-nez v0, :unica_process
++
++    new-instance v0, Ljava/io/IOException;
++
++    const-string v1, "OTA preparation failed: cannot remove stale block.map"
++
++    invoke-direct {v0, v1}, Ljava/io/IOException;-><init>(Ljava/lang/String;)V
++
++    throw v0
++
++    :unica_process
++    iget-object v0, p0, La81;->c:Landroid/content/Context;
++
++    const/4 v1, 0x0
++
++    invoke-static {v0, p1, v1}, Landroid/os/RecoverySystem;->processPackage(Landroid/content/Context;Ljava/io/File;Landroid/os/RecoverySystem$ProgressListener;)V
++
++    invoke-virtual {p1}, Ljava/io/File;->getCanonicalPath()Ljava/lang/String;
++
++    move-result-object v0
++
++    const-string v1, "/data/"
++
++    invoke-virtual {v0, v1}, Ljava/lang/String;->startsWith(Ljava/lang/String;)Z
++
++    move-result v0
++
++    if-eqz v0, :unica_prepared
++
++    new-instance v0, Ljava/io/File;
++
++    const-string v1, "/cache/recovery/block.map"
++
++    invoke-direct {v0, v1}, Ljava/io/File;-><init>(Ljava/lang/String;)V
++
++    invoke-virtual {v0}, Ljava/io/File;->length()J
++
++    move-result-wide v0
++
++    const-wide/16 v2, 0x0
++
++    cmp-long v0, v0, v2
++
++    if-gtz v0, :unica_prepared
++
++    new-instance v0, Ljava/io/IOException;
++
++    const-string v1, "OTA preparation failed: missing or empty block.map"
++
++    invoke-direct {v0, v1}, Ljava/io/IOException;-><init>(Ljava/lang/String;)V
++
++    throw v0
++
++    :unica_prepared
+     invoke-virtual {p1}, Ljava/io/File;->getAbsolutePath()Ljava/lang/String;
+
+     move-result-object v0
+@@ -299,15 +430,26 @@
+
+     iget-object v0, p0, La81;->c:Landroid/content/Context;
+
+-    invoke-static {v0, p1}, Landroid/os/RecoverySystem;->installPackage(Landroid/content/Context;Ljava/io/File;)V
++    const/4 v1, 0x1
++
++    invoke-static {v0, p1, v1}, Landroid/os/RecoverySystem;->installPackage(Landroid/content/Context;Ljava/io/File;Z)V
+     :try_end_0
+     .catch Ljava/io/IOException; {:try_start_0 .. :try_end_0} :catch_0
++    .catch Ljava/lang/SecurityException; {:try_start_0 .. :try_end_0} :catch_0
+
+     return-void
+
+     :catch_0
+     move-exception p1
+
++    new-instance v0, Ljava/io/File;
++
++    const-string v1, "/cache/recovery/openrecoveryscript"
++
++    invoke-direct {v0, v1}, Ljava/io/File;-><init>(Ljava/lang/String;)V
++
++    invoke-virtual {v0}, Ljava/io/File;->delete()Z
++
+     const-wide v0, 0x5c18c5a7d5d38297L    # 4.5013289755227735E135
+
+     invoke-static {v0, v1}, Lpj;->p(J)Ljava/lang/String;
+--- /dev/null
++++ b/smali/UnicaRecoveryInstallTask.smali
+@@ -0,0 +1,47 @@
++.class public final LUnicaRecoveryInstallTask;
++.super Ljava/lang/Object;
++.implements Ljava/lang/Runnable;
++
++.field private final owner:La81;
++.field private final file:Ljava/io/File;
++.field private final id:Ljava/lang/String;
++
++.method public constructor <init>(La81;Ljava/io/File;Ljava/lang/String;)V
++    .locals 0
++    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
++    iput-object p1, p0, LUnicaRecoveryInstallTask;->owner:La81;
++    iput-object p2, p0, LUnicaRecoveryInstallTask;->file:Ljava/io/File;
++    iput-object p3, p0, LUnicaRecoveryInstallTask;->id:Ljava/lang/String;
++    return-void
++.end method
++
++.method public final run()V
++    .locals 3
++    :try_start
++    iget-object v0, p0, LUnicaRecoveryInstallTask;->owner:La81;
++    iget-object v1, p0, LUnicaRecoveryInstallTask;->file:Ljava/io/File;
++    iget-object v2, p0, LUnicaRecoveryInstallTask;->id:Ljava/lang/String;
++    invoke-virtual {v0, v1, v2}, La81;->installPreparedPackage(Ljava/io/File;Ljava/lang/String;)V
++    :try_end
++    .catchall {:try_start .. :try_end} :catchall
++    invoke-direct {p0}, LUnicaRecoveryInstallTask;->clear()V
++    return-void
++
++    :catchall
++    move-exception v0
++    invoke-direct {p0}, LUnicaRecoveryInstallTask;->clear()V
++    throw v0
++.end method
++
++.method private clear()V
++    .locals 2
++    iget-object v0, p0, LUnicaRecoveryInstallTask;->owner:La81;
++    const/4 v1, 0x0
++    iput-boolean v1, v0, La81;->b:Z
++    iput-object v1, v0, La81;->a:Ljava/lang/Thread;
++    sput-object v1, La81;->f:Ljava/lang/String;
++    iget-object v0, v0, La81;->d:Lo81;
++    iget-object v1, p0, LUnicaRecoveryInstallTask;->id:Ljava/lang/String;
++    invoke-virtual {v0, v1}, Lo81;->g(Ljava/lang/String;)V
++    return-void
++.end method
