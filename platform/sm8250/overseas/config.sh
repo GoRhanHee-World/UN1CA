@@ -1,7 +1,7 @@
 # shellcheck shell=bash
 # Sourced after each S20 target's standard configuration.
 # Released kernels carry verified overseas DTBO/NFC metadata. Keep an explicit
-# Korean-only opt-out; the generated model list also gates the vendor modules.
+# Korean-only opt-out. Installer model checks do not require overseas firmware.
 case "${SM8250_OVERSEAS:-1}" in
     0) TARGET_ASSERT_MODEL=("${TARGET_ASSERT_MODEL[0]}"); return 0 ;;
     1) ;;
@@ -15,19 +15,3 @@ case "$TARGET_CODENAME" in
     z3q) TARGET_ASSERT_MODEL=("SM-G988N" "SM-G9880" "SCG03") ;;
     *) echo "Overseas support is only defined for x1q, y2q and z3q" >&2; return 1 ;;
 esac
-
-# Keep the donor's dual-tray framework path for the mixed-model image. The
-# model-selected vendor service still publishes one slot on Korean/Japanese units.
-# shellcheck disable=SC2034
-TARGET_RIL_SIM_CONFIG_MULTISIM_TRAYCOUNT="2"
-
-# The module hashes pin the exact borrowed files. A different firmware revision
-# must be reverified rather than accepted silently. See README.md for versions.
-TARGET_EXTRA_FIRMWARES+=(
-    "SM-G9860/TGY/350999641234561"
-    "SCG02/KDI/350999641234561"
-    "SM-S9480/TGY/350999641234561"
-)
-if [ "$TARGET_CODENAME" = x1q ]; then
-    TARGET_EXTRA_FIRMWARES+=("SCG01/KDI/350999641234561")
-fi
