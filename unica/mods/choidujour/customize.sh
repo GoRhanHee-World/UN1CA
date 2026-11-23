@@ -25,6 +25,8 @@ APPLY_PATCH "system" "system/priv-app/ChoiDujour/ChoiDujour.apk" \
     "$MODPATH/ChoiDujour.apk/0002-Use-identity-encoding-for-download-size-checks.patch"
 APPLY_PATCH "system" "system/priv-app/ChoiDujour/ChoiDujour.apk" \
     "$MODPATH/ChoiDujour.apk/0003-Prepare-package-before-recovery-reboot.patch"
+APPLY_PATCH "system" "system/priv-app/ChoiDujour/ChoiDujour.apk" \
+    "$MODPATH/ChoiDujour.apk/0004-Handle-empty-OTA-lists.patch"
 
 # uncrypt's realpath(userdata) needs getattr before it can create block.map.
 CHOIDUJOUR_SEPOLICY="$WORK_DIR/system/system/etc/selinux/plat_sepolicy.cil"
