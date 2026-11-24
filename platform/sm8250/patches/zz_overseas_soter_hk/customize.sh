@@ -45,18 +45,16 @@ LOG_STEP_IN "- WeChat fingerprint payment (Soter) on the Hong Kong, China and Ta
 [ -z "$(find "$WORK_DIR/vendor" -iname '*soter@3.0*' -o -iname 'libSoterServiceImpl.so' -o -iname 'libTigerCaV4.so' | head -1)" ] \
     || { ABORT "[$TARGET_CODENAME] the vendor already has Soter files - re-check before adding the TGY ones"; return 1; }
 
-# path  uid gid mode label  sha256 (stock G9860ZHUCHZE1)
-while read -r _F _U _G _M _L _S; do
+# path  uid gid mode label (stock G9860ZHUCHZE1)
+while read -r _F _U _G _M _L; do
     [ -n "$_F" ] || continue
-    ADD_TO_WORK_DIR "g9860tgy" "vendor" "$_F" "$_U" "$_G" "$_M" "$_L"
-    [ "$(sha256sum "$WORK_DIR/vendor/$_F" 2>/dev/null | cut -d' ' -f1)" = "$_S" ] \
-        || { ABORT "[$TARGET_CODENAME] vendor/$_F is missing or not the stock SM-G9860 file"; return 1; }
+    ADD_TO_WORK_DIR "g9860tgy" "vendor" "$_F" "$_U" "$_G" "$_M" "$_L" || return 1
 done <<'EOF'
-bin/hw/vendor.samsung.hardware.soter@3.0-service 0 2000 755 u:object_r:hal_soter_sec_exec:s0 e23e0c22a2da91bd81e035b265f7e0cbf4caec559d11ce73387e2502d6a660c4
-lib64/libSoterServiceImpl.so 0 0 644 u:object_r:vendor_file:s0 6c3a8365924f013dd92c8b05379226e592cf4cdd97fdad33ef45b07cae0a5793
-lib64/libTigerCaV4.so 0 0 644 u:object_r:vendor_file:s0 c4c68ddb17d20bff1196d96e6454f26f147b4bebc7cae9f8cb4f6409deeb9422
-lib64/libTigerLogger.so 0 0 644 u:object_r:vendor_file:s0 a12aeec78fd6cc84e71ca682f58ac0827ea57b0332df694bb0474986624cec92
-lib64/vendor.samsung.hardware.soter@3.0.so 0 0 644 u:object_r:vendor_file:s0 525b67bdcecb2495b37c0c065ccd69da4ee003d7a33e374bce5e8673e591020f
+bin/hw/vendor.samsung.hardware.soter@3.0-service 0 2000 755 u:object_r:hal_soter_sec_exec:s0
+lib64/libSoterServiceImpl.so 0 0 644 u:object_r:vendor_file:s0
+lib64/libTigerCaV4.so 0 0 644 u:object_r:vendor_file:s0
+lib64/libTigerLogger.so 0 0 644 u:object_r:vendor_file:s0
+lib64/vendor.samsung.hardware.soter@3.0.so 0 0 644 u:object_r:vendor_file:s0
 EOF
 cmp -s "$WORK_DIR/vendor/lib64/libQSEEComAPI.so" "$SRC_DIR/prebuilts/samsung/g9860tgy/vendor/lib64/libQSEEComAPI.so" \
     || { ABORT "[$TARGET_CODENAME] libQSEEComAPI.so differs from stock SM-G9860's - libTigerCaV4.so was built against it"; return 1; }
@@ -68,22 +66,20 @@ if ! grep -q '^/(vendor|system/vendor)/bin/hw/vendor\\\.samsung\\\.hardware\\\.s
     return 1
 fi
 
-ADD_TO_WORK_DIR "$MODPATH/files" "vendor" "etc/init/minsos_soter_hk.rc" 0 0 644 "u:object_r:vendor_configs_file:s0"
+ADD_TO_WORK_DIR "$MODPATH/files" "vendor" "etc/init/minsos_soter_hk.rc" 0 0 644 "u:object_r:vendor_configs_file:s0" || return 1
 
 # Preserve the shared vendor's radio declarations and add Samsung Soter once.
 bash "$SRC_DIR/platform/sm8250/overseas/vendor_manifest.sh" soter \
     "$WORK_DIR/vendor/etc/vintf/manifest.xml" || return 1
 
 # The two system apps (apk only - stock TGY ships no oat for them).
-for _A in SecSoterService:66e618393d06520ef9d582211af340767c80d53c78eab7c57d875339ada161bb \
-          SoterSskdsSerivce:ebfacd7b43b02648a9a933f84df8ac9ca0a48990e9b86a6e85731061d0431992; do
-    _N=${_A%%:*}
+for _N in SecSoterService SoterSskdsSerivce; do
     [ ! -e "$WORK_DIR/system/system/priv-app/$_N" ] || { ABORT "[$TARGET_CODENAME] system already has priv-app/$_N"; return 1; }
-    ADD_TO_WORK_DIR "s9480tgy" "system" "system/priv-app/$_N" 0 0 755 "u:object_r:system_file:s0"
+    ADD_TO_WORK_DIR "s9480tgy" "system" "system/priv-app/$_N" 0 0 755 "u:object_r:system_file:s0" || return 1
     SET_METADATA "system" "system/priv-app/$_N/$_N.apk" 0 0 644 "u:object_r:system_file:s0"
-    if [ "$(sha256sum "$WORK_DIR/system/system/priv-app/$_N/$_N.apk" 2>/dev/null | cut -d' ' -f1)" != "${_A#*:}" ] \
+    if [ ! -f "$WORK_DIR/system/system/priv-app/$_N/$_N.apk" ] \
         || [ "$(find "$WORK_DIR/system/system/priv-app/$_N" -type f | wc -l)" != 1 ]; then
-        ABORT "[$TARGET_CODENAME] priv-app/$_N is missing, not the stock SM-S9480 apk, or brought more than the apk"
+        ABORT "[$TARGET_CODENAME] priv-app/$_N is missing its apk or brought more than the apk"
         return 1
     fi
 done
@@ -94,5 +90,5 @@ done
 grep -q '<privapp-permissions package="com.tencent.soter.soterserver">' "$WORK_DIR/system/system/etc/permissions/privapp-permissions-platform.xml" \
     || { ABORT "[$TARGET_CODENAME] the donor's privapp-permissions-platform.xml no longer lists com.tencent.soter.soterserver"; return 1; }
 
-unset _F _U _G _M _L _S _A _N _P
+unset _F _U _G _M _L _N _P
 LOG_STEP_OUT

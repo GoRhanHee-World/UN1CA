@@ -97,7 +97,7 @@ LOG "- Latest available firmware: $LATEST_FIRMWARE"
 if [ -f "$SRC_DIR/prebuilts/samsung/$DEVICE/files.list" ]; then
     RECIPE_HASH="$(
         cd "$SRC_DIR/prebuilts/samsung/$DEVICE" || exit 1
-        for recipe in files.list required-sdk expected-sha256; do
+        for recipe in files.list required-sdk; do
             [ ! -f "$recipe" ] || sha256sum "$recipe"
         done | sha256sum | cut -d ' ' -f 1
     )"

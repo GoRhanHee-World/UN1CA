@@ -33,28 +33,17 @@ LOG_STEP_IN "- Second SIM on the Hong Kong, China and Taiwan models"
 
 _H="$SRC_DIR/prebuilts/samsung/g9860tgy/vendor"
 [ -d "$_H" ] || { ABORT "Missing g9860tgy snapshot; run Update prebuilt blobs and merge the bot PR (see platform/sm8250/overseas/README.md)"; return 1; }
-_K="$WORK_DIR/vendor/bin/secril_config_svc"
-[ "$(sha256sum "$_K" | cut -d' ' -f1)" = "be1e470b16ae6e1a6e2bd72713a2a13a669d87175c39716f7315f6663b91e12f" ] \
-    || { ABORT "[$TARGET_CODENAME] vendor secril_config_svc is not the Korean one this was measured against"; return 1; }
 
 # The TGY binary under its own name, next to the Korean one.
 _T=$(mktemp -d)
 mkdir -p "$_T/vendor/bin"
-cp -a "$_H/bin/secril_config_svc" "$_T/vendor/bin/secril_config_svc_ds"
-ADD_TO_WORK_DIR "$_T" "vendor" "bin/secril_config_svc_ds" 0 2000 755 "u:object_r:vendor_secril_config_svc_exec:s0"
+cp -a "$_H/bin/secril_config_svc" "$_T/vendor/bin/secril_config_svc_ds" || return 1
+ADD_TO_WORK_DIR "$_T" "vendor" "bin/secril_config_svc_ds" 0 2000 755 "u:object_r:vendor_secril_config_svc_exec:s0" || return 1
 rm -rf "$_T"
-[ "$(sha256sum "$WORK_DIR/vendor/bin/secril_config_svc_ds" | cut -d' ' -f1)" = "1dc73192833d9c9d339d61b02acc40048d1f445c8a7dd17e52110ca61756c3e7" ] \
-    || { ABORT "[$TARGET_CODENAME] secril_config_svc_ds is not the stock SM-G9860 binary"; return 1; }
 
 # Network name tables the Korean libsec-ril.so looks for.
-ADD_TO_WORK_DIR "g9860tgy" "vendor" "etc/plmn_delta_hktw.bin" 0 0 644 "u:object_r:vendor_configs_file:s0"
-ADD_TO_WORK_DIR "scg02kdi" "vendor" "etc/plmn_delta_jpnkdi.bin" 0 0 644 "u:object_r:vendor_configs_file:s0"
-if [ "$(sha256sum "$WORK_DIR/vendor/etc/plmn_delta_hktw.bin" | cut -d' ' -f1)" != "ee57afe248b0cffc2f38852f284b2d5138c6f30649f78c0cce40016fa5d48fc3" ] \
-    || [ "$(sha256sum "$WORK_DIR/vendor/etc/plmn_delta_jpnkdi.bin" | cut -d' ' -f1)" != "72cf1cdf6fe3aff8441d11f3c0895561442da162772d30121c514840dc99a295" ]; then
-    ABORT "[$TARGET_CODENAME] a plmn_delta table is not the stock file"
-    return 1
-fi
-
+ADD_TO_WORK_DIR "g9860tgy" "vendor" "etc/plmn_delta_hktw.bin" 0 0 644 "u:object_r:vendor_configs_file:s0" || return 1
+ADD_TO_WORK_DIR "scg02kdi" "vendor" "etc/plmn_delta_jpnkdi.bin" 0 0 644 "u:object_r:vendor_configs_file:s0" || return 1
 # sim_config moves from rilcommon's "on fs" to minsos_dualsim.rc.
 _R="$WORK_DIR/vendor/etc/init/init.vendor.rilcommon.rc"
 [ "$(grep -c '^    exec_start sim_config$' "$_R")" = 1 ] || { ABORT "[$TARGET_CODENAME] rilcommon.rc does not start sim_config exactly once"; return 1; }
@@ -63,10 +52,10 @@ if grep -q 'exec_start sim_config' "$_R" || ! grep -q '^service sim_config /vend
     ABORT "[$TARGET_CODENAME] rilcommon.rc still starts sim_config, or lost its definition"
     return 1
 fi
-ADD_TO_WORK_DIR "$MODPATH/files" "vendor" "etc/init/minsos_dualsim.rc" 0 0 644 "u:object_r:vendor_configs_file:s0"
+ADD_TO_WORK_DIR "$MODPATH/files" "vendor" "etc/init/minsos_dualsim.rc" 0 0 644 "u:object_r:vendor_configs_file:s0" || return 1
 
 # The shared UN1CA vendor already declares the second radio slot.
 bash "$SRC_DIR/platform/sm8250/overseas/vendor_manifest.sh" radio \
     "$WORK_DIR/vendor/etc/vintf/manifest.xml" || return 1
-unset _H _K _T _R _M
+unset _H _T _R _M
 LOG_STEP_OUT

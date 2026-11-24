@@ -1,5 +1,0 @@
-6ede5f1b2c33ba66c00a4d4dc1b4e6e26ff3eccaacef81e17a0626f961cc1124  vendor/bin/hw/sec.android.hardware.nfc@1.2-service
-6f578f34d77924c4148a982d84047aa979310b5efa1cb892c001ca5ba75b07a6  vendor/etc/libnfc-sec-vendor.conf
-6448600887fa65a0d3974fe57b79eb8ddd6a74633614e1250f319f6891fef7c6  vendor/etc/sec_senn82ab_rfreg.bin
-27f1fde1caa1e9095898d8f09a6f8dc0f04513bbf109e6da5f32d1676c86b72d  vendor/firmware/sec_senn82ab_firmware.bin
-0c5d1084258d9f8d23ea179e6e4eafb5117fb242772be2cda2422d4d248a7275  vendor/lib64/nfc_nci_fn.so

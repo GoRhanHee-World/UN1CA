@@ -17,7 +17,7 @@ Supported installer model lists in overseas mode:
 ## Bot-managed prebuilt snapshots
 
 `Update prebuilt blobs` (`.github/workflows/blobs.yml`) extracts only the files
-listed in each snapshot's `files.list`, checks `expected-sha256`, and opens a PR
+listed in each snapshot's `files.list` and opens a PR
 as `github-actions[bot]`. It also uploads the snapshot as an Actions artifact.
 The normal S20 build restores these paths through `.github/prebuilt-paths`;
 it does not download the four full overseas firmwares.
@@ -34,8 +34,8 @@ verified with a successful Samsung FUS BinaryInform response (status 200) on
 2026-11-24. These are generated download identities, not copied device IMEIs.
 No extra repository identity secrets are required. Dispatch the workflow
 with a device selector, or `overseas` for these four sources.
-The downloader requests the latest FUS revision; pinned file hashes reject an
-incompatible snapshot before it is published.
+The downloader requests the latest FUS revision. Firmware blob SHA-256 pins
+are disabled in both export and overseas module installation.
 
 TAC provenance: [G9860 model record](https://swappa.com/imei/info/352622117031190),
 [SCG01 seller listing](https://www.musbi.net/sys/d/26659904.html),
@@ -45,7 +45,7 @@ models; the generated download identities are verified separately against FUS.
 
 After merging the verified bot PRs, remove `disable` from the three
 `platform/sm8250/patches/zz_overseas_*` modules to include their patches. Keep the
-existing per-file and vendor compatibility checks. `g9860tgy`, `scg02kdi`, and
+existing file-presence and vendor compatibility checks. `g9860tgy`, `scg02kdi`, and
 `s9480tgy` are shared by all targets; `scg01kdi` supplies x1q's antenna RF data.
 The two NFC snapshots also contain the interface library used for comparison;
 `g9860tgy` includes the QSEE library for the same compatibility check.

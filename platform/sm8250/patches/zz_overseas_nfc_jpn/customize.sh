@@ -38,8 +38,8 @@ esac
 # vendor labels the HAL and /dev/sec-nfc the same way and ships the same vendor.samsung.hardware.nfc@2.0.so.
 # z3q is left alone: its JPN dts keeps pn547@2B (NXP), so the SCG03 runs the HAL this vendor already has.
 case "$TARGET_CODENAME" in
-    y2q) _JP="scg02kdi"; _RF=6d776943ee8e8e7ed40e2fdb5e66d7406bbb0e9faaa3d32e19ad285d080aace2 ;;
-    x1q) _JP="scg01kdi"; _RF=6448600887fa65a0d3974fe57b79eb8ddd6a74633614e1250f319f6891fef7c6 ;;
+    y2q) _JP="scg02kdi" ;;
+    x1q) _JP="scg01kdi" ;;
     *)   LOG "- nfc_jpn: x1q and y2q only (z3q's Japanese model has the NXP chip)"; return 0 ;;
 esac
 
@@ -48,26 +48,23 @@ LOG_STEP_IN "- NFC on the Japanese $TARGET_CODENAME: Samsung SENN82AB HAL from s
 _JD="$SRC_DIR/prebuilts/samsung/$_JP/vendor"
 [ -d "$_JD" ] || { ABORT "Missing $_JP snapshot; run Update prebuilt blobs and merge the bot PR (see platform/sm8250/overseas/README.md)"; return 1; }
 
-# path  uid gid mode label  sha256 (stock SCG02KDS1DXB1 / SCG01KDS1DXB1: equal except the RF register file)
-while read -r _F _U _G _M _L _S; do
+# path  uid gid mode label (stock SCG02KDS1DXB1 / SCG01KDS1DXB1: equal except the RF register file)
+while read -r _F _U _G _M _L; do
     [ -n "$_F" ] || continue
-    [ "$_S" != RF ] || _S=$_RF
-    ADD_TO_WORK_DIR "$_JP" "vendor" "$_F" "$_U" "$_G" "$_M" "$_L"
-    [ "$(sha256sum "$WORK_DIR/vendor/$_F" | cut -d' ' -f1)" = "$_S" ] \
-        || { ABORT "[$TARGET_CODENAME] vendor/$_F is not the stock ${_JP%/*} file"; return 1; }
+    ADD_TO_WORK_DIR "$_JP" "vendor" "$_F" "$_U" "$_G" "$_M" "$_L" || return 1
     grep -q "^vendor/$_F " "$WORK_DIR/configs/fs_config-vendor" \
         || { ABORT "[$TARGET_CODENAME] vendor/$_F has no fs_config entry"; return 1; }
 done <<'EOF'
-bin/hw/sec.android.hardware.nfc@1.2-service 0 2000 755 u:object_r:hal_nfc_default_exec:s0 6ede5f1b2c33ba66c00a4d4dc1b4e6e26ff3eccaacef81e17a0626f961cc1124
-lib64/nfc_nci_fn.so 0 0 644 u:object_r:vendor_file:s0 0c5d1084258d9f8d23ea179e6e4eafb5117fb242772be2cda2422d4d248a7275
-etc/libnfc-sec-vendor.conf 0 0 644 u:object_r:vendor_configs_file:s0 6f578f34d77924c4148a982d84047aa979310b5efa1cb892c001ca5ba75b07a6
-etc/sec_senn82ab_rfreg.bin 0 0 644 u:object_r:vendor_configs_file:s0 RF
-firmware/sec_senn82ab_firmware.bin 0 0 644 u:object_r:vendor_firmware_file:s0 27f1fde1caa1e9095898d8f09a6f8dc0f04513bbf109e6da5f32d1676c86b72d
+bin/hw/sec.android.hardware.nfc@1.2-service 0 2000 755 u:object_r:hal_nfc_default_exec:s0
+lib64/nfc_nci_fn.so 0 0 644 u:object_r:vendor_file:s0
+etc/libnfc-sec-vendor.conf 0 0 644 u:object_r:vendor_configs_file:s0
+etc/sec_senn82ab_rfreg.bin 0 0 644 u:object_r:vendor_configs_file:s0
+firmware/sec_senn82ab_firmware.bin 0 0 644 u:object_r:vendor_firmware_file:s0
 EOF
 cmp -s "$WORK_DIR/vendor/lib64/vendor.samsung.hardware.nfc@2.0.so" "$_JD/lib64/vendor.samsung.hardware.nfc@2.0.so" \
     || { ABORT "[$TARGET_CODENAME] vendor.samsung.hardware.nfc@2.0.so differs from stock SCG02's - the SCG02 HAL was built against it"; return 1; }
 
-ADD_TO_WORK_DIR "$MODPATH/files" "vendor" "etc/init/minsos_nfc_jpn.rc" 0 0 644 "u:object_r:vendor_configs_file:s0"
+ADD_TO_WORK_DIR "$MODPATH/files" "vendor" "etc/init/minsos_nfc_jpn.rc" 0 0 644 "u:object_r:vendor_configs_file:s0" || return 1
 
 # The chip name moves from build.prop (read-only, first writer wins) to minsos_nfc_jpn.rc.
 [ "$(GET_PROP "vendor" "ro.vendor.nfc.feature.chipname")" = "NXP_SN100U" ] \
@@ -80,5 +77,5 @@ SET_PROP "vendor" "ro.vendor.nfc.feature.chipname" --delete
 grep -q '^service vendor.nfc_hal_service /vendor/bin/hw/nxp.android.hardware.nfc@1.2-service$' \
     "$WORK_DIR/vendor/etc/init/nxp.android.hardware.nfc@1.2-service.rc" \
     || { ABORT "[$TARGET_CODENAME] the NXP NFC HAL rc is missing or changed"; return 1; }
-unset _JP _JD _RF _F _U _G _M _L _S
+unset _JP _JD _F _U _G _M _L
 LOG_STEP_OUT

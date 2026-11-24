@@ -143,9 +143,9 @@ jobs:
           compression-level: 0
 
       - name: Create Pull Request
-        continue-on-error: true
         uses: peter-evans/create-pull-request@v8
         with:
+          base: ${{ github.event.repository.default_branch }}
           add-paths: |
             prebuilts/samsung/${{ matrix.device }}
           commit-message: 'prebuilts/samsung/${{ matrix.device }}: update blobs to ${{ env.PDA_BUILD }}'
