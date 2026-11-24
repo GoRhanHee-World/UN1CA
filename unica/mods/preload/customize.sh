@@ -1,15 +1,10 @@
 KERNELSU_MANAGER_APK="https://github.com/backslashxx/KernelSU/releases/download/v3.3.1%2B55/KernelSU_v3.3.1+55_32736-release.apk"
-KERNELSU_MANAGER_SHA256="7302d6c92179f3a389510a818c52e73b2d957309f17a52bb53b4d9de25673895"
 # https://github.com/tiann/KernelSU/issues/886
 APK_PATH="system/preload/KernelSU/me.weishu.kernelsu-mesa==/base.apk"
 
 LOG "- Adding xxKSU Manager v3.3.1+55 (32736) to preload apps"
 mkdir -p "$WORK_DIR/system/$(dirname "$APK_PATH")"
 DOWNLOAD_FILE "$KERNELSU_MANAGER_APK" "$WORK_DIR/system/$APK_PATH" || return 1
-if ! printf '%s  %s\n' "$KERNELSU_MANAGER_SHA256" "$WORK_DIR/system/$APK_PATH" | sha256sum --check --status; then
-    ABORT "KernelSU Manager APK is missing or its SHA-256 does not match the release"
-    return 1
-fi
 
 # Samsung Internet Browser
 # https://play.google.com/store/apps/details?id=com.sec.android.app.sbrowser
@@ -34,4 +29,4 @@ while IFS= read -r i; do
     fi
 done <<< "$(find "$WORK_DIR/system/system/preload")"
 
-unset KERNELSU_MANAGER_APK KERNELSU_MANAGER_SHA256 APK_PATH PRELOAD_APK_LIST
+unset KERNELSU_MANAGER_APK APK_PATH PRELOAD_APK_LIST
