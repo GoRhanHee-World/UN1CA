@@ -1,0 +1,6 @@
+id=drm_requires_secure_decoder
+name=Legacy Widevine secure decoder capability fallback
+version=v1
+versionCode=1
+author=MinsOS, GoRhanHee
+description=Answer requiresSecureDecoder for video on L1 HIDL 1.3 Widevine instead of reporting false when the 1.4 interface is unavailable.
