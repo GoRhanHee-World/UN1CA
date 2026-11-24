@@ -1,0 +1,9 @@
+# S20 overseas compatibility inputs; populated by Update prebuilt blobs.
+vendor/bin/hw/vendor.samsung.hardware.soter@3.0-service
+vendor/bin/secril_config_svc
+vendor/etc/plmn_delta_hktw.bin
+vendor/lib64/libQSEEComAPI.so
+vendor/lib64/libSoterServiceImpl.so
+vendor/lib64/libTigerCaV4.so
+vendor/lib64/libTigerLogger.so
+vendor/lib64/vendor.samsung.hardware.soter@3.0.so

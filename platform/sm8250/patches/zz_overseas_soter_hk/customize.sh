@@ -39,16 +39,16 @@ esac
 
 LOG_STEP_IN "- WeChat fingerprint payment (Soter) on the Hong Kong, China and Taiwan models"
 
-[ -d "$FW_DIR/SM-G9860_TGY/vendor" ] || { ABORT "[$TARGET_CODENAME] stock SM-G9860 TGY is not extracted at $FW_DIR/SM-G9860_TGY (see platform/sm8250/overseas/README.md)"; return 1; }
-[ -d "$FW_DIR/SM-S9480_TGY/system/system/priv-app" ] \
-    || { ABORT "[$TARGET_CODENAME] stock SM-S9480 TGY is not extracted at $FW_DIR/SM-S9480_TGY (see platform/sm8250/overseas/README.md)"; return 1; }
+[ -d "$SRC_DIR/prebuilts/samsung/g9860tgy/vendor" ] || { ABORT "Missing g9860tgy snapshot; run Update prebuilt blobs and merge the bot PR (see platform/sm8250/overseas/README.md)"; return 1; }
+[ -d "$SRC_DIR/prebuilts/samsung/s9480tgy/system/priv-app" ] \
+    || { ABORT "Missing s9480tgy snapshot; run Update prebuilt blobs and merge the bot PR (see platform/sm8250/overseas/README.md)"; return 1; }
 [ -z "$(find "$WORK_DIR/vendor" -iname '*soter@3.0*' -o -iname 'libSoterServiceImpl.so' -o -iname 'libTigerCaV4.so' | head -1)" ] \
     || { ABORT "[$TARGET_CODENAME] the vendor already has Soter files - re-check before adding the TGY ones"; return 1; }
 
 # path  uid gid mode label  sha256 (stock G9860ZHUCHZE1)
 while read -r _F _U _G _M _L _S; do
     [ -n "$_F" ] || continue
-    ADD_TO_WORK_DIR "SM-G9860/TGY" "vendor" "$_F" "$_U" "$_G" "$_M" "$_L"
+    ADD_TO_WORK_DIR "g9860tgy" "vendor" "$_F" "$_U" "$_G" "$_M" "$_L"
     [ "$(sha256sum "$WORK_DIR/vendor/$_F" 2>/dev/null | cut -d' ' -f1)" = "$_S" ] \
         || { ABORT "[$TARGET_CODENAME] vendor/$_F is missing or not the stock SM-G9860 file"; return 1; }
 done <<'EOF'
@@ -58,7 +58,7 @@ lib64/libTigerCaV4.so 0 0 644 u:object_r:vendor_file:s0 c4c68ddb17d20bff1196d96e
 lib64/libTigerLogger.so 0 0 644 u:object_r:vendor_file:s0 a12aeec78fd6cc84e71ca682f58ac0827ea57b0332df694bb0474986624cec92
 lib64/vendor.samsung.hardware.soter@3.0.so 0 0 644 u:object_r:vendor_file:s0 525b67bdcecb2495b37c0c065ccd69da4ee003d7a33e374bce5e8673e591020f
 EOF
-cmp -s "$WORK_DIR/vendor/lib64/libQSEEComAPI.so" "$FW_DIR/SM-G9860_TGY/vendor/lib64/libQSEEComAPI.so" \
+cmp -s "$WORK_DIR/vendor/lib64/libQSEEComAPI.so" "$SRC_DIR/prebuilts/samsung/g9860tgy/vendor/lib64/libQSEEComAPI.so" \
     || { ABORT "[$TARGET_CODENAME] libQSEEComAPI.so differs from stock SM-G9860's - libTigerCaV4.so was built against it"; return 1; }
 if ! grep -q '^/(vendor|system/vendor)/bin/hw/vendor\\\.samsung\\\.hardware\\\.soter@3\\\.0-service *u:object_r:hal_soter_sec_exec:s0' \
     "$WORK_DIR/vendor/etc/selinux/vendor_file_contexts" \
@@ -79,7 +79,7 @@ for _A in SecSoterService:66e618393d06520ef9d582211af340767c80d53c78eab7c57d8753
           SoterSskdsSerivce:ebfacd7b43b02648a9a933f84df8ac9ca0a48990e9b86a6e85731061d0431992; do
     _N=${_A%%:*}
     [ ! -e "$WORK_DIR/system/system/priv-app/$_N" ] || { ABORT "[$TARGET_CODENAME] system already has priv-app/$_N"; return 1; }
-    ADD_TO_WORK_DIR "SM-S9480/TGY" "system" "system/priv-app/$_N" 0 0 755 "u:object_r:system_file:s0"
+    ADD_TO_WORK_DIR "s9480tgy" "system" "system/priv-app/$_N" 0 0 755 "u:object_r:system_file:s0"
     SET_METADATA "system" "system/priv-app/$_N/$_N.apk" 0 0 644 "u:object_r:system_file:s0"
     if [ "$(sha256sum "$WORK_DIR/system/system/priv-app/$_N/$_N.apk" 2>/dev/null | cut -d' ' -f1)" != "${_A#*:}" ] \
         || [ "$(find "$WORK_DIR/system/system/priv-app/$_N" -type f | wc -l)" != 1 ]; then

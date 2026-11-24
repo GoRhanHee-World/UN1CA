@@ -10,6 +10,7 @@ MODEL=""
 CSC=""
 IMEI=""
 LATEST_FIRMWARE=""
+RECIPE_HASH=""
 
 UPDATE_BLOBS()
 {
@@ -93,9 +94,18 @@ LOG_STEP_IN true "Starting update_prebuilt_blobs for prebuilts/samsung/$DEVICE"
 LOG "- Current firmware: $(cat "$SRC_DIR/prebuilts/samsung/$DEVICE/.current" 2> /dev/null)"
 LOG "- Latest available firmware: $LATEST_FIRMWARE"
 
+if [ -f "$SRC_DIR/prebuilts/samsung/$DEVICE/files.list" ]; then
+    RECIPE_HASH="$(
+        cd "$SRC_DIR/prebuilts/samsung/$DEVICE" || exit 1
+        for recipe in files.list required-sdk expected-sha256; do
+            [ ! -f "$recipe" ] || sha256sum "$recipe"
+        done | sha256sum | cut -d ' ' -f 1
+    )"
+fi
+
 if [[ "$LATEST_FIRMWARE" == "$(cat "$SRC_DIR/prebuilts/samsung/$DEVICE/.current" 2> /dev/null)" ]] && \
         { [ ! -f "$SRC_DIR/prebuilts/samsung/$DEVICE/files.list" ] || \
-          [[ "$(sha256sum "$SRC_DIR/prebuilts/samsung/$DEVICE/files.list" | cut -d ' ' -f 1)" == "$(cat "$SRC_DIR/prebuilts/samsung/$DEVICE/.manifest.sha256" 2> /dev/null)" ]]; }; then
+          [[ "$RECIPE_HASH" == "$(cat "$SRC_DIR/prebuilts/samsung/$DEVICE/.manifest.sha256" 2> /dev/null)" ]]; }; then
     LOG_STEP_IN
     LOG "\033[0;33m! Nothing to do\033[0m"
     exit 0

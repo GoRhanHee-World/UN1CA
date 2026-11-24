@@ -1,8 +1,10 @@
 # Experimental overseas S20 support
 
-This port keeps the default Korean-only builds and their existing kernel pins.
-Overseas mode is explicit because the old released kernel ZIPs lack Japanese NFC
-support and the full overseas DTBO set. No overseas hardware has been tested.
+The released S20 kernels carry overseas DTBO/NFC metadata. Overseas installer
+models are enabled by default; export `SM8250_OVERSEAS=0` before sourcing
+`buildenv.sh` for Korean-only model assertions. No overseas hardware has been
+tested. The three `zz_overseas_*` modules remain disabled until their verified
+prebuilt snapshots have been imported.
 
 Supported installer model lists in overseas mode:
 
@@ -12,36 +14,46 @@ Supported installer model lists in overseas mode:
 | y2q | SM-G986N, SM-G9860, SCG02, SC-52A |
 | z3q | SM-G988N, SM-G9880, SCG03 |
 
-## Configuration for a future build
+## Bot-managed prebuilt snapshots
 
-Before sourcing `buildenv.sh`, export `SM8250_OVERSEAS=1` and set
-`SM8250_OVERSEAS_KERNEL_ZIP` to the absolute path of a new kernel ZIP for the
-selected target. Use the companion changes in
-`GoRhanHee-World/android_samsung_kernel_sm8250` on `staging` when preparing that
-kernel (companion source commit `bb37d5afa3e0`). The ZIP must contain
-`s20-overseas.json` and the matching Image, DTB and
-DTBO hashes; the ROM checks all three. The new kernel packaging keeps Korean
-board IDs first, adds Japanese and Chinese IDs without duplicates, and verifies
-the Samsung/NXP NFC selection code on x1q/y2q. The z3q NFC remains NXP.
+`Update prebuilt blobs` (`.github/workflows/blobs.yml`) extracts only the files
+listed in each snapshot's `files.list`, checks `expected-sha256`, and opens a PR
+as `github-actions[bot]`. It also uploads the snapshot as an Actions artifact.
+The normal S20 build restores these paths through `.github/prebuilt-paths`;
+it does not download the four full overseas firmwares.
 
-The model list persists this choice in the generated config, so overseas modules
-cannot accidentally run just because an unrelated environment variable is set.
-The target configuration also declares the extra firmware inputs for normal
-UN1CA download/extraction. The exact files below are hash-pinned by the upstream
-modules; newer revisions are rejected if their files differ. Previously supplied
-exact firmware extracts can be placed in the corresponding `out/fw` directories.
+| Device selector | Source | Measured revision | Model TAC |
+| --- | --- | --- | --- |
+| `g9860tgy` | SM-G9860/TGY | G9860ZHUCHZE1 | `35262211` |
+| `scg01kdi` | SCG01/KDI | SCG01KDS1DXB1 | `35333011` |
+| `scg02kdi` | SCG02/KDI | SCG02KDS1DXB1 | `35469611` |
+| `s9480tgy` | SM-S9480/TGY | S9480ZHS4BZIG | `35075479` |
 
-| Firmware extract | Upstream version | Used by |
-| --- | --- | --- |
-| SM-G9860_TGY | G9860ZHUCHZE1 | Dual-SIM configuration, regional PLMN, Soter HAL/libraries |
-| SCG02_KDI | SCG02KDS1DXB1 | Japanese PLMN and S20+ NFC |
-| SCG01_KDI | SCG01KDS1DXB1 | S20 NFC and antenna-specific RF data; x1q only |
-| SM-S9480_TGY | S9480ZHS4BZIG | SecSoterService and SoterSskdsSerivce |
+The manifest passes the model's eight-digit TAC directly to samloader, which
+supports generating and checking download IMEIs from a TAC. No extra repository
+identity secrets or individual device IMEIs are required. Dispatch the workflow
+with a device selector, or `overseas` for these four sources.
+The downloader requests the latest FUS revision; pinned file hashes reject an
+incompatible snapshot before it is published.
 
-The firmware inputs are not included as blobs in this cherry-pick. Neither ROM
-nor kernel has been built as part of this port. A future overseas build requires
-these exact inputs and a newly prepared matching kernel, and fails if they are
-absent. Ordinary Korean-only builds do not acquire these dependencies.
+TAC provenance: [G9860 model record](https://swappa.com/imei/info/352622117031190),
+[SCG01 seller listing](https://www.musbi.net/sys/d/26659904.html),
+[SCG02 seller listing](https://item.rakuten.co.jp/amemoba/27630740/), and
+[SM-S9480 TAC record](https://fccid.io/TAC/35075479). Only the model-level TAC is
+stored in the firmware manifest.
+
+After merging the verified bot PRs, remove `disable` from the three
+`platform/sm8250/patches/zz_overseas_*` modules to include their patches. Keep the
+existing per-file and vendor compatibility checks. `g9860tgy`, `scg02kdi`, and
+`s9480tgy` are shared by all targets; `scg01kdi` supplies x1q's antenna RF data.
+The two NFC snapshots also contain the interface library used for comparison;
+`g9860tgy` includes the QSEE library for the same compatibility check.
+
+The configured release kernels are checked by `verify_kernel.sh`. To override a
+kernel, set `SM8250_OVERSEAS_KERNEL_ZIP` to an absolute path. Its
+`s20-overseas.json` must identify the selected target and match the Image, DTB,
+and DTBO hashes. Korean board IDs remain first; x1q/y2q require Samsung/NXP NFC
+selection, while z3q keeps NXP.
 
 ## Runtime behavior
 

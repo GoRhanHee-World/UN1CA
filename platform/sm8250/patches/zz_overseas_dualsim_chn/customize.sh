@@ -31,8 +31,8 @@ esac
 
 LOG_STEP_IN "- Second SIM on the Hong Kong, China and Taiwan models"
 
-_H="$FW_DIR/SM-G9860_TGY/vendor"
-[ -d "$_H" ] || { ABORT "[$TARGET_CODENAME] stock SM-G9860 TGY is not extracted at $_H (see platform/sm8250/overseas/README.md)"; return 1; }
+_H="$SRC_DIR/prebuilts/samsung/g9860tgy/vendor"
+[ -d "$_H" ] || { ABORT "Missing g9860tgy snapshot; run Update prebuilt blobs and merge the bot PR (see platform/sm8250/overseas/README.md)"; return 1; }
 _K="$WORK_DIR/vendor/bin/secril_config_svc"
 [ "$(sha256sum "$_K" | cut -d' ' -f1)" = "be1e470b16ae6e1a6e2bd72713a2a13a669d87175c39716f7315f6663b91e12f" ] \
     || { ABORT "[$TARGET_CODENAME] vendor secril_config_svc is not the Korean one this was measured against"; return 1; }
@@ -47,8 +47,8 @@ rm -rf "$_T"
     || { ABORT "[$TARGET_CODENAME] secril_config_svc_ds is not the stock SM-G9860 binary"; return 1; }
 
 # Network name tables the Korean libsec-ril.so looks for.
-ADD_TO_WORK_DIR "SM-G9860/TGY" "vendor" "etc/plmn_delta_hktw.bin" 0 0 644 "u:object_r:vendor_configs_file:s0"
-ADD_TO_WORK_DIR "SCG02/KDI" "vendor" "etc/plmn_delta_jpnkdi.bin" 0 0 644 "u:object_r:vendor_configs_file:s0"
+ADD_TO_WORK_DIR "g9860tgy" "vendor" "etc/plmn_delta_hktw.bin" 0 0 644 "u:object_r:vendor_configs_file:s0"
+ADD_TO_WORK_DIR "scg02kdi" "vendor" "etc/plmn_delta_jpnkdi.bin" 0 0 644 "u:object_r:vendor_configs_file:s0"
 if [ "$(sha256sum "$WORK_DIR/vendor/etc/plmn_delta_hktw.bin" | cut -d' ' -f1)" != "ee57afe248b0cffc2f38852f284b2d5138c6f30649f78c0cce40016fa5d48fc3" ] \
     || [ "$(sha256sum "$WORK_DIR/vendor/etc/plmn_delta_jpnkdi.bin" | cut -d' ' -f1)" != "72cf1cdf6fe3aff8441d11f3c0895561442da162772d30121c514840dc99a295" ]; then
     ABORT "[$TARGET_CODENAME] a plmn_delta table is not the stock file"

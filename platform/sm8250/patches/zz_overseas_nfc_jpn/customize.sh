@@ -38,15 +38,15 @@ esac
 # vendor labels the HAL and /dev/sec-nfc the same way and ships the same vendor.samsung.hardware.nfc@2.0.so.
 # z3q is left alone: its JPN dts keeps pn547@2B (NXP), so the SCG03 runs the HAL this vendor already has.
 case "$TARGET_CODENAME" in
-    y2q) _JP="SCG02/KDI"; _RF=6d776943ee8e8e7ed40e2fdb5e66d7406bbb0e9faaa3d32e19ad285d080aace2 ;;
-    x1q) _JP="SCG01/KDI"; _RF=6448600887fa65a0d3974fe57b79eb8ddd6a74633614e1250f319f6891fef7c6 ;;
+    y2q) _JP="scg02kdi"; _RF=6d776943ee8e8e7ed40e2fdb5e66d7406bbb0e9faaa3d32e19ad285d080aace2 ;;
+    x1q) _JP="scg01kdi"; _RF=6448600887fa65a0d3974fe57b79eb8ddd6a74633614e1250f319f6891fef7c6 ;;
     *)   LOG "- nfc_jpn: x1q and y2q only (z3q's Japanese model has the NXP chip)"; return 0 ;;
 esac
 
 LOG_STEP_IN "- NFC on the Japanese $TARGET_CODENAME: Samsung SENN82AB HAL from stock ${_JP%/*}"
 
-_JD="$FW_DIR/${_JP/\//_}/vendor"
-[ -d "$_JD" ] || { ABORT "[$TARGET_CODENAME] stock ${_JP%/*} is not extracted at $_JD (see platform/sm8250/overseas/README.md)"; return 1; }
+_JD="$SRC_DIR/prebuilts/samsung/$_JP/vendor"
+[ -d "$_JD" ] || { ABORT "Missing $_JP snapshot; run Update prebuilt blobs and merge the bot PR (see platform/sm8250/overseas/README.md)"; return 1; }
 
 # path  uid gid mode label  sha256 (stock SCG02KDS1DXB1 / SCG01KDS1DXB1: equal except the RF register file)
 while read -r _F _U _G _M _L _S; do

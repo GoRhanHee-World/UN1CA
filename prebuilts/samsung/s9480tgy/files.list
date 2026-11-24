@@ -1,0 +1,3 @@
+# S20 overseas compatibility inputs; populated by Update prebuilt blobs.
+system/priv-app/SecSoterService/SecSoterService.apk
+system/priv-app/SoterSskdsSerivce/SoterSskdsSerivce.apk
