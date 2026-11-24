@@ -46,7 +46,7 @@ esac
 LOG_STEP_IN "- NFC on the Japanese $TARGET_CODENAME: Samsung SENN82AB HAL from stock ${_JP%/*}"
 
 _JD="$SRC_DIR/prebuilts/samsung/$_JP/vendor"
-[ -d "$_JD" ] || { ABORT "Missing $_JP snapshot; run Update prebuilt blobs and merge the bot PR (see platform/sm8250/overseas/README.md)"; return 1; }
+[ -d "$_JD" ] || { ABORT "Missing $_JP snapshot; run Update prebuilt blobs and merge the bot PR"; return 1; }
 
 # path  uid gid mode label (stock SCG02KDS1DXB1 / SCG01KDS1DXB1: equal except the RF register file)
 while read -r _F _U _G _M _L; do

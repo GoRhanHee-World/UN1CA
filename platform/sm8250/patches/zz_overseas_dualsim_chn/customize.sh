@@ -32,7 +32,7 @@ esac
 LOG_STEP_IN "- Second SIM on the Hong Kong, China and Taiwan models"
 
 _H="$SRC_DIR/prebuilts/samsung/g9860tgy/vendor"
-[ -d "$_H" ] || { ABORT "Missing g9860tgy snapshot; run Update prebuilt blobs and merge the bot PR (see platform/sm8250/overseas/README.md)"; return 1; }
+[ -d "$_H" ] || { ABORT "Missing g9860tgy snapshot; run Update prebuilt blobs and merge the bot PR"; return 1; }
 
 # The TGY binary under its own name, next to the Korean one.
 _T=$(mktemp -d)

@@ -39,9 +39,9 @@ esac
 
 LOG_STEP_IN "- WeChat fingerprint payment (Soter) on the Hong Kong, China and Taiwan models"
 
-[ -d "$SRC_DIR/prebuilts/samsung/g9860tgy/vendor" ] || { ABORT "Missing g9860tgy snapshot; run Update prebuilt blobs and merge the bot PR (see platform/sm8250/overseas/README.md)"; return 1; }
+[ -d "$SRC_DIR/prebuilts/samsung/g9860tgy/vendor" ] || { ABORT "Missing g9860tgy snapshot; run Update prebuilt blobs and merge the bot PR"; return 1; }
 [ -d "$SRC_DIR/prebuilts/samsung/s9480tgy/system/priv-app" ] \
-    || { ABORT "Missing s9480tgy snapshot; run Update prebuilt blobs and merge the bot PR (see platform/sm8250/overseas/README.md)"; return 1; }
+    || { ABORT "Missing s9480tgy snapshot; run Update prebuilt blobs and merge the bot PR"; return 1; }
 [ -z "$(find "$WORK_DIR/vendor" -iname '*soter@3.0*' -o -iname 'libSoterServiceImpl.so' -o -iname 'libTigerCaV4.so' | head -1)" ] \
     || { ABORT "[$TARGET_CODENAME] the vendor already has Soter files - re-check before adding the TGY ones"; return 1; }
 
