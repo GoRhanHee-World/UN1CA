@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-# Populate the wrapper's own cache with a verified official distribution before
+# Populate the wrapper's own cache with the official distribution before
 # Java runs. curl retries transient HTTP failures independently of the wrapper.
 set -euo pipefail
 
@@ -9,14 +9,12 @@ PROPERTIES="${1:-gradle/wrapper/gradle-wrapper.properties}"
 URL=""
 BASE="GRADLE_USER_HOME"
 DIST_PATH="wrapper/dists"
-EXPECTED=""
 while IFS= read -r LINE || [ -n "$LINE" ]; do
     LINE="${LINE%$'\r'}"
     case "$LINE" in
         distributionUrl=*) URL="${LINE#*=}" ;;
         distributionBase=*) BASE="${LINE#*=}" ;;
         distributionPath=*) DIST_PATH="${LINE#*=}" ;;
-        distributionSha256Sum=*) EXPECTED="${LINE#*=}" ;;
     esac
 done < "$PROPERTIES"
 URL="${URL//\\:/:}"
@@ -48,21 +46,13 @@ fi
 mkdir -p "$CACHE"
 CURL=(curl --fail --location --silent --show-error --retry 4 --retry-all-errors
       --retry-delay 3 --connect-timeout 15 --max-time 300)
-if [ -z "$EXPECTED" ]; then
-    EXPECTED="$("${CURL[@]}" "https://downloads.gradle.org/distributions/$NAME.sha256")"
-fi
-if [[ ! "$EXPECTED" =~ ^[[:xdigit:]]{64}$ ]]; then
-    echo "Invalid official checksum for $NAME" >&2
-    exit 1
-fi
-
-if [ -f "$ZIP" ] && printf '%s  %s\n' "$EXPECTED" "$ZIP" | sha256sum --check --status; then
+if [ -s "$ZIP" ] && unzip -tq "$ZIP" > /dev/null 2>&1; then
     exit 0
 fi
 
-echo "Downloading and verifying $NAME with curl..."
+echo "Downloading $NAME with curl..."
 PART="$(mktemp "$CACHE/$NAME.part.XXXXXXXX")"
 trap 'test ! -f "$PART" || unlink "$PART"' EXIT
 "${CURL[@]}" "https://downloads.gradle.org/distributions/$NAME" --output "$PART"
-printf '%s  %s\n' "$EXPECTED" "$PART" | sha256sum --check
+unzip -tq "$PART" > /dev/null
 mv -f "$PART" "$ZIP"

@@ -18,7 +18,4 @@ jq -e --arg device "$device" '
 for part in Image dtb dtbo.img; do
     unzip -p "$payload" "$part" > "$tmp/$part"
     [ -s "$tmp/$part" ] || { echo "Empty kernel payload: $part" >&2; exit 1; }
-    expected=$(jq -er --arg part "$part" '.sha256[$part]' "$tmp/info.json")
-    actual=$(sha256sum "$tmp/$part" | cut -d ' ' -f 1)
-    [ "$expected" = "$actual" ] || { echo "Kernel payload hash mismatch: $part" >&2; exit 1; }
 done

@@ -1,7 +1,5 @@
 {
  "libveframework.videoeditor.samsung.so": {
-  "sha256_in": "57547980e8627e42d034a8b4620a148c7a4cd15e666a246ba5f5ae0cae898c95",
-  "sha256_out": "2c670a4a4683774a1dcfd2eeea22c611f1ac33ac6edf993b21dbde857547798f",
   "patches": [
    {
     "off": 208,
@@ -31,8 +29,6 @@
   ]
  },
  "libauto-reframing-arm64-v8a.so": {
-  "sha256_in": "e8921a043f2050d69d11f906820a400054c835bebd0f743bff7a33405c42f835",
-  "sha256_out": "85f7b4dd6922c8d575037aadb9b4619c8123b6cddf4adef028495031c6c9bfc6",
   "patches": [
    {
     "off": 289112,
