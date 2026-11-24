@@ -3,8 +3,8 @@
 The released S20 kernels carry overseas DTBO/NFC metadata. Overseas installer
 models are enabled by default; export `SM8250_OVERSEAS=0` before sourcing
 `buildenv.sh` for Korean-only model assertions. No overseas hardware has been
-tested. The three `zz_overseas_*` modules remain disabled until their verified
-prebuilt snapshots have been imported.
+tested. The three `zz_overseas_*` modules are enabled by default and use the
+imported prebuilt snapshots for dual SIM, Japanese NFC and Soter support.
 
 Supported installer model lists in overseas mode:
 
@@ -42,9 +42,9 @@ TAC provenance: [G9860 model record](https://swappa.com/imei/info/35262211703119
 [SM-S9480 TAC record](https://fccid.io/TAC/35499240). The TAC sources identify the
 models; the generated download identities are verified separately against FUS.
 
-After merging the verified bot PRs, remove `disable` from the three
-`platform/sm8250/patches/zz_overseas_*` modules to include their patches. Keep the
-existing file-presence and vendor compatibility checks. `g9860tgy`, `scg02kdi`, and
+The three `platform/sm8250/patches/zz_overseas_*` modules are active.
+`SM8250_OVERSEAS=0` skips their installation for a Korean-only build. File-presence
+and vendor compatibility checks remain in place. `g9860tgy`, `scg02kdi`, and
 `s9480tgy` are shared by all targets; `scg01kdi` supplies x1q's antenna RF data.
 The two NFC snapshots also contain the interface library used for comparison;
 `g9860tgy` includes the QSEE library for the same compatibility check.
