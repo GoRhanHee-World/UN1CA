@@ -57,25 +57,25 @@
   {
     "module": "Galaxy S20+ TGY (dual SIM / Soter)",
     "device": "g9860tgy",
-    "firmware": "SM-G9860/TGY/35262211",
+    "firmware": "SM-G9860/TGY/352622110760688",
     "group": "overseas"
   },
   {
     "module": "Galaxy S20 au (Japanese NFC)",
     "device": "scg01kdi",
-    "firmware": "SCG01/KDI/35333011",
+    "firmware": "SCG01/KDI/353330110912270",
     "group": "overseas"
   },
   {
     "module": "Galaxy S20+ au (Japanese NFC / PLMN)",
     "device": "scg02kdi",
-    "firmware": "SCG02/KDI/35469611",
+    "firmware": "SCG02/KDI/354696110490007",
     "group": "overseas"
   },
   {
     "module": "SM-S9480 TGY (S20 Soter apps)",
     "device": "s9480tgy",
-    "firmware": "SM-S9480/TGY/35075479",
+    "firmware": "SM-S9480/TGY/354992400538062",
     "group": "overseas"
   }
 ]

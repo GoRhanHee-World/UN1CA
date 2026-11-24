@@ -27,11 +27,12 @@ it does not download the four full overseas firmwares.
 | `g9860tgy` | SM-G9860/TGY | G9860ZHUCHZE1 | `35262211` |
 | `scg01kdi` | SCG01/KDI | SCG01KDS1DXB1 | `35333011` |
 | `scg02kdi` | SCG02/KDI | SCG02KDS1DXB1 | `35469611` |
-| `s9480tgy` | SM-S9480/TGY | S9480ZHS4BZIG | `35075479` |
+| `s9480tgy` | SM-S9480/TGY | S9480ZHS4BZIG | `35499240` |
 
-The manifest passes the model's eight-digit TAC directly to samloader, which
-supports generating and checking download IMEIs from a TAC. No extra repository
-identity secrets or individual device IMEIs are required. Dispatch the workflow
+The manifest uses download IMEIs generated from the model TACs above, each
+verified with a successful Samsung FUS BinaryInform response (status 200) on
+2026-11-24. These are generated download identities, not copied device IMEIs.
+No extra repository identity secrets are required. Dispatch the workflow
 with a device selector, or `overseas` for these four sources.
 The downloader requests the latest FUS revision; pinned file hashes reject an
 incompatible snapshot before it is published.
@@ -39,8 +40,8 @@ incompatible snapshot before it is published.
 TAC provenance: [G9860 model record](https://swappa.com/imei/info/352622117031190),
 [SCG01 seller listing](https://www.musbi.net/sys/d/26659904.html),
 [SCG02 seller listing](https://item.rakuten.co.jp/amemoba/27630740/), and
-[SM-S9480 TAC record](https://fccid.io/TAC/35075479). Only the model-level TAC is
-stored in the firmware manifest.
+[SM-S9480 TAC record](https://fccid.io/TAC/35499240). The TAC sources identify the
+models; the generated download identities are verified separately against FUS.
 
 After merging the verified bot PRs, remove `disable` from the three
 `platform/sm8250/patches/zz_overseas_*` modules to include their patches. Keep the
