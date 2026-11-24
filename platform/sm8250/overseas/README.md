@@ -34,8 +34,7 @@ verified with a successful Samsung FUS BinaryInform response (status 200) on
 2026-11-24. These are generated download identities, not copied device IMEIs.
 No extra repository identity secrets are required. Dispatch the workflow
 with a device selector, or `overseas` for these four sources.
-The downloader requests the latest FUS revision. Firmware blob SHA-256 pins
-are disabled in both export and overseas module installation.
+The downloader requests the latest FUS revision. The prebuilt exporter and overseas modules do not generate or check SHA files.
 
 TAC provenance: [G9860 model record](https://swappa.com/imei/info/352622117031190),
 [SCG01 seller listing](https://www.musbi.net/sys/d/26659904.html),

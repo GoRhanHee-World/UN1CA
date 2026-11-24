@@ -48,22 +48,12 @@ for partition in "${!partitions[@]}"; do
     cp "$firmware/file_context-$partition" "$staging/file_context-$partition"
 done
 cp "$firmware/.extracted" "$staging/.current"
-(
-    cd "$prebuilts"
-    for recipe in files.list required-sdk; do
-        [[ ! -f "$recipe" ]] || sha256sum "$recipe"
-    done | sha256sum | cut -d ' ' -f 1
-) > "$staging/.manifest.sha256"
 while IFS= read -r -d '' file; do
     if [[ "$(stat -c %s "$file")" -gt 52428800 ]]; then
         split -d -b 52428800 "$file" "$file."
         rm "$file"
     fi
 done < <(find "${partition_paths[@]}" -type f -print0)
-(
-    cd "$staging"
-    find "${!partitions[@]}" -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum > SHA256SUMS
-)
 # Keep the recipe, but remove files no longer present in the refreshed snapshot.
 find "$prebuilts" -mindepth 1 -maxdepth 1 ! -name files.list ! -name required-sdk -exec rm -rf -- {} +
 cp -a "$staging/." "$prebuilts/"
