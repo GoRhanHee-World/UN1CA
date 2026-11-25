@@ -9,6 +9,8 @@ APPLY_PATCH "system" "system/framework/framework.jar" \
 APPLY_PATCH "system" "system/framework/framework.jar" \
     "$MODPATH/0004-Hide-automatic-lockdown-notice-in-power-menu.patch" || return 1
 APPLY_PATCH "system" "system/framework/framework.jar" \
+    "$MODPATH/0005-Authenticate-power-off-without-automatic-lockdown.patch" || return 1
+APPLY_PATCH "system" "system/framework/framework.jar" \
     "$MODPATH/0002-Remove-permanent-lock-attempt-warning-threshold.patch" || return 1
 APPLY_PATCH "system" "system/system_ext/priv-app/SystemUI/SystemUI.apk" \
     "$MODPATH/0003-Disable-permanent-lock-in-both-keyguard-paths.patch" || return 1
