@@ -1,0 +1,57 @@
+Subject: [PATCH] Register OTA installation in the bootloader message
+
+Samsung's installPackage writes /cache/recovery/command without setting the
+BCB recovery arguments. TWRP reaches its main menu without an update target
+and can skip the standalone ORS while data is marked encrypted.
+
+Schedule the prepared package through RecoverySystem before requesting the
+reboot. TWRP receives --update_package=@/cache/recovery/block.map and can use
+the existing uncrypt map without decrypting userdata. Do not also queue an
+ORS install. Clear the scheduled command if preparation or reboot fails.
+
+--- a/smali/a81.smali
++++ b/smali/a81.smali
+@@ -422,14 +422,10 @@
+     throw v0
+ 
+     :unica_prepared
+-    invoke-virtual {p1}, Ljava/io/File;->getAbsolutePath()Ljava/lang/String;
+-
+-    move-result-object v0
+-
+-    invoke-virtual {p0, v0}, La81;->a(Ljava/lang/String;)V
+-
+     iget-object v0, p0, La81;->c:Landroid/content/Context;
+ 
++    invoke-static {v0, p1}, Landroid/os/RecoverySystem;->scheduleUpdateOnBoot(Landroid/content/Context;Ljava/io/File;)V
++
+     const/4 v1, 0x1
+ 
+     invoke-static {v0, p1, v1}, Landroid/os/RecoverySystem;->installPackage(Landroid/content/Context;Ljava/io/File;Z)V
+@@ -442,6 +438,26 @@
+     :catch_0
+     move-exception p1
+ 
++    :try_start_unica_cancel
++    iget-object v0, p0, La81;->c:Landroid/content/Context;
++
++    invoke-static {v0}, Landroid/os/RecoverySystem;->cancelScheduledUpdate(Landroid/content/Context;)V
++    :try_end_unica_cancel
++    .catch Ljava/io/IOException; {:try_start_unica_cancel .. :try_end_unica_cancel} :unica_cancel_failed
++    .catch Ljava/lang/SecurityException; {:try_start_unica_cancel .. :try_end_unica_cancel} :unica_cancel_failed
++
++    goto :unica_cancel_done
++
++    :unica_cancel_failed
++    move-exception v0
++
++    const-string v1, "RecoveryInstaller"
++
++    const-string v2, "Failed to clear pending OTA installation"
++
++    invoke-static {v1, v2, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    :unica_cancel_done
+     new-instance v0, Ljava/io/File;
+ 
+     const-string v1, "/cache/recovery/openrecoveryscript"
