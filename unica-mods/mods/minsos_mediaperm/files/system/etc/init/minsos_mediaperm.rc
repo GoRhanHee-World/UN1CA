@@ -1,0 +1,15 @@
+# MinsOS I-188: move sdcardfs-era Android/media folders to group media_rw so apps can write them
+# through FUSE again. See /system/bin/minsos_mediaperm.
+#   - after sys.user.0.ce_available: /data/media/0 is credential-encrypted, names are unreadable before
+#   - not critical, oneshot, every exit 0
+#   - seclabel is load-bearing (system_file script, no derivable domain - see pkgcache_invalidate)
+service minsos_mediaperm /system/bin/minsos_mediaperm
+    class late_start
+    user root
+    group root media_rw
+    oneshot
+    disabled
+    seclabel u:r:minsos_mediaperm:s0
+
+on property:sys.user.0.ce_available=true
+    start minsos_mediaperm

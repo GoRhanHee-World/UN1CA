@@ -1,0 +1,6 @@
+id=minsos_mediaperm
+name=MinsOS Android/media group fix
+version=v1
+versionCode=1
+author=MinsOS
+description=I-188. Folders that apps made under Android/media while sdcardfs was on keep the app's own group, which the FUSE storage used since tablet 2.0.0-beta2 and phone 2.0.0-beta5 cannot write through. Moves them to media_rw (1023) with group write after each unlock, so WhatsApp can save downloads again.

@@ -1,0 +1,36 @@
+#!/system/bin/sh
+# MinsOS I-188: let apps write their own Android/media folder again after sdcardfs was turned off.
+#
+# WHY (measured 11-25 on the owner's S20+, y2q 2.0.0-beta5, and in Hayachi's report MinsOS_1155):
+#   Under sdcardfs (every build before tablet 2.0.0-beta2 / phone 2.0.0-beta5, I-166) a folder an
+#   app made under Android/media landed on disk as 1023:<app ext gid> drwxrwsr-x, e.g. 1023:30316.
+#   With sdcardfs off, the FUSE daemon (MediaProvider, uid 10285, groups 1023 1078 1079 ...) does the
+#   write on the app's behalf. It is neither the owner nor in that group, so it gets r-x and every
+#   create fails with EACCES. WhatsApp keeps all media there, so downloads failed and it deleted the
+#   half-made entry (Hayachi: 89 "Deleted 1 ... due to com.whatsapp" in 8 minutes, the folder
+#   1023:30345). Download/ is 1023:1023, MediaProvider is in 1023, and the same app wrote there
+#   through the same path - that is the control. chgrp 1023 + g+rwX on one folder fixed it live.
+#
+# Runs after user 0 CE storage is unlocked (folder names are encrypted before that). Idempotent:
+# only entries not already in group 1023 are touched, so after the first run it changes nothing.
+# Every exit is 0; this is never worth a boot problem.
+# ponytail: user 0 and Android/media only. Secure Folder / dual-app users and sdcardfs-era files
+# elsewhere (Pictures 1023:1057, in-place edits) are not covered - widen if a report shows them.
+set -u
+TAG=MinsOS-MediaPerm
+D=${MINSOS_MEDIAPERM_DIR:-/data/media/0/Android/media}
+say() { log -t "$TAG" "$@" 2>/dev/null; }
+
+if [ ! -d "$D" ]; then
+    say "$D is not there - nothing to do"
+    exit 0
+fi
+N=$(find "$D" ! -group 1023 2>/dev/null | wc -l)
+if [ "$N" -eq 0 ]; then
+    say "all entries under $D are already group 1023"
+    exit 0
+fi
+find "$D" ! -group 1023 -exec chgrp 1023 {} + -exec chmod g+rwX {} + 2>/dev/null
+LEFT=$(find "$D" ! -group 1023 2>/dev/null | wc -l)
+say "moved $((N - LEFT)) of $N entries under $D to group 1023 (left: $LEFT)"
+exit 0
