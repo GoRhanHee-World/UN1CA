@@ -25,12 +25,18 @@ if [ ! -d "$D" ]; then
     say "$D is not there - nothing to do"
     exit 0
 fi
-N=$(find "$D" ! -group 1023 2>/dev/null | wc -l)
+# Work from inside $D. toybox find -exec ... + opens the current directory to come back to it, and init starts this
+# with cwd / (rootfs), which this domain may not read: 2.0.0-beta3/beta6 shipped without the cd and every -exec
+# failed with "find: .: Permission denied" while the counts still worked (11-26: "moved 0 of 7" on the T970).
+cd "$D" 2>/dev/null || { say "cannot enter $D - nothing done"; exit 0; }
+N=$(find . ! -group 1023 2>/dev/null | wc -l)
 if [ "$N" -eq 0 ]; then
     say "all entries under $D are already group 1023"
     exit 0
 fi
-find "$D" ! -group 1023 -exec chgrp 1023 {} + -exec chmod g+rwX {} + 2>/dev/null
-LEFT=$(find "$D" ! -group 1023 2>/dev/null | wc -l)
-say "moved $((N - LEFT)) of $N entries under $D to group 1023 (left: $LEFT)"
+ERR=$(find . ! -group 1023 -exec chgrp 1023 {} + -exec chmod g+rwX {} + 2>&1 | head -3)
+# chgrp clears the setgid bit on these directories (measured 11-26); they carry it on stock so new entries keep group 1023.
+find . -type d ! -perm -2000 -exec chmod g+s {} + 2>/dev/null
+LEFT=$(find . ! -group 1023 2>/dev/null | wc -l)
+say "moved $((N - LEFT)) of $N entries under $D to group 1023 (left: $LEFT)${ERR:+ - errors: $ERR}"
 exit 0
