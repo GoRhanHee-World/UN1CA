@@ -1,0 +1,4 @@
+id=bluetooth_audio
+name=Bluetooth software audio path
+author=MinsOS
+description=Avoids silent car A2DP playback on the S20 family by disabling hardware audio offload.
