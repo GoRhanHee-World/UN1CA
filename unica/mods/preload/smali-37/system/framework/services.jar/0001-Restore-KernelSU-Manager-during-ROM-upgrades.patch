@@ -1,0 +1,21 @@
+Subject: [PATCH] Restore KernelSU Manager during ROM upgrades
+
+--- a/smali_classes2/com/samsung/android/server/pm/install/PrePackageInstaller.smali
++++ b/smali_classes2/com/samsung/android/server/pm/install/PrePackageInstaller.smali
+@@ -547,6 +547,16 @@
+     :catch_0
+     iget-object v6, v6, Landroid/content/pm/PackageInfo;->packageName:Ljava/lang/String;
+
++    # Keep the ROM's missing KernelSU Manager in the preload install list even
++    # when Samsung's install history remembers a previous installation.
++    const-string v7, "me.weishu.kernelsu"
++
++    invoke-virtual {v7, v6}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++
++    move-result v7
++
++    if-nez v7, :cond_0
++
+     iget-object v7, p0, Lcom/samsung/android/server/pm/install/PrePackageInstallerBase;->mInstallHistory:Ljava/util/Collection;
+
+     check-cast v7, Ljava/util/HashSet;
