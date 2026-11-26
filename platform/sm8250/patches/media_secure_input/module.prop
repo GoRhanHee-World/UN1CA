@@ -1,0 +1,6 @@
+id=media_secure_input
+name=Legacy OMX protected video input length
+version=1.0
+versionCode=1
+author=GoRhanHee, MinsOS
+description=Clamp native-handle secure OMX input to its subsample length on the S24 Ultra EZK1 donor, preserving clear playback and the existing DRM HAL.
