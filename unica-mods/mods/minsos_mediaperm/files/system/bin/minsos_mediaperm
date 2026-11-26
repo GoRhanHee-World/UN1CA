@@ -44,8 +44,10 @@ if cd "$D" 2>/dev/null; then
         ERR=$(find . ! -group 1023 -exec chgrp 1023 {} + -exec chmod g+rwX {} + 2>&1 | head -3)
         # chgrp clears the setgid bit on these directories (measured 11-26); they carry it on stock so new entries keep 1023.
         find . -type d ! -perm -2000 -exec chmod g+s {} + 2>/dev/null
+        # chmod drops g+s silently without CAP_FSETID or group membership, so count what is left (11-26 T970).
+        NS=$(find . -type d ! -perm -2000 2>/dev/null | wc -l)
         LEFT=$(find . ! -group 1023 2>/dev/null | wc -l)
-        say "moved $((N - LEFT)) of $N entries under $D to group 1023 (left: $LEFT)${ERR:+ - errors: $ERR}"
+        say "moved $((N - LEFT)) of $N entries under $D to group 1023 (left: $LEFT, folders without setgid: $NS)${ERR:+ - errors: $ERR}"
     fi
 else
     say "cannot enter $D - Android/media left alone"
@@ -53,7 +55,7 @@ fi
 
 # ---- Android/data: each app's own entries back to <app uid>:1078 (ext_data_rw) ----
 if cd "$DD" 2>/dev/null; then
-    T=0; M=0; SKIP=0; ERR=""
+    T=0; M=0; SKIP=0; NS=0; ERR=""
     for P in */; do
         P=${P%/}
         [ -d "$DD/$P" ] || continue
@@ -67,6 +69,7 @@ if cd "$DD" 2>/dev/null; then
             else
                 E=$(find . ! -group 1078 -exec chown "$U:1078" {} + -exec chmod g+rwX {} + 2>&1 | head -1)
                 find . -type d ! -perm -2000 -exec chmod g+s {} + 2>/dev/null
+                NS=$((NS + $(find . -type d ! -perm -2000 2>/dev/null | wc -l)))
                 L=$(find . ! -group 1078 2>/dev/null | wc -l)
                 T=$((T + N)); M=$((M + N - L))
                 [ -n "$E" ] && [ -z "$ERR" ] && ERR="$P: $E"
@@ -74,7 +77,7 @@ if cd "$DD" 2>/dev/null; then
         fi
         cd "$DD" 2>/dev/null || break
     done
-    say "Android/data: gave $M of $T entries back to their app (uid:1078), $SKIP package folder(s) not owned by an app left alone${ERR:+ - first error: $ERR}"
+    say "Android/data: gave $M of $T entries back to their app (uid:1078, folders without setgid: $NS), $SKIP package folder(s) not owned by an app left alone${ERR:+ - first error: $ERR}"
 else
     say "cannot enter $DD - Android/data left alone"
 fi
