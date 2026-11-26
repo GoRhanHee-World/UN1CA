@@ -1,7 +1,7 @@
 #!/system/bin/sh
-# MinsOS I-188: let apps write their own Android/media folder again after sdcardfs was turned off.
+# MinsOS I-188 / I-191: let apps write their own Android/media and Android/data folders again after sdcardfs was turned off.
 #
-# WHY (measured 11-25 on the owner's S20+, y2q 2.0.0-beta5, and in Hayachi's report MinsOS_1155):
+# WHY, Android/media (I-188, measured 11-25 on the owner's S20+, y2q 2.0.0-beta5, and in Hayachi's report MinsOS_1155):
 #   Under sdcardfs (every build before tablet 2.0.0-beta2 / phone 2.0.0-beta5, I-166) a folder an
 #   app made under Android/media landed on disk as 1023:<app ext gid> drwxrwsr-x, e.g. 1023:30316.
 #   With sdcardfs off, the FUSE daemon (MediaProvider, uid 10285, groups 1023 1078 1079 ...) does the
@@ -11,32 +11,71 @@
 #   1023:30345). Download/ is 1023:1023, MediaProvider is in 1023, and the same app wrote there
 #   through the same path - that is the control. chgrp 1023 + g+rwX on one folder fixed it live.
 #
+# WHY, Android/data (I-191, Random-Shrig's T875 2.0.0-beta2, XDA #1,016/#1,021, 11-26):
+#   Android/data is bind-mounted, so an app writes the lower f2fs as itself. Folders vold made since 2.0
+#   are <app uid>:1078 (ext_data_rw) drwxrws--- (dev.imranr.obtainium/{cache,files} 10292:1078), but a
+#   subfolder the app made under sdcardfs is 1023:<app ext gid> drwxrwsr-x (files/app_data 1023:30292,
+#   11-24 on beta1). The app is neither its owner nor in that group, gets r-x, and Obtainium failed
+#   with "PathAccessException ... Permission denied". The fix gives such entries back to the app:
+#   <uid of its Android/data/<pkg> folder>:1078 with g+rwX. A package folder that is itself not an
+#   app's (owner below 10000) is left alone - there is no uid to give it to.
+#
 # Runs after user 0 CE storage is unlocked (folder names are encrypted before that). Idempotent:
-# only entries not already in group 1023 are touched, so after the first run it changes nothing.
+# only entries in the wrong group are touched, so after the first run it changes nothing.
 # Every exit is 0; this is never worth a boot problem.
-# ponytail: user 0 and Android/media only. Secure Folder / dual-app users and sdcardfs-era files
-# elsewhere (Pictures 1023:1057, in-place edits) are not covered - widen if a report shows them.
+# ponytail: user 0, Android/media and Android/data only. Android/obb, Secure Folder / dual-app users and
+# sdcardfs-era files elsewhere (Pictures 1023:1057, in-place edits) are not covered - widen if a report shows them.
 set -u
 TAG=MinsOS-MediaPerm
 D=${MINSOS_MEDIAPERM_DIR:-/data/media/0/Android/media}
+DD=${MINSOS_MEDIAPERM_DATA_DIR:-/data/media/0/Android/data}
 say() { log -t "$TAG" "$@" 2>/dev/null; }
 
-if [ ! -d "$D" ]; then
-    say "$D is not there - nothing to do"
-    exit 0
+# Work from inside each folder. toybox find -exec ... + opens the current directory to come back to it, and init
+# starts this with cwd / (rootfs), which this domain may not read: 2.0.0-beta3/beta6 shipped without the cd and
+# every -exec failed with "find: .: Permission denied" while the counts still worked (11-26: "moved 0 of 7").
+
+# ---- Android/media: group 1023 (media_rw), which MediaProvider is in ----
+if cd "$D" 2>/dev/null; then
+    N=$(find . ! -group 1023 2>/dev/null | wc -l)
+    if [ "$N" -eq 0 ]; then
+        say "all entries under $D are already group 1023"
+    else
+        ERR=$(find . ! -group 1023 -exec chgrp 1023 {} + -exec chmod g+rwX {} + 2>&1 | head -3)
+        # chgrp clears the setgid bit on these directories (measured 11-26); they carry it on stock so new entries keep 1023.
+        find . -type d ! -perm -2000 -exec chmod g+s {} + 2>/dev/null
+        LEFT=$(find . ! -group 1023 2>/dev/null | wc -l)
+        say "moved $((N - LEFT)) of $N entries under $D to group 1023 (left: $LEFT)${ERR:+ - errors: $ERR}"
+    fi
+else
+    say "cannot enter $D - Android/media left alone"
 fi
-# Work from inside $D. toybox find -exec ... + opens the current directory to come back to it, and init starts this
-# with cwd / (rootfs), which this domain may not read: 2.0.0-beta3/beta6 shipped without the cd and every -exec
-# failed with "find: .: Permission denied" while the counts still worked (11-26: "moved 0 of 7" on the T970).
-cd "$D" 2>/dev/null || { say "cannot enter $D - nothing done"; exit 0; }
-N=$(find . ! -group 1023 2>/dev/null | wc -l)
-if [ "$N" -eq 0 ]; then
-    say "all entries under $D are already group 1023"
-    exit 0
+
+# ---- Android/data: each app's own entries back to <app uid>:1078 (ext_data_rw) ----
+if cd "$DD" 2>/dev/null; then
+    T=0; M=0; SKIP=0; ERR=""
+    for P in */; do
+        P=${P%/}
+        [ -d "$DD/$P" ] || continue
+        U=$(stat -c %u "$DD/$P" 2>/dev/null)
+        case "$U" in ''|*[!0-9]*) continue ;; esac
+        cd "$DD/$P" 2>/dev/null || continue
+        N=$(find . ! -group 1078 2>/dev/null | wc -l)
+        if [ "$N" -gt 0 ]; then
+            if [ "$U" -lt 10000 ]; then
+                SKIP=$((SKIP + 1))
+            else
+                E=$(find . ! -group 1078 -exec chown "$U:1078" {} + -exec chmod g+rwX {} + 2>&1 | head -1)
+                find . -type d ! -perm -2000 -exec chmod g+s {} + 2>/dev/null
+                L=$(find . ! -group 1078 2>/dev/null | wc -l)
+                T=$((T + N)); M=$((M + N - L))
+                [ -n "$E" ] && [ -z "$ERR" ] && ERR="$P: $E"
+            fi
+        fi
+        cd "$DD" 2>/dev/null || break
+    done
+    say "Android/data: gave $M of $T entries back to their app (uid:1078), $SKIP package folder(s) not owned by an app left alone${ERR:+ - first error: $ERR}"
+else
+    say "cannot enter $DD - Android/data left alone"
 fi
-ERR=$(find . ! -group 1023 -exec chgrp 1023 {} + -exec chmod g+rwX {} + 2>&1 | head -3)
-# chgrp clears the setgid bit on these directories (measured 11-26); they carry it on stock so new entries keep group 1023.
-find . -type d ! -perm -2000 -exec chmod g+s {} + 2>/dev/null
-LEFT=$(find . ! -group 1023 2>/dev/null | wc -l)
-say "moved $((N - LEFT)) of $N entries under $D to group 1023 (left: $LEFT)${ERR:+ - errors: $ERR}"
 exit 0
