@@ -2,10 +2,6 @@
 # Read by apply_modules.sh before sourcing this file.
 # shellcheck disable=SC2034
 SKIPUNZIP=1
-case "$TARGET_CODENAME" in
-    x1q|y2q|z3q) ;;
-    *) return 0 ;;
-esac
 # The generated installer model list persists the overseas build selection.
 case ":${TARGET_ASSERT_MODEL:-}:" in
     *:SM-G9810:*|*:SM-G9860:*|*:SM-G9880:*) ;;
