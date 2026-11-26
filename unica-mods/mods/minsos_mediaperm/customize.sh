@@ -58,7 +58,9 @@ cat <<'EOF' >> "$_PLAT_CIL"
 (allow minsos_mediaperm system_file (file (entrypoint execute execute_no_trans read open map getattr)))
 ; find, chgrp, chmod, wc and log are toybox symlinks, labelled toolbox_exec.
 (allow minsos_mediaperm toolbox_exec (file (read open execute execute_no_trans getattr map)))
-(allow minsos_mediaperm self (capability (chown fowner dac_override dac_read_search)))
+; fsetid: chmod g+s on a directory whose group the caller is not in needs CAP_FSETID, or the kernel drops the bit
+; (I-191, Android/data entries go to group 1078). The rc also puts the service in ext_data_rw for the same reason.
+(allow minsos_mediaperm self (capability (chown fowner fsetid dac_override dac_read_search)))
 (allow minsos_mediaperm system_data_root_file (dir (search getattr)))
 (allow minsos_mediaperm media_userdir_file (dir (search getattr)))
 (allow minsos_mediaperm media_rw_data_file (dir (search read open getattr setattr)))
