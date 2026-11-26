@@ -629,6 +629,98 @@
     throw p0
 .end method
 
+# Capture the connection state that logcat alone cannot reconstruct after a
+# wireless Android Auto or Bluetooth audio failure. Use the existing scrubber
+# and failure list, and bound each dumpsys call to ten seconds.
+.method private static connectionDiagnostics(Ljava/util/zip/ZipOutputStream;Lio/mesalabs/unica/reports/Scrub;Ljava/util/List;)V
+    .locals 6
+
+    const-string v0, "bluetooth_manager"
+    const-string v1, "wifi"
+    const-string v2, "wifip2p"
+    const-string v3, "usb"
+    const-string v4, "audio"
+    const-string v5, "media.audio_policy"
+    filled-new-array/range {v0 .. v5}, [Ljava/lang/String;
+    move-result-object v0
+    const/4 v1, 0x0
+    invoke-static {p0, p1, p2, v0, v1}, Lio/mesalabs/unica/reports/BugReport;->dumpTargets(Ljava/util/zip/ZipOutputStream;Lio/mesalabs/unica/reports/Scrub;Ljava/util/List;[Ljava/lang/String;Z)V
+
+    const-string v0, "com.google.android.projection.gearhead"
+    const-string v1, "com.google.android.googlequicksearchbox"
+    const-string v2, "com.google.android.apps.maps"
+    const-string v3, "com.google.android.gms"
+    const-string v4, "com.android.vending"
+    const-string v5, "org.telegram.messenger"
+    filled-new-array/range {v0 .. v5}, [Ljava/lang/String;
+    move-result-object v0
+    const/4 v1, 0x1
+    invoke-static {p0, p1, p2, v0, v1}, Lio/mesalabs/unica/reports/BugReport;->dumpTargets(Ljava/util/zip/ZipOutputStream;Lio/mesalabs/unica/reports/Scrub;Ljava/util/List;[Ljava/lang/String;Z)V
+
+    return-void
+.end method
+
+.method private static dumpTargets(Ljava/util/zip/ZipOutputStream;Lio/mesalabs/unica/reports/Scrub;Ljava/util/List;[Ljava/lang/String;Z)V
+    .locals 10
+
+    const/4 v0, 0x0
+    array-length v1, p3
+
+    :dump_next
+    if-ge v0, v1, :dump_done
+    aget-object v2, p3, v0
+
+    const-string v3, "dumpsys"
+    const-string v4, "-t"
+    const-string v5, "10"
+    if-eqz p4, :dump_service
+    const-string v6, "package"
+    move-object v7, v2
+    filled-new-array/range {v3 .. v7}, [Ljava/lang/String;
+    move-result-object v8
+    const-string v3, "package_"
+    goto :dump_filename
+
+    :dump_service
+    move-object v6, v2
+    filled-new-array/range {v3 .. v6}, [Ljava/lang/String;
+    move-result-object v8
+    const-string v3, "dumpsys_"
+
+    :dump_filename
+    new-instance v4, Ljava/lang/StringBuilder;
+    invoke-direct {v4}, Ljava/lang/StringBuilder;-><init>()V
+    invoke-virtual {v4, v3}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    invoke-virtual {v4, v2}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    const-string v3, ".txt"
+    invoke-virtual {v4, v3}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    invoke-virtual {v4}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    move-result-object v4
+
+    invoke-static {p0, v4, p1, v8}, Lio/mesalabs/unica/reports/BugReport;->command(Ljava/util/zip/ZipOutputStream;Ljava/lang/String;Lio/mesalabs/unica/reports/Scrub;[Ljava/lang/String;)Ljava/lang/String;
+    move-result-object v5
+    if-eqz v5, :dump_continue
+
+    new-instance v6, Ljava/lang/StringBuilder;
+    invoke-direct {v6}, Ljava/lang/StringBuilder;-><init>()V
+    invoke-virtual {v6, v4}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    const-string v7, " ("
+    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    invoke-virtual {v6, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    const-string v7, ")"
+    invoke-virtual {v6, v7}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    invoke-virtual {v6}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    move-result-object v6
+    invoke-interface {p2, v6}, Ljava/util/List;->add(Ljava/lang/Object;)Z
+
+    :dump_continue
+    add-int/lit8 v0, v0, 0x1
+    goto :dump_next
+
+    :dump_done
+    return-void
+.end method
+
 .method private static deviceInfo(Ljava/lang/String;)Ljava/lang/String;
     .registers 8
 
@@ -2375,6 +2467,8 @@
 
     .line 322
     :cond_14c
+    invoke-static {v7, v1, v4}, Lio/mesalabs/unica/reports/BugReport;->connectionDiagnostics(Ljava/util/zip/ZipOutputStream;Lio/mesalabs/unica/reports/Scrub;Ljava/util/List;)V
+
     const-string v8, "kernel log (no permission)"
 
     invoke-interface {v4, v8}, Ljava/util/List;->add(Ljava/lang/Object;)Z
