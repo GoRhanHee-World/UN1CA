@@ -1,0 +1,4 @@
+id=engineering_mode
+name=Legacy EngineeringMode availability
+author=GoRhanHee
+description=Report the donor EngineeringMode JNI as unsupported when its AIDL backend is not declared, avoiding repeated service waits on the legacy vendor.
