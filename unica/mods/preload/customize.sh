@@ -1,8 +1,8 @@
-KERNELSU_MANAGER_APK="https://github.com/backslashxx/KernelSU/releases/download/v3.3.1%2B55/KernelSU_v3.3.1+55_32736-release.apk"
+KERNELSU_MANAGER_APK="https://github.com/GoRhanHee-World/android_samsung_kernel_sm8250/releases/download/ksu_32737/KernelSU_v3.3.1-57-geeb3bbf8_32737-release.apk"
 # https://github.com/tiann/KernelSU/issues/886
 APK_PATH="system/preload/KernelSU/me.weishu.kernelsu-mesa==/base.apk"
 
-LOG "- Adding xxKSU Manager v3.3.1+55 (32736) to preload apps"
+LOG "- Adding KernelSU Manager v3.3.1-57-geeb3bbf8 (32737) to preload apps"
 mkdir -p "$WORK_DIR/system/$(dirname "$APK_PATH")"
 DOWNLOAD_FILE "$KERNELSU_MANAGER_APK" "$WORK_DIR/system/$APK_PATH" || return 1
 

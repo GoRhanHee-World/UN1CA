@@ -1,6 +1,6 @@
 KERNEL_BASE_TAG="boot-z3q-20261101-212207"
-KERNEL_TAG="z3q-20261123"
-KERNEL_ZIP="not-ksu-20261123-ce177d72-z3q.zip"
+KERNEL_TAG="z3q-20261126"
+KERNEL_ZIP="not-ksu-20261126-daa30f81-z3q.zip"
 
 LOG_STEP_IN "- Repacking not_kernel ($KERNEL_TAG)"
 mkdir -p "$TMP_DIR" "$WORK_DIR/kernel"
