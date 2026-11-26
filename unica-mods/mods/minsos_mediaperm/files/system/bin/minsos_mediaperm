@@ -17,18 +17,31 @@
 #   subfolder the app made under sdcardfs is 1023:<app ext gid> drwxrwsr-x (files/app_data 1023:30292,
 #   11-24 on beta1). The app is neither its owner nor in that group, gets r-x, and Obtainium failed
 #   with "PathAccessException ... Permission denied". The fix gives such entries back to the app:
-#   <uid of its Android/data/<pkg> folder>:1078 with g+rwX. A package folder that is itself not an
-#   app's (owner below 10000) is left alone - there is no uid to give it to.
+#   <app uid>:1078 with g+rwX.
+#   11-26 21:2x (owner's T970, rebuild stopped for this): about 70 of the T970's package folders are
+#   themselves 1023:<app ext gid> 2770 (com.mojang.minecraftpe 1023:30341, com.android.vending 1023:30220),
+#   and a running app is not in its ext gid (vending: Groups 1079 3001-3007 9997 20220 50220, no 30220), so
+#   those apps cannot use their own folder at all. The first version took the uid from the package folder's
+#   owner and skipped these. The app uid is now the folder owner when that is an app (>= 10000), else its
+#   group minus 20000 when the group is a user-0 ext gid (30000-39999): 30341 -> 10341 = /data/data owner,
+#   measured for four apps. Entries with the wrong owner are fixed too, not only the wrong group.
+#
+# WHY, Android/obb (same 11-26 measurement): game data folders made under sdcardfs are 1059:1059 2770
+#   (com.pubg.krmobile, com.YoStarKR.Samsung.Arknights, com.HoYoverse.Nap); apps carry 1079 (ext_obb_rw),
+#   not 1059, so a game cannot read its own obb and stops with "not enough storage" (Hayachi 11-26). Stock
+#   is <app uid>:1079 (com.kakao.talk 10415:1079). The uid comes from the same app's Android/data folder,
+#   already fixed above; an obb folder with no Android/data folder is left alone.
 #
 # Runs after user 0 CE storage is unlocked (folder names are encrypted before that). Idempotent:
 # only entries in the wrong group are touched, so after the first run it changes nothing.
 # Every exit is 0; this is never worth a boot problem.
-# ponytail: user 0, Android/media and Android/data only. Android/obb, Secure Folder / dual-app users and
-# sdcardfs-era files elsewhere (Pictures 1023:1057, in-place edits) are not covered - widen if a report shows them.
+# ponytail: user 0 only. Secure Folder / dual-app users and sdcardfs-era files elsewhere (Pictures 1023:1057,
+# in-place edits) are not covered - widen if a report shows them.
 set -u
 TAG=MinsOS-MediaPerm
 D=${MINSOS_MEDIAPERM_DIR:-/data/media/0/Android/media}
 DD=${MINSOS_MEDIAPERM_DATA_DIR:-/data/media/0/Android/data}
+OB=${MINSOS_MEDIAPERM_OBB_DIR:-/data/media/0/Android/obb}
 say() { log -t "$TAG" "$@" 2>/dev/null; }
 
 # Work from inside each folder. toybox find -exec ... + opens the current directory to come back to it, and init
@@ -53,32 +66,43 @@ else
     say "cannot enter $D - Android/media left alone"
 fi
 
-# ---- Android/data: each app's own entries back to <app uid>:1078 (ext_data_rw) ----
-if cd "$DD" 2>/dev/null; then
+# The app a package folder in Android/data belongs to: its owner if that is an app, else its user-0 ext gid - 20000.
+app_uid() {
+    _u=$(stat -c %u "$DD/$1" 2>/dev/null); _g=$(stat -c %g "$DD/$1" 2>/dev/null)
+    case "$_u$_g" in ''|*[!0-9]*) return 1 ;; esac
+    if [ "$_u" -ge 10000 ]; then echo "$_u"
+    elif [ "$_g" -ge 30000 ] && [ "$_g" -le 39999 ]; then echo $((_g - 20000))
+    else return 1; fi
+}
+
+# <root> <group> <label>: every package folder's entries to <app uid>:<group> g+rwX, setgid on folders.
+fix_pkgs() {
+    _root=$1; _grp=$2
+    if ! cd "$_root" 2>/dev/null; then say "cannot enter $_root - $3 left alone"; return; fi
     T=0; M=0; SKIP=0; NS=0; ERR=""
     for P in */; do
         P=${P%/}
-        [ -d "$DD/$P" ] || continue
-        U=$(stat -c %u "$DD/$P" 2>/dev/null)
-        case "$U" in ''|*[!0-9]*) continue ;; esac
-        cd "$DD/$P" 2>/dev/null || continue
-        N=$(find . ! -group 1078 2>/dev/null | wc -l)
-        if [ "$N" -gt 0 ]; then
-            if [ "$U" -lt 10000 ]; then
-                SKIP=$((SKIP + 1))
-            else
-                E=$(find . ! -group 1078 -exec chown "$U:1078" {} + -exec chmod g+rwX {} + 2>&1 | head -1)
+        [ -d "$_root/$P" ] || continue
+        cd "$_root/$P" 2>/dev/null || continue
+        if U=$(app_uid "$P"); then
+            N=$(find . \( ! -user "$U" -o ! -group "$_grp" \) 2>/dev/null | wc -l)
+            if [ "$N" -gt 0 ]; then
+                E=$(find . \( ! -user "$U" -o ! -group "$_grp" \) -exec chown "$U:$_grp" {} + -exec chmod g+rwX {} + 2>&1 | head -1)
                 find . -type d ! -perm -2000 -exec chmod g+s {} + 2>/dev/null
                 NS=$((NS + $(find . -type d ! -perm -2000 2>/dev/null | wc -l)))
-                L=$(find . ! -group 1078 2>/dev/null | wc -l)
+                L=$(find . \( ! -user "$U" -o ! -group "$_grp" \) 2>/dev/null | wc -l)
                 T=$((T + N)); M=$((M + N - L))
                 [ -n "$E" ] && [ -z "$ERR" ] && ERR="$P: $E"
             fi
+        else
+            SKIP=$((SKIP + 1))
         fi
-        cd "$DD" 2>/dev/null || break
+        cd "$_root" 2>/dev/null || break
     done
-    say "Android/data: gave $M of $T entries back to their app (uid:1078, folders without setgid: $NS), $SKIP package folder(s) not owned by an app left alone${ERR:+ - first error: $ERR}"
-else
-    say "cannot enter $DD - Android/data left alone"
-fi
+    say "$3: gave $M of $T entries back to their app (uid:$_grp, folders without setgid: $NS), $SKIP package folder(s) with no app uid left alone${ERR:+ - first error: $ERR}"
+}
+
+# ---- Android/data (ext_data_rw 1078), then Android/obb (ext_obb_rw 1079), which looks its uid up in Android/data ----
+fix_pkgs "$DD" 1078 Android/data
+fix_pkgs "$OB" 1079 Android/obb
 exit 0
