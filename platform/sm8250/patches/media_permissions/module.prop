@@ -1,0 +1,6 @@
+id=minsos_mediaperm
+name=Legacy external app folder permissions
+version=v1
+versionCode=1
+author=MinsOS
+description=MinsOS I-188/I-191. Repairs legacy user 0 Android/media groups and Android/data/Android/obb ownership after CE storage unlocks.

@@ -1,3 +1,5 @@
+# shellcheck shell=bash disable=SC2034
+# MinsOS a7d2536a through 29f4aef7 (I-188/I-191), adapted to the UN1CA platform module loader.
 # I-188: sdcardfs-era Android/media/<app> folders keep the app's ext gid (1023:303xx), which the
 # FUSE daemon cannot write through once sdcardfs is off (tablet 2.0.0-beta2, phone 2.0.0-beta5,
 # I-166). A oneshot after user 0 unlock moves them to group 1023 with g+rwX. Why in full:
@@ -5,7 +7,7 @@
 SKIPUNZIP=1
 
 case "$TARGET_CODENAME" in
-    gts7*|y2q|x1q|z3q) ;;
+    y2q|x1q|z3q) ;;
     *) return 0 ;;
 esac
 
@@ -29,7 +31,7 @@ grep -q '^on property:sys\.user\.0\.ce_available=true$' "$WORK_DIR/system/system
 grep -q 'seclabel u:r:minsos_mediaperm:s0' "$WORK_DIR/system/system/etc/init/minsos_mediaperm.rc" \
     || ABORT "[$TARGET_CODENAME] minsos_mediaperm.rc has no seclabel - the service would die with status 127"
 
-# ---- the domain init needs to start it (same shape as patches/pkgcache_invalidate) ---------------
+# Domain needed for init to start the helper in enforcing mode.
 _PLAT_CIL="$WORK_DIR/system/system/etc/selinux/plat_sepolicy.cil"
 [ -f "$_PLAT_CIL" ] || ABORT "[$TARGET_CODENAME] plat_sepolicy.cil is not in the work dir"
 grep -q "(type minsos_mediaperm)" "$_PLAT_CIL" \
@@ -40,9 +42,8 @@ for _T in media_rw_data_file media_userdir_file system_data_root_file toolbox_ex
 done
 unset _T
 cat <<'EOF' >> "$_PLAT_CIL"
-; Added by unica/mods/minsos_mediaperm/customize.sh (I-188) - domain for the minsos_mediaperm
-; service. Runs once per unlock as root, walks /data/media/0/Android/media and moves entries that
-; are not in group 1023 into it with g+rwX.
+; Added by platform/sm8250/patches/media_permissions/customize.sh (MinsOS I-188/I-191).
+; Repairs user 0 Android/media, Android/data and Android/obb after CE storage unlocks.
 (type minsos_mediaperm)
 (roletype r minsos_mediaperm)
 ; The trailing space before )) below is deliberate. Do not remove it.

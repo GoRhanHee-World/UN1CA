@@ -6,7 +6,7 @@
 service minsos_mediaperm /system/bin/minsos_mediaperm
     class late_start
     user root
-    group root media_rw ext_data_rw
+    group root media_rw ext_data_rw ext_obb_rw
     oneshot
     disabled
     seclabel u:r:minsos_mediaperm:s0
