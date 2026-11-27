@@ -7471,6 +7471,9 @@
 /system/priv-app/YourPhone_P1_5/oat/arm64/YourPhone_P1_5\.vdex u:object_r:system_file:s0
 /system/priv-app/imsservice u:object_r:system_file:s0
 /system/priv-app/imsservice/imsservice\.apk u:object_r:system_file:s0
+/system/priv-app/imsservice/lib u:object_r:system_file:s0
+/system/priv-app/imsservice/lib/arm64 u:object_r:system_file:s0
+/system/priv-app/imsservice/lib/arm64/dummy\.txt u:object_r:system_file:s0
 /system/priv-app/imsservice/oat u:object_r:system_file:s0
 /system/priv-app/imsservice/oat/arm64 u:object_r:system_file:s0
 /system/priv-app/imsservice/oat/arm64/imsservice\.odex u:object_r:system_file:s0

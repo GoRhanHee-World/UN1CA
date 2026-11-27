@@ -7471,6 +7471,9 @@ system/priv-app/YourPhone_P1_5/oat/arm64/YourPhone_P1_5.odex 0 0 644 capabilitie
 system/priv-app/YourPhone_P1_5/oat/arm64/YourPhone_P1_5.vdex 0 0 644 capabilities=0x0
 system/priv-app/imsservice 0 0 755 capabilities=0x0
 system/priv-app/imsservice/imsservice.apk 0 0 644 capabilities=0x0
+system/priv-app/imsservice/lib 0 0 755 capabilities=0x0
+system/priv-app/imsservice/lib/arm64 0 0 755 capabilities=0x0
+system/priv-app/imsservice/lib/arm64/dummy.txt 0 0 644 capabilities=0x0
 system/priv-app/imsservice/oat 0 0 755 capabilities=0x0
 system/priv-app/imsservice/oat/arm64 0 0 755 capabilities=0x0
 system/priv-app/imsservice/oat/arm64/imsservice.odex 0 0 644 capabilities=0x0

@@ -10,28 +10,28 @@ ro.product.system.name=dm1qksx
 ro.system.product.cpu.abilist=arm64-v8a,armeabi-v7a,armeabi
 ro.system.product.cpu.abilist32=armeabi-v7a,armeabi
 ro.system.product.cpu.abilist64=arm64-v8a
-ro.system.build.date=Mon Sep 28 16:54:08 KST 2026
-ro.system.build.date.utc=1790582048
-ro.system.build.fingerprint=samsung/dm1qksx/qssi:17/CP2A.260605.016/S911NKSU8GZIF:user/release-keys
+ro.system.build.date=Tue Nov 17 15:59:13 KST 2026
+ro.system.build.date.utc=1794898753
+ro.system.build.fingerprint=samsung/dm1qksx/qssi:17/CP2A.260605.016/S911NKSS8GZK3:user/release-keys
 ro.system.build.id=CP2A.260605.016
-ro.system.build.uuid=uX7j5CHtQVLCrbgHSU8UA5qs4w-zueNExNgU7HM9Msg
+ro.system.build.uuid=uaigAR32F-zMvx6GTNcmUIYFk207mqthB0llWGNorAY
 ro.system.build.tags=release-keys
 ro.system.build.type=user
-ro.system.build.version.incremental=S911NKSU8GZIF
+ro.system.build.version.incremental=S911NKSS8GZK3
 ro.system.build.version.release=17
 ro.system.build.version.release_or_codename=17
 ro.system.build.version.sdk=37
 ro.system.build.version.sdk_full=37.0
-ro.system.qb.id=115377634
+ro.system.qb.id=117473735
 ####################################
 # from gen_build_prop.py:generate_build_info
 ####################################
 # begin build properties
 ro.build.id=CP2A.260605.016
-ro.build.uuid=uX7j5CHtQVLCrbgHSU8UA5qs4w-zueNExNgU7HM9Msg
-ro.build.PDA=S911NKSU8GZIF
-ro.build.display.id=CP2A.260605.016.S911NKSU8GZIF
-ro.build.version.incremental=S911NKSU8GZIF
+ro.build.uuid=uaigAR32F-zMvx6GTNcmUIYFk207mqthB0llWGNorAY
+ro.build.PDA=S911NKSS8GZK3
+ro.build.display.id=CP2A.260605.016.S911NKSS8GZK3
+ro.build.version.incremental=S911NKSS8GZK3
 ro.build.version.sdk=37
 ro.build.version.sdk_full=37.0
 ro.build.version.preview_sdk=0
@@ -42,16 +42,16 @@ ro.build.version.known_codenames=Base,Base11,Cupcake,Donut,Eclair,Eclair01,Eclai
 ro.build.version.release=17
 ro.build.version.release_or_codename=17
 ro.build.version.release_or_preview_display=17
-ro.build.version.security_patch=2026-10-05
+ro.build.version.security_patch=2026-11-05
 ro.build.version.security_index=1
-ro.build.version.base_os=
+ro.build.version.base_os=samsung/dm1qksx/dm1q:17/CP2A.260605.016/S911NKSU8GZIF:user/release-keys
 ro.build.version.emergency_base_os=
 ro.build.version.min_supported_target_sdk=28
-ro.build.date=Mon Sep 28 16:54:08 KST 2026
-ro.build.date.utc=1790582048
+ro.build.date=Tue Nov 17 15:59:13 KST 2026
+ro.build.date.utc=1794898753
 ro.build.type=user
 ro.build.user=dpi
-ro.build.host=21DN4615
+ro.build.host=21DND601
 ro.build.tags=release-keys
 ro.build.flavor=dm1qksx-user
 # ro.product.cpu.abi and ro.product.cpu.abi2 are obsolete,
@@ -60,7 +60,7 @@ ro.product.cpu.abi=arm64-v8a
 ro.product.locale=ko-KR
 ro.wifi.channels=
 # Do not try to parse description or thumbprint
-ro.build.description=dm1qksx-user 17 CP2A.260605.016 S911NKSU8GZIF release-keys
+ro.build.description=dm1qksx-user 17 CP2A.260605.016 S911NKSS8GZK3 release-keys
 # end build properties
 ####################################
 # from device/qcom/qssi/system.prop
