@@ -5995,7 +5995,7 @@ diff --git a/smali_classes4/io/mesalabs/unica/settings/enhancements/SoftwareCard
 new file mode 100644
 --- /dev/null
 +++ b/smali_classes4/io/mesalabs/unica/settings/enhancements/SoftwareCardPreference.smali
-@@ -0,0 +1,225 @@
+@@ -0,0 +1,208 @@
 +.class public final Lio/mesalabs/unica/settings/enhancements/SoftwareCardPreference;
 +.super Landroidx/preference/Preference;
 +.source "SoftwareCardPreference.java"
@@ -6129,31 +6129,14 @@ new file mode 100644
 +.end method
 +
 +.method public onBindViewHolder(Landroidx/preference/PreferenceViewHolder;)V
-+    .locals 3
++    .locals 1
 +
 +    .line 19
 +    invoke-super {p0, p1}, Landroidx/preference/Preference;->onBindViewHolder(Landroidx/preference/PreferenceViewHolder;)V
 +
-+    .line 20
-+    nop
-+
-+    .line 21
-+    invoke-virtual {p0}, Lio/mesalabs/unica/settings/enhancements/SoftwareCardPreference;->getContext()Landroid/content/Context;
-+
-+    move-result-object v0
-+
-+    const-string v1, "id"
-+
-+    const-string v2, "unica_software_card_root"
-+
-+    invoke-static {v0, v1, v2}, Lio/mesalabs/unica/settings/enhancements/Config;->id(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;)I
-+
-+    move-result v0
-+
-+    .line 20
-+    invoke-virtual {p1, v0}, Landroidx/preference/PreferenceViewHolder;->findViewById(I)Landroid/view/View;
-+
-+    move-result-object p1
++    # Preference.onBindViewHolder replaces itemView's XML ID with mViewId.
++    # The holder retains the root even after that ID has changed.
++    iget-object p1, p1, Landroidx/recyclerview/widget/RecyclerView$ViewHolder;->itemView:Landroid/view/View;
 +
 +    check-cast p1, Landroid/widget/FrameLayout;
 +
